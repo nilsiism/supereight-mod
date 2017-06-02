@@ -9,7 +9,7 @@
 #include <kernels.h>
 #include <perfstats.h>
 #include <vtk-io.h>
-#include <volume.hpp>
+#include <continuous/volume.hpp>
 #include <octree.hpp>
 #include <algorithms/raycasting.cpp>
 

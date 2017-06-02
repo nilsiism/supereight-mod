@@ -1,8 +1,13 @@
 #ifndef VOLUME_H
 #define VOLUME_H
 
+// Continuous volume template implementation
 #include "volume_template.hpp"
+
+// Discrete octree implementation
 #include "octree.hpp"
+
+// Data types definitions
 #include "voxel_traits.hpp"
 
 /**

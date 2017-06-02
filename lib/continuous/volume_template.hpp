@@ -18,8 +18,8 @@ class VolumeTemplate {};
  * Contiguous, preallocated storage layout specified by the volume
  * discretisation resolution
  */ 
-template <typename FieldType > 
-class VolumeTemplate<FieldType, StaticStorage, Void> {
+template <typename FieldType, template<typename> class Indexer > 
+class VolumeTemplate<FieldType, StaticStorage, Indexer> {
 
   public:
     typedef kfusion_voxel_traits<FieldType> traits_type;
