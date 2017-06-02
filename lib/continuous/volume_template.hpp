@@ -218,7 +218,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
     void init(uint s, float d) {
       _size = s;
       _dim = d; 
-      _map_index.init(_size, make_float3(_dim));
+      _map_index.init(_size, _dim);
     }
 
     void release(){};
@@ -232,10 +232,10 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
     void set(const uint3 & pos, const compute_type& d) {}
 
     compute_type operator[](const float3 & p) const {
-      const float3 scaled_pos = make_float3((p.x * _size / _dim),
+      const int3 scaled_pos = make_int3(make_float3((p.x * _size / _dim),
           (p.y * _size / _dim),
-          (p.z * _size / _dim));
-      return _map_index.get(scaled_pos);
+          (p.z * _size / _dim)));
+      return _map_index.get(scaled_pos.x, scaled_pos.y, scaled_pos.z);
     }
 
     compute_type operator[](const uint3 p) const {

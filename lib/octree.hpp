@@ -102,48 +102,118 @@ public:
     deallocateTree();
   }
 
-  void init(int size, float3 dim);
+  /*! \brief Initialises the octree attributes
+   * \param size number of voxels per side of the cube
+   * \param dim cube extension per side, in meter
+   */
+  void init(int size, float dim);
 
   inline int size(){ return size_; }
   inline float3 dim() const { return dim_; }
-  float3 pos(const uint3 p) const;
 
+
+  /*! \brief Retrieves voxel value at coordinates (x,y,z)
+   * \param x x coordinate in interval [0, size]
+   * \param y y coordinate in interval [0, size]
+   * \param z z coordinate in interval [0, size]
+   */
+  compute_type get(const int x, const int y, const int z) const;
+
+  /*! \brief Fetch the voxel block at which contains voxel  (x,y,z)
+   * \param x x coordinate in interval [0, size]
+   * \param y y coordinate in interval [0, size]
+   * \param z z coordinate in interval [0, size]
+   */
+  Aggregate<T> * fetch(const int x, const int y, const int z) const;
+
+  /*! \brief Interp voxel value at voxel position  (x,y,z)
+   * \param pos three-dimensional coordinates in which each component belongs 
+   * to the interval [0, size]
+   * \return signed distance function value at voxel position (x, y, z)
+   */
+  float interp(const float3 pos) const;
+
+  /*! \brief Compute the gradient at voxel position  (x,y,z)
+   * \param pos three-dimensional coordinates in which each component belongs 
+   * to the interval [0, size]
+   * \return gradient at voxel position pos
+   */
+  float3 grad(const float3 pos) const;
+
+
+  /*! \brief Cast a ray to find the closest signed distance function 
+   * intersection.
+   * \param pos camera pixel from which the ray is originating 
+   * \param view camera SE3 pose 
+   * \param nearPlane search range (in meters) 
+   * \param farPlane maximum search range (in meters) 
+   * \param mu signed distance function truncation value (in meters) 
+   * \param step ray-casting step size (usually proportional to 
+   * the voxel spacing 
+   * \param largeStep larger step size (usually a fraction of mu)
+   * \return float4 with the first three coordinates indicating the 
+   * intersection position and the last one the distance travelled 
+   * (in metric units). If no intersection is found the last coordinate is set
+   * to 0.
+   */
+
+  float4 raycast(const uint2 pos, const Matrix4 view,
+      const float nearPlane, const float farPlane, const float mu,
+      const float step, const float largeStep);
+
+  /*! \brief Updates the TSDF map given a frame and camera matrix  
+   * \param pose SE3 pose of the camera
+   * \param K camera intrinsics matrix
+   * \param depthmap input depth frame 
+   * \param imageSize depth frame size in number of pixels per dimension
+   * \param mu truncation bandwidth value
+   * \param frame number of the frame being integrated
+   */
+  void integrateFrame(const Matrix4 &pose, const Matrix4& K,
+      const float *depthmap, const uint2 &imageSize,
+      const float mu, const int frame);
+
+
+  /*! \brief Get the list of allocated block. If the active switch is set to
+   * true then only the visible blocks are retrieved.
+   * \param blocklist output vector of allocated blocks
+   * \param active boolean switch. Set to true to retrieve visible, allocated 
+   * blocks, false to retrieve all allocated blocks.
+   */
+  void getBlockList(std::vector<Aggregate<T> *>& blocklist, bool active);
+
+  /*! \brief Computes the morton code of the block containing voxel 
+   * at coordinates (x,y,z)
+   * \param x x coordinate in interval [0, size]
+   * \param y y coordinate in interval [0, size]
+   * \param z z coordinate in interval [0, size]
+   */
   unsigned int hash(const int x, const int y, const int z) {
     constexpr int morton_mask = MAX_BITS - log2(blockSide) - 1;
     return compute_morton(make_uint3(x, y, z)) & MASK[morton_mask];   
   }
-  
-  compute_type get(const int x, const int y, const int z) const;
-  compute_type get(const float3 pos) const;
-  Aggregate<T> * fetch(const int x, const int y, const int z) const;
-  Aggregate<T> * fetch(const float x, const float y, const float z) const;
+ 
 
-  float interp(const float3 pos) const;
-  float3 grad(const float3 pos) const;
-
-
-  float4 raycast(const uint2 pos, const Matrix4 view,
-      const float nearPlane, const float farPlane, const float mu,
-      const float step, const float largeStep, int frame);
-
-  // Returns a list of allocated blocks. The active switch indicates whether
-  // the blocks should be visible or not.
-  void getBlockList(std::vector<Aggregate<T> *>& blocklist, bool active);
-
-  // Allocate the list of voxels, passed as a list of morton numbers.
+  /*! \brief allocate a set of voxel blocks via their positional key  
+   * \param keys collection of voxel block keys to be allocated (i.e. their 
+   * morton number)
+   * \param number of keys in the keys array
+   */
   bool allocate(uint *keys, int num_elem);
 
+  /*! \brief Counts the number of blocks allocated
+   * \return number of voxel blocks allocated
+   */
   int leavesCount();
-  int nodeCount();
 
-  void integrateFrame(const Matrix4 &pose, const float4& k,
-      const float *depthmap, const uint2 &imageSize,
-      const float mu, const int frame);
+  /*! \brief Counts the number of internal nodes
+   * \return number of internal nodes
+   */
+  int nodeCount();
 
   void printMemStats(){
     // memory.printStats();
   };
-  bool print_kernel_timing;
 
 private:
 
@@ -155,7 +225,7 @@ private:
 
   Node<T> * root_;
   int size_;
-  float3 dim_;
+  float dim_;
   int max_level_;
   MemoryPool<Aggregate<T> > block_memory_;
 
@@ -179,7 +249,6 @@ private:
   // Private implementation of cached methods
   compute_type get(const int x, const int y, const int z, Aggregate<T>* cached) const;
   compute_type get(const float3 pos, Aggregate<T>* cached) const;
-  float vs(const uint x, const uint y, const uint z, Aggregate<T>*& start) const;
 
   // Build a list of voxels to be allocated given the current input frame.
   // Returns the number of voxels to be allocated.
@@ -210,37 +279,14 @@ private:
   void deallocateTree(){ deleteNode(&root_); }
 };
 
-template <typename T>
-inline typename Octree<T>::compute_type Octree<T>::get(const float3 p) const {
-
-  const uint3 pos = make_uint3(p.x, p.y, p.z);
-
-  Node<T> * n = root_;
-  if(!n) {
-    return empty();
-  }
-
-  // Get the block.
-
-  uint edge = size_ >> 1;
-  for(; edge >= blockSide; edge = edge >> 1){
-    n = n->child((pos.x & edge) > 0u, (pos.y & edge) > 0u, (pos.z & edge) > 0u);
-    if(!n){
-    return empty();
-    }
-  }
-
-  // Get the element in the voxel block
-  return static_cast<Aggregate<T>*>(n)->data(pos);
-}
 
 template <typename T>
 inline typename Octree<T>::compute_type Octree<T>::get(const float3 p, 
     Aggregate<T>* cached) const {
 
-  const uint3 pos = make_uint3((p.x * size_ / dim_.x),
-                               (p.y * size_ / dim_.y),
-                               (p.z * size_ / dim_.z));
+  const uint3 pos = make_uint3((p.x * size_ / dim_),
+                               (p.y * size_ / dim_),
+                               (p.z * size_ / dim_));
 
   if(cached != NULL){
     uint3 lower = cached->coordinates();
@@ -347,7 +393,7 @@ void Octree<T>::deleteNode(Node<T> **node){
 
 
 template <typename T>
-void Octree<T>::init(int size, float3 dim) {
+void Octree<T>::init(int size, float dim) {
   size_ = size;
   dim_ = dim;
   max_level_ = log2(size);
@@ -355,18 +401,6 @@ void Octree<T>::init(int size, float3 dim) {
   // root_->edge(size_);
   reserved_ = 0;
   maxweight_ = maxweight; // from constant_parameters.h
-}
-
-template <typename T>
-float3 Octree<T>::pos(const uint3 p) const {
-  return make_float3((p.x + 0.5f) * dim_.x / size_,
-      (p.y + 0.5f) * dim_.y / size_, (p.z + 0.5f) * dim_.z / size_);
-}
-
-template <typename T>
-inline Aggregate<T> * Octree<T>::fetch(const float x, const float y, 
-   const float z) const {
-  return fetch((int)x, (int)y, (int)z);
 }
 
 template <typename T>
@@ -546,7 +580,7 @@ float3 Octree<T>::grad(const float3 pos) const {
           * factor.x) * factor.y) * factor.z;
 
   return gradient
-    * make_float3(dim_.x / size_, dim_.y / size_, dim_.z / size_)
+    * make_float3(dim_ / size_, dim_ / size_, dim_ / size_)
     * (0.5f * 0.00003051944088f);
     }
   }
@@ -620,7 +654,7 @@ float3 Octree<T>::grad(const float3 pos) const {
           * factor.x) * factor.y) * factor.z;
 
   return gradient
-    * make_float3(dim_.x / size_, dim_.y / size_, dim_.z / size_)
+    * make_float3(dim_ / size_, dim_ / size_, dim_ / size_)
     * (0.5f);
 
 }
@@ -777,7 +811,7 @@ inline uint3 Octree<T>::getChildFromCode(int code, int level){
 template <typename T>
 float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
     const float nearPlane, const float farPlane, const float mu,
-    const float step, const float largeStep, int frame){
+    const float step, const float largeStep){
 
   const float3 origin = get_translation(view);
   float3 direction = rotate(view, make_float3(position.x, position.y, 1.f));
@@ -811,7 +845,7 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
   float t_max = fminf(fminf(t_coef.x - t_bias.x, t_coef.y - t_bias.y), t_coef.z - t_bias.z);
   float h = t_max;
   t_min = fmaxf(t_min, 0.0f);
-  t_max = fminf(t_max, farPlane/dim_.x);
+  t_max = fminf(t_max, farPlane/dim_);
 
   Node<T> * parent = root_;
   Node<T> * child;
@@ -838,8 +872,8 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
     if (scale == min_scale && child != NULL){
 
         // check against near and far plane
-        float tnear = t_min  * dim_.x;
-        float tfar = tc_max * dim_.x;
+        float tnear = t_min  * dim_;
+        float tfar = tc_max * dim_;
         // const float tfar = fminf(fminf(t_corner.x, t_corner.y), t_corner.z);
         if (tnear < tfar) {
           // first walk with largesteps until we found a hit
@@ -937,7 +971,6 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
 
     }
   }
-  //if( doTock ) TOCK("raycastOctreeIteration", frame);
   return make_float4(0);
 }
 
@@ -956,7 +989,7 @@ void Octree<T>::integrateFrame(const Matrix4 &pose, const float4& k,
 
   Aggregate<T> ** list = active_list.data();
   unsigned int num_active = active_list.size();
-  integratePass(list, num_active, depthmap, imageSize, dim_.x/size_,
+  integratePass(list, num_active, depthmap, imageSize, dim_/size_,
       inverse(pose), getCameraMatrix(k),  mu, maxweight_, frame);
 }
 
@@ -965,7 +998,7 @@ unsigned int Octree<T>::buildAllocationList(const Matrix4 &pose, const float4& k
     const float *depthmap, const uint2 &imageSize,
     const float mu, const int frame) {
 
-  const float voxelSize = dim_.x/size_;
+  const float voxelSize = dim_/size_;
   const float inverseVoxelSize = 1/voxelSize;
   constexpr int morton_mask = MAX_BITS - log2(blockSide) - 1;
 
