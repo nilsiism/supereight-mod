@@ -272,7 +272,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
           _map_index, pose, getCameraMatrix(k), depthmap, frameSize, _size, 
           _dim/_size, mu, frame);
       _map_index.allocate(_allocationList.data(), allocated);
-      _map_index.integrateFrame(pose, k, depthmap, frameSize, mu, frame); 
+      _map_index.integrateFrame(pose, getCameraMatrix(k), depthmap, frameSize, mu, frame); 
     }
 
     unsigned int _size;

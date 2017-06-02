@@ -250,13 +250,6 @@ private:
   compute_type get(const int x, const int y, const int z, Aggregate<T>* cached) const;
   compute_type get(const float3 pos, Aggregate<T>* cached) const;
 
-  // Build a list of voxels to be allocated given the current input frame.
-  // Returns the number of voxels to be allocated.
-  unsigned int buildAllocationList(const Matrix4 &pose, const float4& k,
-      const float *depthmap, const uint2 &imageSize,
-      const float mu, const int frame);
-
-
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
   bool allocateLevel(uint * keys, int num_tasks, int target_level);
@@ -977,7 +970,7 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
 // Simple ray-caster in metric space
 
 template <typename T>
-void Octree<T>::integrateFrame(const Matrix4 &pose, const float4& k,
+void Octree<T>::integrateFrame(const Matrix4 &pose, const Matrix4& K,
                             const float *depthmap,
                             const uint2 &imageSize, const float mu,
                             const int frame) {
@@ -990,72 +983,7 @@ void Octree<T>::integrateFrame(const Matrix4 &pose, const float4& k,
   Aggregate<T> ** list = active_list.data();
   unsigned int num_active = active_list.size();
   integratePass(list, num_active, depthmap, imageSize, dim_/size_,
-      inverse(pose), getCameraMatrix(k),  mu, maxweight_, frame);
-}
-
-template <typename T>
-unsigned int Octree<T>::buildAllocationList(const Matrix4 &pose, const float4& k,
-    const float *depthmap, const uint2 &imageSize,
-    const float mu, const int frame) {
-
-  const float voxelSize = dim_/size_;
-  const float inverseVoxelSize = 1/voxelSize;
-  constexpr int morton_mask = MAX_BITS - log2(blockSide) - 1;
-
-  const Matrix4 invPose = inverse(pose);
-  Matrix4 K = getCameraMatrix(k);
-  Matrix4 invK = getInverseCameraMatrix(k);
-  const Matrix4 kPose = pose * invK;
-
-#ifdef _OPENMP
-  std::atomic<unsigned int> voxelCount;
-#else
-  unsigned int voxelCount;
-#endif
-
-  unsigned int x, y;
-  const float3 camera = get_translation(pose);
-  const int numSteps = ceil(2*mu*inverseVoxelSize);
-  voxelCount = 0;
-#pragma omp parallel for \
-  private(y)
-  for (y = 0; y < imageSize.y; y++) {
-    for (x = 0; x < imageSize.x; x++) {
-      if(depthmap[x + y*imageSize.x] == 0)
-        continue;
-      const float depth = depthmap[x + y*imageSize.x];
-      float3 worldVertex = (kPose * make_float3(x * depth, y * depth, depth));
-
-      float3 direction = normalize(worldVertex - camera);
-      const float3 origin = worldVertex - mu * direction;
-      const float3 end = worldVertex + mu * direction;
-      const float3 step = (2*direction*mu)/numSteps;
-
-      uint3 voxel;
-      float3 voxelPos = origin;
-      for(int i = 0; i < numSteps; i++){
-        float3 voxelScaled = floorf(voxelPos * inverseVoxelSize);
-        if((voxelScaled.x < size()) && (voxelScaled.y < size()) &&
-           (voxelScaled.z < size()) && (voxelScaled.x >= 0) &&
-           (voxelScaled.y >= 0) && (voxelScaled.z >= 0)){
-          voxel = make_uint3(voxelScaled.x, voxelScaled.y, voxelScaled.z);
-          Aggregate<T> * n = fetch((int) voxel.x, (int) voxel.y, (int) voxel.z);
-          if(!n){
-            uint k = compute_morton(voxel) & MASK[morton_mask];
-            unsigned int idx = ++voxelCount;
-            allocationList_[idx] = k;
-          }
-          else if(n->last_integrated_frame() < frame){
-           integrate(n, depthmap, imageSize, voxelSize,
-               invPose, K, mu, maxweight_);
-           n->last_integrated_frame(frame);
-          }
-        }
-        voxelPos +=step;
-      }
-    }
-  }
-  return voxelCount;
+      inverse(pose), K,  mu, maxweight_, frame);
 }
 
 template <typename T>
@@ -1112,5 +1040,4 @@ void Octree<T>::getAllocatedBlockList(Node<T> *n,
   }
 
 }
-
 #endif // OCTREE_H
