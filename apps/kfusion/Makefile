@@ -7,7 +7,7 @@ C=2
 2 = -s 5.0 -p 0.34,0.5,0.24 	-z 1 -c $C -r 1 -k 481.2,-480,320,240 -B $(BLOCK_SIZE) -v $(SIZE) -m 0.1 -F
 3 = -s 5.0 -p 0.2685,0.5,0.4 	-z 1 -c $C -r 1 -k 481.2,-480,320,240 -B $(BLOCK_SIZE) -v $(SIZE)  -m 0.1 -F 
 live = -s 5.0 -p 0.5,0.5,0.5 -z 1 -c 1 -r 1 -k 580.8,581.8,308.8,253.0 -B $(BLOCK_SIZE) -v $(SIZE) -m 0.1
-fr2desk = -s 8.0 -p 0.5,0.5,0.5 -z 1 -c 2 -r 1 -k 580.8,581.8,308.8,253.0 -B $(BLOCK_SIZE) -v $(SIZE) -m 0.1 -F
+fr2desk = -s 5.0 -p 0.5,0.5,0.2 -z 1 -c 2 -r 1 -k 580.8,581.8,308.8,253.0 -B $(BLOCK_SIZE) -v $(SIZE) -m 0.1 -F
 # fr2xyz = 	-s 8.0 -p 0.5,0.5,0.5	-z 1 -c 2 -r 1 -k 580.8,581.8,308.8,253.0 -B $(BLOCK_SIZE) -v $(SIZE),$(SIZE),$(SIZE)  -m 0.1 -F 
 
 ROOT_DIR=$(shell pwd)
@@ -70,8 +70,8 @@ livingRoom%.gt.freiburg :
 	./thirdparty/checkPos.py $(LOGS)/benchmark.$(SIZE).$@  livingRoom$(*F).gt.freiburg > $(LOGS)/resume.$(SIZE).$@
 	./thirdparty/checkKernels.py $(LOGS)/kernels.$(SIZE).$@   >> $(LOGS)/resume.$(SIZE).$@
 
-fr2desk.openmp.log : fr2_desk.raw 
-	KERNEL_TIMINGS=1 ./build/kfusion-benchmark-octree-openmp $(fr2desk) -d octree-openmp-$(BLOCK_SIZE).$(SIZE) -i  fr2_desk.raw -o  benchmark.$(BLOCK_SIZE).$(SIZE).$@ 2> kernels.$(BLOCK_SIZE).$(SIZE).$@
+fr2desk.openmp.log : fr2_desk.raw fr2desk.gt 
+	KERNEL_TIMINGS=1 ./build/kfusion-benchmark-openmp $(fr2desk) -d octree-openmp-$(BLOCK_SIZE).$(SIZE) -i  fr2_desk.raw -o  benchmark.$(BLOCK_SIZE).$(SIZE).$@ 2> kernels.$(BLOCK_SIZE).$(SIZE).$@
 	./thirdparty/checkPos.py benchmark.$(BLOCK_SIZE).$(SIZE).$@  livingRoom2.gt.freiburg > resume.$(BLOCK_SIZE).$(SIZE).$@
 	./thirdparty/checkKernels.py kernels.$(BLOCK_SIZE).$(SIZE).$@   >> resume.$(BLOCK_SIZE).$(SIZE).$@
 
