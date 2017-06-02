@@ -37,6 +37,7 @@ float3 voxelToPos(const uint3 p, const float voxelSize){
   return make_float3((p.x + 0.5f) * voxelSize, (p.y + 0.5f) * voxelSize,
     (p.z + 0.5f) * voxelSize);
 }
+
 template <typename T>
 void integratePass(Aggregate<T> ** blockList, unsigned int list_size, 
     const float * depth, uint2 depthSize, const float voxelSize, 

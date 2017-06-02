@@ -41,7 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <parallel/algorithm>
 #include <node.hpp>
 #include <memory_pool.hpp>
-#include <mapping.hpp>
+#include <algorithms/mapping.hpp>
 
 #define MAX_BITS 10
 #define CAST_STACK_DEPTH 23
@@ -123,10 +123,6 @@ public:
 
 
   float4 raycast(const uint2 pos, const Matrix4 view,
-      const float nearPlane, const float farPlane, const float mu,
-      const float step, const float largeStep, int frame);
-
-  float4 raycastSimple(const uint2 pos, const Matrix4 view,
       const float nearPlane, const float farPlane, const float mu,
       const float step, const float largeStep, int frame);
 
@@ -946,73 +942,6 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
 }
 
 // Simple ray-caster in metric space
-template <typename T>
-float4 Octree<T>::raycastSimple(const uint2 pos, const Matrix4 view,
-    const float nearPlane, const float farPlane, const float mu, 
-    const float step, const float largestep, int frame) { 
-
-    float timings[4];
-    int raycast_steps[4];
-
-	const float3 origin = get_translation(view);
-	const float3 direction = rotate(view, make_float3(pos.x, pos.y, 1.f));
-
-	// intersect ray with a box
-	// http://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter3.htm
-	// compute intersection of ray with all six bbox planes
-	const float3 invR = make_float3(1.0f) / direction;
-	const float3 tbot = -1 * invR * origin;
-	const float3 ttop = invR * (dim_.x - origin);
-
-	// re-order intersections to find smallest and largest on each axis
-	const float3 tmin = fminf(ttop, tbot);
-	const float3 tmax = fmaxf(ttop, tbot);
-
-	// find the largest tmin and the smallest tmax
-	const float largest_tmin = fmaxf(fmaxf(tmin.x, tmin.y),
-			fmaxf(tmin.x, tmin.z));
-	const float smallest_tmax = fminf(fminf(tmax.x, tmax.y),
-			fminf(tmax.x, tmax.z));
-
-	// check against near and far plane
-	const float tnear = fmaxf(largest_tmin, nearPlane);
-	const float tfar = fminf(smallest_tmax, farPlane);
-
-	if (tnear < tfar) {
-		// first walk with largesteps until we found a hit
-		float t = tnear;
-		float stepsize = largestep;
-    float3 position = origin + direction * t;
-		float f_t = interp(position);
-		float f_tt = 0;
-		if (f_t > 0) { // ups, if we were already in it, then don't render anything here
-			for (; t < tfar; t += stepsize) {
-        float2 data = get(position);
-        if(data.y < 0){
-          stepsize = dim_.x/size_*blockSide;
-          position += stepsize*direction;
-          continue;
-        }
-        f_tt = data.x;
-        if(f_tt <= 0.1 && f_tt >= -0.5f){
-          f_tt = interp(position);
-        }
-        if (f_tt < 0)                  // got it, jump out of inner loop
-          break;
-        stepsize = fmaxf(f_tt * mu, step);
-        position += stepsize*direction;
-        //stepsize = step;
-        f_t = f_tt;
-      }
-			if (f_tt < 0) {           // got it, calculate accurate intersection
-				t = t + stepsize * f_tt / (f_t - f_tt);
-				return make_float4(origin + direction * t, t);
-			}
-		}
-	}
-	return make_float4(0);
-
-}
 
 template <typename T>
 void Octree<T>::integrateFrame(const Matrix4 &pose, const float4& k,

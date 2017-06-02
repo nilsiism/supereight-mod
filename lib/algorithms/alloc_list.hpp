@@ -3,7 +3,7 @@
 
 #include <math_utils.h> 
 #include <node.hpp>
-#include <mapping.hpp>
+#include <algorithms/mapping.hpp>
 #include <utils/morton_utils.hpp>
 
 template <typename FieldType, template <typename> class IndexType>
