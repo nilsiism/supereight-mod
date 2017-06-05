@@ -53,7 +53,10 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
           if(!n){
             uint k = map_index.hash(voxel.x, voxel.y, voxel.z);
             unsigned int idx = ++voxelCount;
-            allocationList[idx] = k;
+            if(idx < reserved) {
+              allocationList[idx] = k;
+            } else
+              break;
           }
           else {
             n->active(true); 
@@ -63,6 +66,8 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
       }
     }
   }
-  return voxelCount;
+
+  const uint written = voxelCount;
+  return written >= reserved ? reserved : written;
 }
 #endif
