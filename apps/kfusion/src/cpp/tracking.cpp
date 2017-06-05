@@ -311,3 +311,39 @@ void trackKernel(TrackData* output, const float3* inVertex,
 	TOCK("trackKernel", inSize.x * inSize.y);
 }
 
+bool updatePoseKernel(Matrix4 & pose, const float * output,
+		float icp_threshold) {
+	bool res = false;
+	TICK();
+	// Update the pose regarding the tracking result
+	TooN::Matrix<8, 32, const float, TooN::Reference::RowMajor> values(output);
+	TooN::Vector<6> x = solve(values[0].slice<1, 27>());
+	TooN::SE3<> delta(x);
+	pose = toMatrix4(delta) * pose;
+
+	// Return validity test result of the tracking
+	if (norm(x) < icp_threshold)
+		res = true;
+
+	TOCK("updatePoseKernel", 1);
+	return res;
+}
+
+bool checkPoseKernel(Matrix4 & pose, Matrix4 oldPose, const float * output,
+		uint2 imageSize, float track_threshold) {
+
+	// Check the tracking result, and go back to the previous camera position if necessary
+
+	TooN::Matrix<8, 32, const float, TooN::Reference::RowMajor> values(output);
+
+	if ((std::sqrt(values(0, 0) / values(0, 28)) > 2e-2)
+			|| (values(0, 28) / (imageSize.x * imageSize.y) < track_threshold)) {
+		pose = oldPose;
+		return false;
+	} else {
+		return true;
+	}
+
+}
+
+

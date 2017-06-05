@@ -6,7 +6,7 @@
 
 namespace algorithms { 
 
-  float4 raycast(Volume& volume, const uint2 pos, const Matrix4 view,
+  float4 raycast(const Volume& volume, const uint2 pos, const Matrix4 view,
       const float nearPlane, const float farPlane, const float mu, 
       const float step, const float largestep, int frame) { 
 
