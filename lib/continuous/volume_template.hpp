@@ -260,7 +260,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       return _map_index.grad(scaled_pos);
     }
 
-    void updateVolume(const Matrix4 &pose, const float4& k,
+    void updateVolume(const Matrix4 &pose, const Matrix4& K,
                             const float *depthmap,
                             const uint2 frameSize, const float mu,
                             const int frame) {
@@ -269,10 +269,10 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       _allocationList.reserve(num_vox_per_pix * frameSize.x * frameSize.y);
       const int allocated = 
         buildAllocationList(_allocationList.data(), _allocationList.capacity(),  
-          _map_index, pose, getCameraMatrix(k), depthmap, frameSize, _size, 
+          _map_index, pose, K, depthmap, frameSize, _size, 
           _dim/_size, mu, frame);
       _map_index.allocate(_allocationList.data(), allocated);
-      _map_index.integrateFrame(pose, getCameraMatrix(k), depthmap, frameSize, mu, frame); 
+      _map_index.integrateFrame(pose, K, depthmap, frameSize, mu, frame); 
     }
 
     unsigned int _size;
