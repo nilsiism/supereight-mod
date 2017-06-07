@@ -218,7 +218,7 @@ int processAll(DepthReader *reader, bool processFrame, bool renderImages,
 
 		timings[1] = tock();
 
-		kfusion->preprocessing(inputDepth, inputRGB, inputSize, config->bilateralFilter);
+		kfusion->preprocessing(inputDepth, inputSize, config->bilateralFilter);
 
 		timings[2] = tock();
 

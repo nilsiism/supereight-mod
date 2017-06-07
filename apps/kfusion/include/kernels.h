@@ -131,7 +131,7 @@ public:
   void dumpVolume(std::string filename);
   void printStats();
 
-  void getPointCloudFromVolume(float mu);
+  void getPointCloudFromVolume();
 
   void renderVolume(uchar4 * out, const uint2 outputSize, int frame, int rate,
       float4 k, float mu);
