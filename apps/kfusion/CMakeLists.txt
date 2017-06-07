@@ -115,6 +115,7 @@ find_package(GLUT   )
 find_package(OpenGL )
 find_package(OpenNI2)
 find_package(PAPI)
+find_package(OpenMP)
 
 find_package(PkgConfig)
 find_package(Qt5Core)
@@ -143,7 +144,7 @@ ENDIF(STATS)
 # ----------------- CPP VERSION ----------------- 
 
 add_library(${appname}-cpp  src/cpp/kfusion.cpp)
-target_compile_options(${appname}-cpp PRIVATE -std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Werror)
+target_compile_options(${appname}-cpp PRIVATE -std=c++11 -Wall -Wextra -Werror -Wno-unknown-pragmas)
 target_link_libraries(${appname}-cpp   ${common_libraries})	
 add_version(${appname} cpp "" "")
 
@@ -155,11 +156,12 @@ add_version(${appname} cpp "" "")
 # 
 # # ----------------- OPENMP VERSION ----------------- 
 # 
-add_library(${appname}-openmp  src/cpp/kfusion.cpp)
-target_compile_options(${appname}-openmp PRIVATE -std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Werror)
-target_link_libraries(${appname}-openmp   ${common_libraries})	
-SET_TARGET_PROPERTIES(${appname}-openmp PROPERTIES COMPILE_FLAGS "-fopenmp")
-add_version(${appname} openmp "-fopenmp" "-fopenmp")
+if(OPENMP_FOUND)
+  add_library(${appname}-openmp  src/cpp/kfusion.cpp)
+  target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -Wno-unknown-pragmas)
+  target_link_libraries(${appname}-openmp   ${common_libraries})	
+  add_version(${appname} openmp ${OpenMP_CXX_FLAGS} ${OpenMP_CXX_FLAGS})
+endif()
 # 
 # # ----------------- OPENMP VERSION OCTREE ----------------- 
 # 
