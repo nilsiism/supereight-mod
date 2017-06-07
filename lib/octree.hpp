@@ -416,10 +416,6 @@ inline Aggregate<T> * Octree<T>::fetch(const int x, const int y,
   return static_cast<Aggregate<T>* > (n);
 }
 
-inline bool operator<=(const uint3 a, const int3 b){
-  return((a.x <= b.x) && (a.y <= b.y) && (a.z <= b.z));
-}
-
 template <typename T>
 float Octree<T>::interp(const float3 pos) const {
 
