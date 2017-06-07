@@ -209,7 +209,7 @@ typedef struct Triangle {
   float3 * uniform_sample(int num){
 
     float3 * points = new float3[num];
-    for(unsigned int i = 0; i < num; i++){
+    for(int i = 0; i < num; ++i){
       float u = ((float)rand())/(float)RAND_MAX; 
       float v = ((float)rand())/(float)RAND_MAX;
       if(u + v > 1){
@@ -226,7 +226,7 @@ typedef struct Triangle {
   float3 * uniform_sample(int num, unsigned int& seed) const {
 
     float3 * points = new float3[num];
-    for(unsigned int i = 0; i < num; i++){
+    for(int i = 0; i < num; ++i){
       float u = ((float)rand_r(&seed))/(float)RAND_MAX; 
       float v = ((float)rand_r(&seed))/(float)RAND_MAX;
       if(u + v > 1){
@@ -386,12 +386,11 @@ inline float distance(const float3& point) const {
   const float c = dot(e1, e1);
   const float d = dot(e0, D);
   const float e = dot(e1, D);
-  const float f = dot(D, D);
+  // const float f = dot(D, D); Not sure why this is here and unused
 
   const float det = a*c - b*b;
   float s = b*e - c*d;
   float t = b*d - a*e;
-  float sqrdist = 0.f;
  
   if(s+t <= det){
     if(s < 0){
@@ -908,13 +907,12 @@ inline bool loadObjFile(std::string filename,
 }
 
 inline void objToTriangles(const std::vector<tinyobj::shape_t>& shapes,
-                           const std::vector<tinyobj::material_t>& materials,
                            std::vector<Triangle>& out){
-  for(int i = 0; i < shapes.size(); ++i){
+  for(unsigned int i = 0; i < shapes.size(); ++i){
     const tinyobj::shape_t & shape = shapes[i];  
     
     const std::vector<unsigned int>& indices = shape.mesh.indices;    
-    for(uint it = 0; it < shape.mesh.indices.size() / 3; ++it){
+    for(unsigned int it = 0; it < shape.mesh.indices.size() / 3; ++it){
       Triangle t;
       uint index = (indices[it*3]);
       
@@ -951,7 +949,7 @@ inline void writeVtkMesh(const char * filename,
   bool hasPointData = point_data != NULL;
   bool hasCellData = cell_data != NULL;
 
-  for(int i = 0; i < mesh.size(); ++i ){
+  for(unsigned int i = 0; i < mesh.size(); ++i ){
     const Triangle& t = mesh[i];
 
     points << t.vertexes[0].x << " " << t.vertexes[0].y << " " 
@@ -1013,7 +1011,7 @@ inline void writeObjMesh(const char * filename,
   int point_count = 0;
   int face_count = 0;
 
-  for(int i = 0; i < mesh.size(); i++){
+  for(unsigned int i = 0; i < mesh.size(); i++){
     const Triangle& t = mesh[i];  
     points << "v " << t.vertexes[0].x << " " << t.vertexes[0].y
            << " "  << t.vertexes[0].z << std::endl;
