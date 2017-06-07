@@ -49,10 +49,6 @@ inline float4 operator*(const Matrix4 & M, const float4 & v) {
 			dot(M.data[3], v));
 }
 
-inline bool operator<=(const uint3 a, const int3 b){
-  return((a.x <= b.x) && (a.y <= b.y) && (a.z <= b.z));
-}
-
 static inline float __host__ __device__ bspline(float t){
   float value = 0.f;
   if(t >= -3.0f && t <= -1.0f) {
@@ -94,6 +90,10 @@ inline Matrix4 toMatrix4(float4 quat, const float3& trans) {
   se3_mat.data[2] = make_float4(mat.data[0].z - mat.data[1].w,     mat.data[1].z + mat.data[0].w, 1.0-mat.data[0].x - mat.data[1].y, trans.z);
   se3_mat.data[3] = make_float4(0.0, 0.0, 0.0, 1.0);
   return se3_mat;
+}
+
+constexpr int log2_const(int n){
+  return (n < 2 ? 0 : 1 + log2_const(n/2));
 }
 
 #endif
