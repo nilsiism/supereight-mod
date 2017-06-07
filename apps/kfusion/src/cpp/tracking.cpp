@@ -4,8 +4,6 @@ void new_reduce(int blockIndex, float * out, TrackData* J, const uint2 Jsize,
 		const uint2 size) {
 	float *sums = out + blockIndex * 32;
 
-	float * jtj = sums + 7;
-	float * info = sums + 28;
 	for (uint i = 0; i < 32; ++i)
 		sums[i] = 0;
 	float sums0, sums1, sums2, sums3, sums4, sums5, sums6, sums7, sums8, sums9,
