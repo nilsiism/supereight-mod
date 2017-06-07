@@ -63,7 +63,7 @@ void depth2vertexKernel(float3* vertex, const float * depth, uint2 imageSize,
 }
 
 template <bool NegY>
-void vertex2normalKernel(float3 * out, const float3 * in, uint2 imageSize, float4 k) {
+void vertex2normalKernel(float3 * out, const float3 * in, uint2 imageSize) {
 	TICK();
 	unsigned int x, y;
 #pragma omp parallel for \

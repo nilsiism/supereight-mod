@@ -216,9 +216,9 @@ bool Kfusion::tracking(float4 k, float icp_threshold, uint tracking_rate,
 		depth2vertexKernel(inputVertex[i], ScaledDepth[i], localimagesize,
 				invK);
     if(k.y < 0)
-      vertex2normalKernel<true>(inputNormal[i], inputVertex[i], localimagesize, k);
+      vertex2normalKernel<true>(inputNormal[i], inputVertex[i], localimagesize);
     else
-      vertex2normalKernel<false>(inputNormal[i], inputVertex[i], localimagesize, k);
+      vertex2normalKernel<false>(inputNormal[i], inputVertex[i], localimagesize);
 		localimagesize = make_uint2(localimagesize.x / 2, localimagesize.y / 2);
 	}
 
