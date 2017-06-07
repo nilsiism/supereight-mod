@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MAPPING_HPP
 #include <node.hpp>
 
-float3 voxelToPos(const uint3 p, const float voxelSize){
+inline float3 voxelToPos(const uint3 p, const float voxelSize){
   return make_float3((p.x + 0.5f) * voxelSize, (p.y + 0.5f) * voxelSize,
     (p.z + 0.5f) * voxelSize);
 }
@@ -57,24 +57,23 @@ void integrate(Aggregate<T> * block, const float * depth, uint2 depthSize,
     const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
     const float mu, const float maxweight) { 
 
-  const float3 delta = rotate(invTrack, make_float3(0, 0, voxelSize));
+  const float3 delta = rotate(invTrack, make_float3(voxelSize, 0, 0));
   const float3 cameraDelta = rotate(K, delta);
   const uint3 blockCoord = block->coordinates();
   bool is_visible = false;
   block->active(is_visible);
 
-  unsigned int x, y, blockSide; 
+  unsigned int x, y, z, blockSide; 
   blockSide = Aggregate<T>::side;
   unsigned int xlast = blockCoord.x + blockSide;
   unsigned int ylast = blockCoord.y + blockSide;
   unsigned int zlast = blockCoord.z + blockSide;
-  for (y = blockCoord.y; y < ylast; ++y){
-    for (x = blockCoord.x; x < xlast; ++x){
-      uint3 pix = make_uint3(x, y, blockCoord.z);
+  for(z = blockCoord.z; z < zlast; ++z)
+    for (y = blockCoord.y; y < ylast; ++y){
+      uint3 pix = make_uint3(blockCoord.x, y, z);
       float3 pos = invTrack * voxelToPos(pix, voxelSize);
       float3 cameraX = K * pos;
-
-      for (; pix.z < zlast; ++pix.z, pos+= delta, cameraX += cameraDelta){
+      for (; pix.x < xlast; ++pix.x, pos+= delta, cameraX += cameraDelta){
         if (pos.z < 0.0001f) // some near plane constraint
           continue;
         const float2 pixel = make_float2(cameraX.x / cameraX.z + 0.5f,
@@ -99,7 +98,6 @@ void integrate(Aggregate<T> * block, const float * depth, uint2 depthSize,
         }
       }
     }
-  }
   block->active(is_visible);
 }
 
