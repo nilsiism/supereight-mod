@@ -63,7 +63,6 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
 
     float3 grad(const float3 & pos) const {
 
-      const float voxelSize = _dim / _size;
       const float inverseVoxelSize = _size / _dim;
       const float3 scaled_pos = make_float3((pos.x * inverseVoxelSize) - 0.5f,
           (pos.y * inverseVoxelSize) - 0.5f,
