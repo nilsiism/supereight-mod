@@ -134,7 +134,7 @@ template <typename T>
 Aggregate<T>:: Aggregate(){
     last_integrated_frame_ = 0;
     coordinates_ = make_uint3(0);
-    for (int i = 0; i < side*sideSq; i++){
+    for (unsigned int i = 0; i < side*sideSq; i++){
       voxel_block_[i] = initValue();
     }
   }

@@ -45,7 +45,7 @@ void integratePass(Aggregate<T> ** blockList, unsigned int list_size,
     const float maxweight, const int current_frame) {
 
 #pragma omp parallel for
-  for(int i = 0; i < list_size; ++i){
+  for(unsigned int i = 0; i < list_size; ++i){
       integrate(blockList[i], depth, depthSize, voxelSize,
           invTrack, K, mu, maxweight);
       blockList[i]->last_integrated_frame(current_frame);
@@ -63,7 +63,7 @@ void integrate(Aggregate<T> * block, const float * depth, uint2 depthSize,
   bool is_visible = false;
   block->active(is_visible);
 
-  unsigned int x, y, z, blockSide; 
+  unsigned int x, y, blockSide; 
   blockSide = Aggregate<T>::side;
   unsigned int xlast = blockCoord.x + blockSide;
   unsigned int ylast = blockCoord.y + blockSide;
