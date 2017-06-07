@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OCTREE_H
 #define OCTREE_H
 
-#include <vector_types.h>
+#include <math_utils.h>
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
 #include <cutil_math.h>
@@ -189,7 +189,7 @@ public:
    * \param z z coordinate in interval [0, size]
    */
   unsigned int hash(const int x, const int y, const int z) {
-    constexpr int morton_mask = MAX_BITS - log2(blockSide) - 1;
+    constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
     return compute_morton(make_uint3(x, y, z)) & MASK[morton_mask];   
   }
  
@@ -235,8 +235,7 @@ private:
   // maximum tree depth in bits
   static constexpr unsigned int max_depth = ((sizeof(morton_type)*8)/3);
   // Tree depth at which blocks are found
-  static constexpr unsigned int block_depth = max_depth -
-    static_cast<unsigned int>(log2(BLOCK_SIDE));
+  static constexpr unsigned int block_depth = max_depth - log2_const(BLOCK_SIDE);
 
   // Allocation specific variables
   uint * allocationList_;
