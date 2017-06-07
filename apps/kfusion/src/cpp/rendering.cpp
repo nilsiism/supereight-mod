@@ -3,7 +3,7 @@
 
 void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 inputSize, 
     const Matrix4 view, const float nearPlane, const float farPlane, 
-    const float mu, const float step, const float largestep, int frame) {
+    const float mu, const float step, const float largestep) {
 	TICK();
 	unsigned int y;
 #pragma omp parallel for \
@@ -14,7 +14,7 @@ void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 i
 			uint2 pos = make_uint2(x, y);
 
 			const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
-          farPlane, mu, step, largestep, frame);
+          farPlane, mu, step, largestep);
 			if (hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
 				float3 surfNorm = volume.grad(make_float3(hit));
@@ -122,7 +122,7 @@ void renderTrackKernel(uchar4* out, const TrackData* data, uint2 outSize) {
 void renderVolumeKernel(const Volume& volume, uchar4* out, const uint2 depthSize, const Matrix4 view, 
     const float nearPlane, const float farPlane, const float mu,
 		const float step, const float largestep, const float3 light,
-		const float3 ambient, int frame) {
+		const float3 ambient) {
 	TICK();
 	unsigned int y;
 #pragma omp parallel for \
@@ -132,7 +132,7 @@ void renderVolumeKernel(const Volume& volume, uchar4* out, const uint2 depthSize
 			const uint2 pos = make_uint2(x, y);
 
 			const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
-          farPlane, mu, step, largestep, frame);
+          farPlane, mu, step, largestep);
 			if (hit.w > 0) {
 				const float3 test = make_float3(hit);
 				const float3 surfNorm = volume.grad(test);

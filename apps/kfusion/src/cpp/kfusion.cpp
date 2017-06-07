@@ -277,7 +277,7 @@ bool Kfusion::raycasting(float4 k, float mu, uint frame) {
     raycastPose = pose;
     raycastKernel(volume, vertex, normal, computationSize, 
         raycastPose * getInverseCameraMatrix(k), nearPlane, farPlane, mu, 
-        step, step*BLOCK_SIDE, frame);
+        step, step*BLOCK_SIDE);
     doRaycast = true;
   }
   return doRaycast;
@@ -470,7 +470,7 @@ void Kfusion::renderVolume(uchar4 * out, uint2 outputSize, int frame,
 	if (frame % raycast_rendering_rate == 0)
 		renderVolumeKernel(volume, out, outputSize, 
         *(this->viewPose) * getInverseCameraMatrix(k), nearPlane, 
-        farPlane * 2.0f, _mu, step, largestep, light, ambient, frame);
+        farPlane * 2.0f, _mu, step, largestep, light, ambient);
 }
 
 void Kfusion::renderTrack(uchar4 * out, uint2 outputSize) {

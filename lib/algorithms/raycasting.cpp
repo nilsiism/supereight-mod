@@ -8,10 +8,7 @@ namespace algorithms {
 
   float4 raycast(const Volume& volume, const uint2 pos, const Matrix4 view,
       const float nearPlane, const float farPlane, const float mu, 
-      const float step, const float largestep, int frame) { 
-
-    float timings[4];
-    int raycast_steps[4];
+      const float step, const float largestep) { 
 
     const float3 origin = get_translation(view);
     const float3 direction = rotate(view, make_float3(pos.x, pos.y, 1.f));
