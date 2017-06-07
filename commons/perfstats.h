@@ -239,7 +239,6 @@ inline void PerfStats::print_all_data(std::ostream& out, bool include_all_data) 
 	resPtr = (struct Results *) malloc(sizeof(struct Results) * stats.size());
 	out.precision(10);
 	res = resPtr;
-	bool first = true;
 	//for (std::map<std::string,Stats>::const_iterator it=stats.begin(); it!=stats.end(); it++){
 	for (std::map<int, std::string>::const_iterator kt = order.begin();
 		 kt != order.end(); kt++) {
@@ -248,7 +247,6 @@ inline void PerfStats::print_all_data(std::ostream& out, bool include_all_data) 
 		if (it == stats.end())
 			continue;
 
-		first = false;
 		(*res).mean = 0.0;
 		(*res).min = 9e10;
 		(*res).max = -9e10;
@@ -285,7 +283,6 @@ inline void PerfStats::print_all_data(std::ostream& out, bool include_all_data) 
 
 	idx = 0;
 
-	bool first2 = true;
 	int count =0;
 
 	if (include_all_data)
@@ -344,7 +341,6 @@ inline void PerfStats::print_all_data(std::ostream& out, bool include_all_data) 
 			}
 			res++;
 		}
-		first2 = false;
 		if (include_all_data && done) {
 			out << "# End of file";
 		}
