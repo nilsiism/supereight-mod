@@ -80,7 +80,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       const int allocated = 
         buildAllocationList(_allocationList.data(), _allocationList.capacity(),  
           _map_index, pose, K, depthmap, frameSize, _size, 
-          _dim/_size, mu, frame);
+          _dim/_size, mu);
       _map_index.allocate(_allocationList.data(), allocated);
       _map_index.integrateFrame(pose, K, depthmap, frameSize, mu, frame); 
     }

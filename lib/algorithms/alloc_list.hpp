@@ -10,11 +10,11 @@ template <typename FieldType, template <typename> class IndexType>
 unsigned int buildAllocationList(uint * allocationList, size_t reserved,
     IndexType<FieldType>& map_index, const Matrix4 &pose, const Matrix4& K, 
     const float *depthmap, const uint2 &imageSize, const unsigned int size,  
-    const float voxelSize, const float mu, const int frame) {
+    const float voxelSize, const float mu) {
 
   const float inverseVoxelSize = 1/voxelSize;
 
-  const Matrix4 invPose = inverse(pose); Matrix4 invK = inverse(K);
+  Matrix4 invK = inverse(K);
   const Matrix4 kPose = pose * invK;
 
 #ifdef _OPENMP
@@ -38,7 +38,6 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
 
       float3 direction = normalize(worldVertex - camera);
       const float3 origin = worldVertex - mu * direction;
-      const float3 end = worldVertex + mu * direction;
       const float3 step = (2*direction*mu)/numSteps;
 
       int3 voxel;

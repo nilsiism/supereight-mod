@@ -258,7 +258,7 @@ private:
   unsigned int getMortonAtLevel(uint code, int level);
 
   void reserveBuffers(const int n);
-  bool getKeysAtLevel(const uint * inputKeys, uint *outpuKeys, int num_keys, int level);
+  bool getKeysAtLevel(const uint * inputKeys, uint *outpuKeys, unsigned int num_keys, int level);
   uint3 getChildFromCode(int code, int level);
 
   // General helpers
@@ -350,8 +350,6 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
   }
 
   Node<T> * n = root_;
-  int level = 1;
-
   if(!n) {
     return empty();
   }
@@ -695,7 +693,8 @@ inline uint Octree<T>::getMortonAtLevel(uint code, int level){
 }
 
 template <typename T>
-inline bool Octree<T>::getKeysAtLevel(const uint * inputKeys, uint * outputKeys,  int num_keys, int level){
+inline bool Octree<T>::getKeysAtLevel(const uint * inputKeys, uint * outputKeys,  
+    unsigned int num_keys, int level){
 
   const int shift = MAX_BITS - max_level_;
   outputKeys[0] = inputKeys[0] & MASK[level + shift-1];
@@ -749,7 +748,6 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
     Node<T> ** n = &root_;
-    Node<T> * parent;
     int myKey = keys[i];
     int edge = size_/2;
 
@@ -757,7 +755,6 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
 
       uint3 child = getChildFromCode(myKey, level);
       int index = child.x + child.y*2 + child.z*4;
-      parent = *n;
       n = &(*n)->child(index);
 
       if(!(*n)){
