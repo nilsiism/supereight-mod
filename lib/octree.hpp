@@ -312,9 +312,8 @@ inline typename Octree<T>::compute_type Octree<T>::get(const float3 p,
 template <typename T>
 inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     const int y, const int z) const {
-  Node<T> * n = root_;
-  int level = 1;
 
+  Node<T> * n = root_;
   if(!n) {
     return empty();
   }
@@ -427,9 +426,9 @@ float Octree<T>::interp(const float3 pos) const {
 
   Aggregate<T> * n = fetch(lower.x, lower.y, lower.z);
   if(n){
-    const uint3 ul = n->coordinates() + Aggregate<T>::side;
+    const int3 ul = make_int3(n->coordinates() + Aggregate<T>::side);
     // Local interpolation
-    if( upper.x < ul.x && upper.y < ul.y && upper.z < ul.z){
+    if(upper.x < ul.x && upper.y < ul.y && upper.z < ul.z){
 
       stored_type* data = n->getBlockRawPtr();
       const uint3 offset = n->coordinates();
@@ -732,13 +731,14 @@ std::sort(keys, keys+num_elem);
   reserveBuffers(num_elem);
 
   int last_elem = 0;
+  bool success = false;
   const int leaf_level = max_level_ - log2(blockSide);
   for (int level = 1; level <= leaf_level; level++){
     getKeysAtLevel(keys, keys_at_level_, num_elem, level);
     last_elem = unique(keys_at_level_, num_elem);
-    bool success = allocateLevel(keys_at_level_, last_elem, level);
+    success = allocateLevel(keys_at_level_, last_elem, level);
   }
-  return true;
+  return success;
 }
 
 template <typename T>
