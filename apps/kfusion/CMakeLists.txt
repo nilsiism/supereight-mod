@@ -13,7 +13,8 @@ else(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3 ")
 endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
-add_compile_options(-std=c++11)
+# add_compile_options(-std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Werror -Wno-error=deprecated-declarations -Wno-error=array-bounds)
+ add_compile_options(-std=c++11)
 
 if(APPLE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__APPLE__")
@@ -142,6 +143,7 @@ ENDIF(STATS)
 # ----------------- CPP VERSION ----------------- 
 
 add_library(${appname}-cpp  src/cpp/kfusion.cpp)
+target_compile_options(${appname}-cpp PRIVATE -std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Werror)
 target_link_libraries(${appname}-cpp   ${common_libraries})	
 add_version(${appname} cpp "" "")
 
@@ -154,6 +156,7 @@ add_version(${appname} cpp "" "")
 # # ----------------- OPENMP VERSION ----------------- 
 # 
 add_library(${appname}-openmp  src/cpp/kfusion.cpp)
+target_compile_options(${appname}-openmp PRIVATE -std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Werror)
 target_link_libraries(${appname}-openmp   ${common_libraries})	
 SET_TARGET_PROPERTIES(${appname}-openmp PROPERTIES COMPILE_FLAGS "-fopenmp")
 add_version(${appname} openmp "-fopenmp" "-fopenmp")
