@@ -166,53 +166,6 @@ void clean() {
 }
 ;
 
-void integrateKernel(Volume& vol, const float* depth, uint2 depthSize,
-		const Matrix4 invTrack, const Matrix4 K, const float mu,
-		const float maxweight) {
-	TICK();
-	const float3 delta = rotate(invTrack,
-			make_float3(0, 0, vol._dim / vol._size));
-	const float3 cameraDelta = rotate(K, delta);
-	unsigned int y;
-#pragma omp parallel for \
-        shared(vol), private(y)
-	for (y = 0; y < vol._size; y++)
-		for (unsigned int x = 0; x < vol._size; x++) {
-
-			uint3 pix = make_uint3(x, y, 0); //pix.x = x;pix.y = y;
-			float3 pos = invTrack * vol.pos(pix);
-			float3 cameraX = K * pos;
-
-			for (pix.z = 0; pix.z < vol._size;
-					++pix.z, pos += delta, cameraX += cameraDelta) {
-				if (pos.z < 0.0001f) // some near plane constraint
-					continue;
-				const float2 pixel = make_float2(cameraX.x / cameraX.z + 0.5f,
-						cameraX.y / cameraX.z + 0.5f);
-				if (pixel.x < 0 || pixel.x > depthSize.x - 1 || pixel.y < 0
-						|| pixel.y > depthSize.y - 1)
-					continue;
-				const uint2 px = make_uint2(pixel.x, pixel.y);
-				if (depth[px.x + px.y * depthSize.x] == 0)
-					continue;
-				const float diff =
-						(depth[px.x + px.y * depthSize.x] - cameraX.z)
-								* std::sqrt(
-										1 + sq(pos.x / pos.z)
-												+ sq(pos.y / pos.z));
-				if (diff > -mu) {
-					const float sdf = fminf(1.f, diff / mu);
-					float2 data = vol[pix];
-					data.x = clamp((data.y * data.x + sdf) / (data.y + 1), -1.f,
-							1.f);
-					data.y = fminf(data.y + 1, maxweight);
-					vol.set(pix, data);
-				}
-			}
-		}
-	TOCK("integrateKernel", vol._size * vol._size);
-}
-
 bool Kfusion::preprocessing(const ushort * inputDepth, const uint2 inputSize, 
     const bool filterInput){
 
@@ -337,8 +290,7 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
 			computationSize, track_threshold) : true;
 
   if ((doIntegrate && ((frame % integration_rate) == 0)) || (frame <= 3)) {
-    // integrateKernel(volume, floatDepth, computationSize, inverse(pose),
-    //     getCameraMatrix(k), mu, maxweight);
+
     volume.updateVolume(pose, getCameraMatrix(k), floatDepth, computationSize, mu, frame);
     // std::stringstream f;
     // f << "./slices/integration_" << (bayesian ? "bayesian_" : "tsdf_" )<< frame << ".vtk";
