@@ -48,7 +48,7 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
             (voxelScaled.z < size) && (voxelScaled.x >= 0) &&
             (voxelScaled.y >= 0) && (voxelScaled.z >= 0)){
           voxel = make_int3(voxelScaled);
-          Aggregate<FieldType> * n = map_index.fetch(voxel.x, voxel.y, voxel.z);
+          VoxelBlock<FieldType> * n = map_index.fetch(voxel.x, voxel.y, voxel.z);
           if(!n){
             uint k = map_index.hash(voxel.x, voxel.y, voxel.z);
             unsigned int idx = ++voxelCount;

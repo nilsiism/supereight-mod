@@ -39,7 +39,7 @@ inline float3 voxelToPos(const uint3 p, const float voxelSize){
 }
 
 template <typename T>
-void integratePass(Aggregate<T> ** blockList, unsigned int list_size, 
+void integratePass(VoxelBlock<T> ** blockList, unsigned int list_size, 
     const float * depth, uint2 depthSize, const float voxelSize, 
     const Matrix4 invTrack, const Matrix4 K, const float mu, 
     const float maxweight, const int current_frame) {
@@ -53,7 +53,7 @@ void integratePass(Aggregate<T> ** blockList, unsigned int list_size,
 }
 
 template <typename T>
-void integrate(Aggregate<T> * block, const float * depth, uint2 depthSize, 
+void integrate(VoxelBlock<T> * block, const float * depth, uint2 depthSize, 
     const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
     const float mu, const float maxweight) { 
 
@@ -64,7 +64,7 @@ void integrate(Aggregate<T> * block, const float * depth, uint2 depthSize,
   block->active(is_visible);
 
   unsigned int y, z, blockSide; 
-  blockSide = Aggregate<T>::side;
+  blockSide = VoxelBlock<T>::side;
   unsigned int xlast = blockCoord.x + blockSide;
   unsigned int ylast = blockCoord.y + blockSide;
   unsigned int zlast = blockCoord.z + blockSide;
@@ -90,7 +90,7 @@ void integrate(Aggregate<T> * block, const float * depth, uint2 depthSize,
           * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
         if (diff > -mu) {
           const float sdf = fminf(1.f, diff / mu);
-          typename Aggregate<T>::compute_type data = block->data(pix); // should do an offsetted access here
+          typename VoxelBlock<T>::compute_type data = block->data(pix); // should do an offsetted access here
           data.x = clamp((data.y * data.x + sdf) / (data.y + 1), -1.f,
               1.f);
           data.y = fminf(data.y + 1, maxweight);

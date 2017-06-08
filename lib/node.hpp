@@ -64,7 +64,7 @@ protected:
 };
 
 template <typename T>
-class Aggregate: public Node<T> {
+class VoxelBlock: public Node<T> {
 
   public:
 
@@ -89,7 +89,7 @@ class Aggregate: public Node<T> {
 
 
     // Default constructor -- initialises voxel data to their initial values.
-    Aggregate();
+    VoxelBlock();
 
     bool isLeaf(){ return true; }
 
@@ -120,10 +120,10 @@ class Aggregate: public Node<T> {
     bool active(){ return active_; }
 
     stored_type * getBlockRawPtr(){ return voxel_block_; }
-    static constexpr int size(){ return sizeof(Aggregate<T>); }
+    static constexpr int size(){ return sizeof(VoxelBlock<T>); }
 
   private:
-    Aggregate(const Aggregate&) = delete;
+    VoxelBlock(const VoxelBlock&) = delete;
     uint3 coordinates_;
     stored_type voxel_block_[side*sideSq]; // Brick of data.
     int last_integrated_frame_;
@@ -131,7 +131,7 @@ class Aggregate: public Node<T> {
 };
 
 template <typename T>
-Aggregate<T>:: Aggregate(){
+VoxelBlock<T>:: VoxelBlock(){
     last_integrated_frame_ = 0;
     coordinates_ = make_uint3(0);
     for (unsigned int i = 0; i < side*sideSq; i++){
@@ -150,7 +150,7 @@ inline Node<T> *& Node<T>::child(int offset){
 }
 
 template <typename T>
-inline float Aggregate<T>::dataVs(const uint3 pos) const {
+inline float VoxelBlock<T>::dataVs(const uint3 pos) const {
   uint3 offset = pos - coordinates_;
   const stored_type& data = voxel_block_[offset.x + offset.y*side + 
                                    offset.z*sideSq];
@@ -158,7 +158,7 @@ inline float Aggregate<T>::dataVs(const uint3 pos) const {
 }
 
 template <typename T>
-inline float Aggregate<T>::dataVs(const uint x, const uint y, 
+inline float VoxelBlock<T>::dataVs(const uint x, const uint y, 
                                   const uint z) const {
   uint3 offset;  
   offset.x = x - coordinates_.x;
@@ -170,7 +170,7 @@ inline float Aggregate<T>::dataVs(const uint x, const uint y,
 }
 
 template <typename T>
-inline typename Aggregate<T>::compute_type Aggregate<T>::data(const uint3 pos) const {
+inline typename VoxelBlock<T>::compute_type VoxelBlock<T>::data(const uint3 pos) const {
   uint3 offset = pos - coordinates_;
   const stored_type& data = voxel_block_[offset.x + offset.y*side + 
                                          offset.z*sideSq];
@@ -178,7 +178,7 @@ inline typename Aggregate<T>::compute_type Aggregate<T>::data(const uint3 pos) c
 }
 
 template <typename T>
-inline void Aggregate<T>::data(const uint3 pos, 
+inline void VoxelBlock<T>::data(const uint3 pos, 
                                compute_type &value){
   uint3 offset = pos - coordinates_;
   voxel_block_[offset.x + offset.y*side + offset.z*sideSq] = translate(value);

@@ -124,7 +124,7 @@ public:
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
    */
-  Aggregate<T> * fetch(const int x, const int y, const int z) const;
+  VoxelBlock<T> * fetch(const int x, const int y, const int z) const;
 
   /*! \brief Interp voxel value at voxel position  (x,y,z)
    * \param pos three-dimensional coordinates in which each component belongs 
@@ -180,7 +180,7 @@ public:
    * \param active boolean switch. Set to true to retrieve visible, allocated 
    * blocks, false to retrieve all allocated blocks.
    */
-  void getBlockList(std::vector<Aggregate<T> *>& blocklist, bool active);
+  void getBlockList(std::vector<VoxelBlock<T> *>& blocklist, bool active);
 
   /*! \brief Computes the morton code of the block containing voxel 
    * at coordinates (x,y,z)
@@ -227,7 +227,7 @@ private:
   int size_;
   float dim_;
   int max_level_;
-  MemoryPool<Aggregate<T> > block_memory_;
+  MemoryPool<VoxelBlock<T> > block_memory_;
 
   // Compile-time constant expressions
   // # of voxels per side in a voxel block
@@ -246,8 +246,8 @@ private:
   float maxweight_;  // maximum weight
 
   // Private implementation of cached methods
-  compute_type get(const int x, const int y, const int z, Aggregate<T>* cached) const;
-  compute_type get(const float3 pos, Aggregate<T>* cached) const;
+  compute_type get(const int x, const int y, const int z, VoxelBlock<T>* cached) const;
+  compute_type get(const float3 pos, VoxelBlock<T>* cached) const;
 
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
@@ -264,8 +264,8 @@ private:
 
   int leavesCountRecursive(Node<T> *);
   int nodeCountRecursive(Node<T> *);
-  void getActiveBlockList(Node<T> *, std::vector<Aggregate<T> *>& blocklist);
-  void getAllocatedBlockList(Node<T> *, std::vector<Aggregate<T> *>& blocklist);
+  void getActiveBlockList(Node<T> *, std::vector<VoxelBlock<T> *>& blocklist);
+  void getAllocatedBlockList(Node<T> *, std::vector<VoxelBlock<T> *>& blocklist);
 
   void deleteNode(Node<T> ** node);
   void deallocateTree(){ deleteNode(&root_); }
@@ -274,7 +274,7 @@ private:
 
 template <typename T>
 inline typename Octree<T>::compute_type Octree<T>::get(const float3 p, 
-    Aggregate<T>* cached) const {
+    VoxelBlock<T>* cached) const {
 
   const uint3 pos = make_uint3((p.x * size_ / dim_),
                                (p.y * size_ / dim_),
@@ -305,7 +305,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const float3 p,
   }
 
   // Get the element in the voxel block
-  return static_cast<Aggregate<T>*>(n)->data(pos);
+  return static_cast<VoxelBlock<T>*>(n)->data(pos);
 }
 
 template <typename T>
@@ -328,12 +328,12 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     }
   }
 
-  return static_cast<Aggregate<T> *>(n)->data(make_uint3(x, y, z));
+  return static_cast<VoxelBlock<T> *>(n)->data(make_uint3(x, y, z));
 }
 
 template <typename T>
 inline typename Octree<T>::compute_type Octree<T>::get(const int x,
-   const int y, const int z, Aggregate<T>* cached) const {
+   const int y, const int z, VoxelBlock<T>* cached) const {
 
   const uint ux = x;
   const uint uy = y;
@@ -361,7 +361,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     }
   }
 
-  return static_cast<Aggregate<T> *>(n)->data(make_uint3(ux, uy, uz));
+  return static_cast<VoxelBlock<T> *>(n)->data(make_uint3(ux, uy, uz));
 }
 
 template <typename T>
@@ -393,7 +393,7 @@ void Octree<T>::init(int size, float dim) {
 }
 
 template <typename T>
-inline Aggregate<T> * Octree<T>::fetch(const int x, const int y, 
+inline VoxelBlock<T> * Octree<T>::fetch(const int x, const int y, 
    const int z) const {
 
   Node<T> * n = root_;
@@ -409,7 +409,7 @@ inline Aggregate<T> * Octree<T>::fetch(const int x, const int y,
       return NULL;
     }
   }
-  return static_cast<Aggregate<T>* > (n);
+  return static_cast<VoxelBlock<T>* > (n);
 }
 
 template <typename T>
@@ -421,9 +421,9 @@ float Octree<T>::interp(const float3 pos) const {
   const int3 upper = min(base + make_int3(1),
       make_int3(size_) - make_int3(1));
 
-  Aggregate<T> * n = fetch(lower.x, lower.y, lower.z);
+  VoxelBlock<T> * n = fetch(lower.x, lower.y, lower.z);
   if(n){
-    const int3 ul = make_int3(n->coordinates() + Aggregate<T>::side);
+    const int3 ul = make_int3(n->coordinates() + VoxelBlock<T>::side);
     // Local interpolation
     if(upper.x < ul.x && upper.y < ul.y && upper.z < ul.z){
 
@@ -490,7 +490,7 @@ float3 Octree<T>::grad(const float3 pos) const {
 
   if (!(lower_code ^ upper_code)){
 //  std::cout << "Doing local gradient here!" << std::endl;
-    Aggregate<T> * n = fetch(lower_lower.x, lower_lower.y, lower_lower.z);
+    VoxelBlock<T> * n = fetch(lower_lower.x, lower_lower.y, lower_lower.z);
     if(n != NULL){
       int3 offset = make_int3(n->coordinates());
       lower_lower = lower_lower - offset;
@@ -570,7 +570,7 @@ float3 Octree<T>::grad(const float3 pos) const {
     }
   }
 
-  Aggregate<T> * n = fetch(base.x, base.y, base.z);
+  VoxelBlock<T> * n = fetch(base.x, base.y, base.z);
 
   gradient.x = (((get(upper_lower.x, lower.y, lower.z, n).x
           - get(lower_lower.x, lower.y, lower.z, n).x) * (1 - factor.x)
@@ -759,8 +759,8 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
       if(!(*n)){
         if(level == leaves_level){
           *n = block_memory_.acquire_block();
-          static_cast<Aggregate<T> *>(*n)->coordinates(unpack_morton(myKey));
-          static_cast<Aggregate<T> *>(*n)->active(true);
+          static_cast<VoxelBlock<T> *>(*n)->coordinates(unpack_morton(myKey));
+          static_cast<VoxelBlock<T> *>(*n)->active(true);
         }
         else  *n = new Node<T>();
       }
@@ -867,7 +867,7 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
           float f_tt = last_sample;
           if (f_t > 0.f) {
             for (t = tnear; t < tfar; t += stepsize) {
-              f_tt = get(origin + direction * t, static_cast<Aggregate<T>*>(child)).x;
+              f_tt = get(origin + direction * t, static_cast<VoxelBlock<T>*>(child)).x;
               if(f_tt < 0.1f){
                 f_tt = interp(origin + direction * t);
               }
@@ -969,17 +969,17 @@ void Octree<T>::integrateFrame(const Matrix4 &pose, const Matrix4& K,
 
   maxweight_ = 100;
 
-  std::vector<Aggregate<T> *> active_list;
+  std::vector<VoxelBlock<T> *> active_list;
   getBlockList(active_list, true);
 
-  Aggregate<T> ** list = active_list.data();
+  VoxelBlock<T> ** list = active_list.data();
   unsigned int num_active = active_list.size();
   integratePass(list, num_active, depthmap, imageSize, dim_/size_,
       inverse(pose), K,  mu, maxweight_, frame);
 }
 
 template <typename T>
-void Octree<T>::getBlockList(std::vector<Aggregate<T>*>& blocklist, bool active){
+void Octree<T>::getBlockList(std::vector<VoxelBlock<T>*>& blocklist, bool active){
   Node<T> * n = root_;
   if(!n) return;
   if(active) getActiveBlockList(n, blocklist);
@@ -988,7 +988,7 @@ void Octree<T>::getBlockList(std::vector<Aggregate<T>*>& blocklist, bool active)
 
 template <typename T>
 void Octree<T>::getActiveBlockList(Node<T> *n,
-    std::vector<Aggregate<T>*>& blocklist){
+    std::vector<VoxelBlock<T>*>& blocklist){
   using tNode = Node<T>;
   if(!n) return;
   std::queue<tNode *> q;
@@ -998,7 +998,7 @@ void Octree<T>::getActiveBlockList(Node<T> *n,
     q.pop();
 
     if(node->isLeaf()){
-      Aggregate<T>* block = static_cast<Aggregate<T> *>(node);
+      VoxelBlock<T>* block = static_cast<VoxelBlock<T> *>(node);
       if(block->active()) blocklist.push_back(block);
       continue;
     }
@@ -1011,7 +1011,7 @@ void Octree<T>::getActiveBlockList(Node<T> *n,
 
 template <typename T>
 void Octree<T>::getAllocatedBlockList(Node<T> *n,
-    std::vector<Aggregate<T>*>& blocklist){
+    std::vector<VoxelBlock<T>*>& blocklist){
   using tNode = Node<T>;
   if(!n) return;
   std::queue<tNode *> q;
@@ -1021,7 +1021,7 @@ void Octree<T>::getAllocatedBlockList(Node<T> *n,
     q.pop();
 
     if(node->isLeaf()){
-      Aggregate<T>* block = static_cast<Aggregate<T> *>(n);
+      VoxelBlock<T>* block = static_cast<VoxelBlock<T> *>(n);
        blocklist.push_back(block);
       continue;
     }
