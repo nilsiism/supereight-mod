@@ -63,7 +63,7 @@ void integrate(Aggregate<T> * block, const float * depth, uint2 depthSize,
   bool is_visible = false;
   block->active(is_visible);
 
-  unsigned int x, y, z, blockSide; 
+  unsigned int y, z, blockSide; 
   blockSide = Aggregate<T>::side;
   unsigned int xlast = blockCoord.x + blockSide;
   unsigned int ylast = blockCoord.y + blockSide;
