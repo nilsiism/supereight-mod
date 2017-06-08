@@ -99,9 +99,6 @@ class VoxelBlock: public Node<T> {
     compute_type data(const uint3 pos) const;
     void data(const uint3 pos, compute_type& value);
 
-    float dataVs(const uint3 pos) const;
-    float dataVs(const uint x, const uint y, const uint z) const;
-
     inline float vs3(const uint x, const uint y, const uint z) const {
       return voxel_block_[(x) +
         (y)*side +
@@ -147,26 +144,6 @@ inline Node<T> *& Node<T>::child(const uint x, const uint y, const uint z){
 template <typename T>
 inline Node<T> *& Node<T>::child(int offset){
   return child_ptr_[offset];
-}
-
-template <typename T>
-inline float VoxelBlock<T>::dataVs(const uint3 pos) const {
-  uint3 offset = pos - coordinates_;
-  const stored_type& data = voxel_block_[offset.x + offset.y*side + 
-                                   offset.z*sideSq];
-  return data.x;
-}
-
-template <typename T>
-inline float VoxelBlock<T>::dataVs(const uint x, const uint y, 
-                                  const uint z) const {
-  uint3 offset;  
-  offset.x = x - coordinates_.x;
-  offset.y = y - coordinates_.y;
-  offset.z = z - coordinates_.z;
-  const stored_type& data = voxel_block_[offset.x + offset.y*side + 
-                                   offset.z*sideSq];
-  return data.x;
 }
 
 template <typename T>
