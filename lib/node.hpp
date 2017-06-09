@@ -42,7 +42,6 @@ template <typename T>
 class Node {
 
 public:
-
   Node(){
     for (unsigned int i = 0; i < 8; i++)
       child_ptr_[i] = NULL;
@@ -50,12 +49,14 @@ public:
 
     virtual ~Node(){};
 
-    Node *& child(const uint x, const uint y, const uint z);
-    Node *& child(int offset );
+    Node *& child(const unsigned int x, const unsigned int y, 
+        const unsigned int z) {
+      return child_ptr_[x + y*2 + z*4];
+    };
 
-    static int size(){ return sizeof(Node *) + sizeof(uint3) + 
-                                     sizeof(int) + sizeof(short2) + 
-                                     sizeof(int); };
+    Node *& child(const int offset ){
+      return child_ptr_[offset];
+    }
 
     virtual bool isLeaf(){ return false; }
 
@@ -87,9 +88,12 @@ class VoxelBlock: public Node<T> {
       return traits_type::translate(value);
     }
 
-
-    // Default constructor -- initialises voxel data to their initial values.
-    VoxelBlock();
+    VoxelBlock(){
+      last_integrated_frame_ = 0;
+      coordinates_ = make_uint3(0);
+      for (unsigned int i = 0; i < side*sideSq; i++)
+        voxel_block_[i] = initValue();
+    }
 
     bool isLeaf(){ return true; }
 
@@ -126,25 +130,6 @@ class VoxelBlock: public Node<T> {
     int last_integrated_frame_;
     bool active_;
 };
-
-template <typename T>
-VoxelBlock<T>:: VoxelBlock(){
-    last_integrated_frame_ = 0;
-    coordinates_ = make_uint3(0);
-    for (unsigned int i = 0; i < side*sideSq; i++){
-      voxel_block_[i] = initValue();
-    }
-  }
-
-template <typename T>
-inline Node<T> *& Node<T>::child(const uint x, const uint y, const uint z){
-  return (child_ptr_[x + y*2 + z*4]);
-}
-
-template <typename T>
-inline Node<T> *& Node<T>::child(int offset){
-  return child_ptr_[offset];
-}
 
 template <typename T>
 inline typename VoxelBlock<T>::compute_type VoxelBlock<T>::data(const uint3 pos) const {
