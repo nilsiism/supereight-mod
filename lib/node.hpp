@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef NODE_H
 #define NODE_H
 
+#include <time.h>
 #include <commons.h>
 #include <cutil_math.h>
 #include <atomic>
@@ -89,7 +90,7 @@ class VoxelBlock: public Node<T> {
     }
 
     VoxelBlock(){
-      last_integrated_frame_ = 0;
+      timestamp_ = 0;
       coordinates_ = make_uint3(0);
       for (unsigned int i = 0; i < side*sideSq; i++)
         voxel_block_[i] = initValue();
@@ -109,12 +110,12 @@ class VoxelBlock: public Node<T> {
         (z)*sideSq].x;
     }
 
-    void last_integrated_frame(const int frame){ 
-      last_integrated_frame_ = frame;
+    void timestamp(const time_t frame){ 
+      timestamp_ = frame;
     }
 
-    int last_integrated_frame() const {
-      return last_integrated_frame_;
+    int timestamp() const {
+      return timestamp_;
     }
 
     void active(const bool a){ active_ = a; }
@@ -127,7 +128,7 @@ class VoxelBlock: public Node<T> {
     VoxelBlock(const VoxelBlock&) = delete;
     uint3 coordinates_;
     stored_type voxel_block_[side*sideSq]; // Brick of data.
-    int last_integrated_frame_;
+    time_t timestamp_;
     bool active_;
 };
 

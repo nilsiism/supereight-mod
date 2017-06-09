@@ -48,7 +48,7 @@ void integratePass(VoxelBlock<T> ** blockList, unsigned int list_size,
   for(unsigned int i = 0; i < list_size; ++i){
       integrate(blockList[i], depth, depthSize, voxelSize,
           invTrack, K, mu, maxweight);
-      blockList[i]->last_integrated_frame(current_frame);
+      blockList[i]->timestamp(current_frame);
   }
 }
 
