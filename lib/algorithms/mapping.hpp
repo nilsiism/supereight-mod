@@ -65,15 +65,18 @@ void integrate(VoxelBlock<T> * block, const float * depth, uint2 depthSize,
 
   unsigned int y, z, blockSide; 
   blockSide = VoxelBlock<T>::side;
-  unsigned int xlast = blockCoord.x + blockSide;
   unsigned int ylast = blockCoord.y + blockSide;
   unsigned int zlast = blockCoord.z + blockSide;
   for(z = blockCoord.z; z < zlast; ++z)
     for (y = blockCoord.y; y < ylast; ++y){
       uint3 pix = make_uint3(blockCoord.x, y, z);
-      float3 pos = invTrack * voxelToPos(pix, voxelSize);
-      float3 cameraX = K * pos;
-      for (; pix.x < xlast; ++pix.x, pos+= delta, cameraX += cameraDelta){
+      float3 start = invTrack * voxelToPos(pix, voxelSize);
+			float3 camerastart = K * start;
+#pragma simd
+      for (unsigned int x = 0; x < blockSide; ++x){
+        pix.x = x + blockCoord.x; 
+        const float3 cameraX = camerastart + (x*cameraDelta);
+        const float3 pos = start + (x*delta);
         if (pos.z < 0.0001f) // some near plane constraint
           continue;
         const float2 pixel = make_float2(cameraX.x / cameraX.z + 0.5f,
