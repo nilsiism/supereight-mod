@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math_utils.h>
 
 class SDF;
-class SigmaSDF;
+class BFusion;
 class ColouredSDF;
 
 template <class VoxelTraits>
@@ -51,6 +51,17 @@ struct kfusion_voxel_traits<SDF> {
   }
   static inline ComputeType translate(const StoredType value){
     return make_float2(value.x * 0.00003051944088f, value.y);
+  }
+};
+
+template<>
+struct kfusion_voxel_traits<BFusion> {
+  typedef float1 ComputeType;
+  typedef float1 StoredType;
+  static inline ComputeType empty(){ return make_float1(0.f); }
+  static inline StoredType initValue(){ return make_float1(0.f); }
+  static inline StoredType translate(const ComputeType value) {
+     return value;
   }
 };
 
