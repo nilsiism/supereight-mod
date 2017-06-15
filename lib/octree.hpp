@@ -160,19 +160,6 @@ public:
       const float nearPlane, const float farPlane, const float mu,
       const float step, const float largeStep);
 
-  /*! \brief Updates the TSDF map given a frame and camera matrix  
-   * \param pose SE3 pose of the camera
-   * \param K camera intrinsics matrix
-   * \param depthmap input depth frame 
-   * \param imageSize depth frame size in number of pixels per dimension
-   * \param mu truncation bandwidth value
-   * \param frame number of the frame being integrated
-   */
-  void integrateFrame(const Matrix4 &pose, const Matrix4& K,
-      const float *depthmap, const uint2 &imageSize,
-      const float mu, const int frame);
-
-
   /*! \brief Get the list of allocated block. If the active switch is set to
    * true then only the visible blocks are retrieved.
    * \param blocklist output vector of allocated blocks
@@ -870,25 +857,6 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
     }
   }
   return make_float4(0);
-}
-
-// Simple ray-caster in metric space
-
-template <typename T>
-void Octree<T>::integrateFrame(const Matrix4 &pose, const Matrix4& K,
-                            const float *depthmap,
-                            const uint2 &imageSize, const float mu,
-                            const int frame) {
-
-  maxweight_ = 100;
-
-  std::vector<VoxelBlock<T> *> active_list;
-  getBlockList(active_list, true);
-
-  VoxelBlock<T> ** list = active_list.data();
-  unsigned int num_active = active_list.size();
-  integratePass(list, num_active, depthmap, imageSize, dim_/size_,
-      inverse(pose), K,  mu, maxweight_, frame);
 }
 
 template <typename T>
