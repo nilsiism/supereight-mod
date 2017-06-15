@@ -9,8 +9,8 @@
 #include <kernels.h>
 #include <perfstats.h>
 #include <vtk-io.h>
-#include <continuous/volume.hpp>
 #include <octree.hpp>
+#include "continuous/volume.hpp"
 #include <algorithms/raycasting.cpp>
 
 extern PerfStats Stats;
