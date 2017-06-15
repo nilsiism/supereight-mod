@@ -14,7 +14,7 @@ else(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 # add_compile_options(-std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Werror -Wno-error=deprecated-declarations -Wno-error=array-bounds)
- add_compile_options(-std=c++11)
+ add_compile_options(-std=c++11 )
 
 if(APPLE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__APPLE__")
@@ -69,7 +69,7 @@ function(add_version appname version compile_flags link_flags)
     file(GLOB qt_srcs qt/*)
 
     QT5_ADD_RESOURCES( ResourceSources  "qt/images.qrc")
-    set(qt_srcs ${qt_srcs} ${ResourceSources} include/PowerMonitor.h ../../commons/perfstats.h)
+    set(qt_srcs ${qt_srcs} ${ResourceSources} include/PowerMonitor.h ../../utils/perfstats.h)
     SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
     SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
     set(CMAKE_AUTOMOC ON)
@@ -123,7 +123,7 @@ find_package(Qt5Widgets)
 find_package(Qt5Gui)
 find_package(Qt5OpenGL)
 find_package(Qt5PrintSupport)
-include_directories(./include ${TOON_INCLUDE_PATHS} ./thirdparty ../../lib ../../commons ${PCL_INCLUDE_DIRS})
+include_directories(./include ${TOON_INCLUDE_PATHS} ./thirdparty ../../lib ../../utils ${PCL_INCLUDE_DIRS})
 
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
 add_library(tiny_obj thirdparty/tiny_obj_loader.cc)
@@ -148,44 +148,15 @@ target_compile_options(${appname}-cpp PRIVATE -std=c++11 -Wall -Wextra -Werror -
 target_link_libraries(${appname}-cpp   ${common_libraries})	
 add_version(${appname} cpp "" "")
 
-# # ----------------- CPP VERSION OCTREE ----------------- 
-# 
-# add_library(${appname}-octree-cpp  src/octree/kernels.cpp src/octree/data-structure/octree.hpp)
-# target_link_libraries(${appname}-octree-cpp  ${common_libraries})	
-# add_version(${appname} octree-cpp "" "")
-# 
-# # ----------------- OPENMP VERSION ----------------- 
-# 
+# ----------------- OPENMP VERSION ----------------- 
+
 if(OPENMP_FOUND)
   add_library(${appname}-openmp  src/cpp/kfusion.cpp)
+  # target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -std=c++11 -Wall -Wextra  -Wno-unknown-pragmas -qopt-report=2 -qopt-report-file=./icc_report.txt -qopt-report-phase=vec)
   target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -Wno-unknown-pragmas)
   target_link_libraries(${appname}-openmp   ${common_libraries})	
   add_version(${appname} openmp ${OpenMP_CXX_FLAGS} ${OpenMP_CXX_FLAGS})
 endif()
-# 
-# # ----------------- OPENMP VERSION OCTREE ----------------- 
-# 
-# add_library(${appname}-octree-openmp  src/octree/kernels.cpp src/octree/data-structure/octree.hpp)
-# target_link_libraries(${appname}-octree-openmp   ${common_libraries})	
-# SET_TARGET_PROPERTIES(${appname}-octree-openmp PROPERTIES COMPILE_FLAGS "-fopenmp")
-# add_version(${appname} octree-openmp "-fopenmp" "-fopenmp")
-
-# #  ----------------- CUDA VERSION ----------------- 
-# if (CUDA_FOUND) 
-# 
-#   set(CUDA_NVCC_FLAGS ${CUDA_NVCC_FLAGS};-std=c++11)
-#   set(kfusion_cuda_srcs
-#     src/cuda/kernels.cu
-#     thirdparty/kfusion.h
-#     src/cpp/marching_cubes.cpp
-#     )
-# 
-#   include_directories(${CUDA_INCLUDE_DIRS})
-#   cuda_add_library(${appname}-cuda    STATIC  ${kfusion_cuda_srcs} OPTIONS -O3 )
-#   target_link_libraries(${appname}-cuda   ${common_libraries})	
-#   add_version(${appname} cuda "-DCUDA" "")
-# 
-# endif(CUDA_FOUND)
 
 #  ----------------- thirdparty ----------------- 
 

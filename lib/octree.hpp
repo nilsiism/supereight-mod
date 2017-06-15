@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math_utils.h>
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
-#include <cutil_math.h>
 #include <commons.h>
 #include <algorithm>
 #include <parallel/algorithm>
