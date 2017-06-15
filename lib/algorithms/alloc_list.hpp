@@ -3,14 +3,29 @@
 
 #include <math_utils.h> 
 #include <node.hpp>
-#include <algorithms/mapping.hpp>
 #include <utils/morton_utils.hpp>
 
+/* 
+ * \brief Given a depth map and camera matrix it computes the list of 
+ * voxels intersected but not allocated by the rays around the measurement m in
+ * a region comprised between m +/- band. 
+ * \param allocationList output list of keys corresponding to voxel blocks to
+ * be allocated
+ * \param reserved allocated size of allocationList
+ * \param map_index indexing structure used to index voxel blocks 
+ * \param pose camera extrinsics matrix
+ * \param K camera intrinsics matrix
+ * \param depthmap input depth map
+ * \param imageSize dimensions of depthmap
+ * \param size discrete extent of the map, in number of voxels
+ * \param voxelSize spacing between two consegutive voxels, in metric space
+ * \param band maximum extent of the allocating region, per ray
+ */
 template <typename FieldType, template <typename> class IndexType>
 unsigned int buildAllocationList(uint * allocationList, size_t reserved,
     IndexType<FieldType>& map_index, const Matrix4 &pose, const Matrix4& K, 
     const float *depthmap, const uint2 &imageSize, const unsigned int size,  
-    const float voxelSize, const float mu) {
+    const float voxelSize, const float band) {
 
   const float inverseVoxelSize = 1/voxelSize;
 
@@ -25,7 +40,7 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
 
   unsigned int x, y;
   const float3 camera = get_translation(pose);
-  const int numSteps = ceil(2*mu*inverseVoxelSize);
+  const int numSteps = ceil(2*band*inverseVoxelSize);
   voxelCount = 0;
 #pragma omp parallel for \
   private(y)
@@ -37,8 +52,8 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
       float3 worldVertex = (kPose * make_float3(x * depth, y * depth, depth));
 
       float3 direction = normalize(worldVertex - camera);
-      const float3 origin = worldVertex - mu * direction;
-      const float3 step = (2*direction*mu)/numSteps;
+      const float3 origin = worldVertex - band * direction;
+      const float3 step = (2*direction*band)/numSteps;
 
       int3 voxel;
       float3 voxelPos = origin;
@@ -65,7 +80,6 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
       }
     }
   }
-
   const uint written = voxelCount;
   return written >= reserved ? reserved : written;
 }
