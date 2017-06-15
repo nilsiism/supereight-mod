@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <time.h>
 #include <commons.h>
-#include <cutil_math.h>
+#include <math_utils.h>
 #include <atomic>
 #include <octree_defines.h>
 #include <memory_pool.hpp>
