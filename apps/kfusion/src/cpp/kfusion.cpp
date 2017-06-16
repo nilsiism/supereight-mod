@@ -10,7 +10,7 @@
 #include <perfstats.h>
 #include <vtk-io.h>
 #include <octree.hpp>
-#include "continuous/volume.hpp"
+#include "continuous/sdf_volume.hpp"
 #include <algorithms/raycasting.cpp>
 
 extern PerfStats Stats;

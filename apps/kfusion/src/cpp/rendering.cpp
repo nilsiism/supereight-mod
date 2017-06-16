@@ -1,5 +1,5 @@
 #include <math_utils.h>
-#include "continuous/volume.hpp"
+#include "continuous/sdf_volume.hpp"
 
 void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 inputSize, 
     const Matrix4 view, const float nearPlane, const float farPlane, 
