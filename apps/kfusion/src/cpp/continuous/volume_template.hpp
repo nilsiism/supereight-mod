@@ -22,7 +22,7 @@ template <typename FieldType, template<typename> class Indexer>
 class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
 
   public:
-    typedef kfusion_voxel_traits<FieldType> traits_type;
+    typedef voxel_traits<FieldType> traits_type;
     typedef typename traits_type::ComputeType compute_type;
     typedef typename traits_type::StoredType stored_type;
 

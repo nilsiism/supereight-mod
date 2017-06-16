@@ -34,14 +34,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math_utils.h>
 
 class SDF;
-class SigmaSDF;
-class ColouredSDF;
 
 template <class VoxelTraits>
-struct kfusion_voxel_traits{ };
+struct voxel_traits{ };
 
 template<>
-struct kfusion_voxel_traits<SDF> {
+struct voxel_traits<SDF> {
   typedef float2 ComputeType;
   typedef short2 StoredType;
   static inline ComputeType empty(){ return make_float2(1.f, -1.f); }

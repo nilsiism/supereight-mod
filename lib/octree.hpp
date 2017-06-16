@@ -89,7 +89,7 @@ class Octree
 
 public:
 
-  typedef kfusion_voxel_traits<T> traits_type;
+  typedef voxel_traits<T> traits_type;
   typedef typename traits_type::ComputeType compute_type;
   typedef typename traits_type::StoredType stored_type;
   compute_type empty() const { return traits_type::empty(); }

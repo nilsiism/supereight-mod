@@ -70,7 +70,7 @@ class VoxelBlock: public Node<T> {
 
   public:
 
-    typedef kfusion_voxel_traits<T> traits_type;
+    typedef voxel_traits<T> traits_type;
     typedef typename traits_type::ComputeType compute_type;
     typedef typename traits_type::StoredType stored_type;
     static constexpr unsigned int side = BLOCK_SIDE;
