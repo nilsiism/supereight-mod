@@ -49,7 +49,7 @@ template <typename FieldType>
 class Data<FieldType, StaticStorage> {
 
   public: 
-    typedef kfusion_voxel_traits<FieldType> traits_type;
+    typedef voxel_traits<FieldType> traits_type;
     typedef typename traits_type::StoredType stored_type;
 
     stored_type& operator()(const int i) {
@@ -78,7 +78,7 @@ template <typename FieldType>
 class Data<FieldType, DynamicStorage> {
 
   public:
-    typedef kfusion_voxel_traits<FieldType> traits_type;
+    typedef voxel_traits<FieldType> traits_type;
     typedef typename traits_type::StoredType stored_type;
     stored_type& operator()(const int pos, const int i);  
     const stored_type& operator()(const int pos, const int i) const;  

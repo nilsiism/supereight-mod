@@ -22,7 +22,7 @@ template <typename FieldType, template<typename> class Indexer>
 class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
 
   public:
-    typedef kfusion_voxel_traits<FieldType> traits_type;
+    typedef voxel_traits<FieldType> traits_type;
     typedef typename traits_type::ComputeType compute_type;
     typedef typename traits_type::StoredType stored_type;
 
@@ -82,7 +82,13 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
           _map_index, pose, K, depthmap, frameSize, _size, 
           _dim/_size, mu);
       _map_index.allocate(_allocationList.data(), allocated);
-      _map_index.integrateFrame(pose, K, depthmap, frameSize, mu, frame); 
+
+      std::vector<VoxelBlock<FieldType> *> active_list;
+      _map_index.getBlockList(active_list, true);
+      VoxelBlock<FieldType> ** list = active_list.data();
+      unsigned int num_active = active_list.size();
+      integratePass(list, num_active, depthmap, frameSize, _dim/_size,
+          inverse(pose), K,  mu, 100, frame);
     }
 
     unsigned int _size;

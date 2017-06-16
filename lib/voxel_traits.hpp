@@ -33,36 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _VOXEL_TRAITS_
 #include <math_utils.h>
 
-class SDF;
-class BFusion;
-class ColouredSDF;
-
 template <class VoxelTraits>
-struct kfusion_voxel_traits{ };
-
-template<>
-struct kfusion_voxel_traits<SDF> {
-  typedef float2 ComputeType;
-  typedef short2 StoredType;
-  static inline ComputeType empty(){ return make_float2(1.f, -1.f); }
-  static inline StoredType initValue(){ return make_short2(32766, 0); }
-  static inline StoredType translate(const ComputeType value) {
-     return make_short2(value.x * 32766.0f, value.y);
-  }
-  static inline ComputeType translate(const StoredType value){
-    return make_float2(value.x * 0.00003051944088f, value.y);
-  }
-};
-
-template<>
-struct kfusion_voxel_traits<BFusion> {
-  typedef float1 ComputeType;
-  typedef float1 StoredType;
-  static inline ComputeType empty(){ return make_float1(0.f); }
-  static inline StoredType initValue(){ return make_float1(0.f); }
-  static inline StoredType translate(const ComputeType value) {
-     return value;
-  }
-};
+struct voxel_traits{ };
 
 #endif
