@@ -10,7 +10,7 @@
 #include <perfstats.h>
 #include <vtk-io.h>
 #include <octree.hpp>
-#include "continuous/sdf_volume.hpp"
+#include "continuous/volume.hpp"
 
 extern PerfStats Stats;
 

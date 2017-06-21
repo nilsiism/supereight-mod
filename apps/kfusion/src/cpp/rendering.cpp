@@ -1,5 +1,5 @@
 #include <math_utils.h>
-#include "continuous/sdf_volume.hpp"
+#include "continuous/volume.hpp"
 
 
 /* Raycasting implementations */ 
