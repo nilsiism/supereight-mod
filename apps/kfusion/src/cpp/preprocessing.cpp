@@ -95,7 +95,8 @@ void vertex2normalKernel(float3 * out, const float3 * in, uint2 imageSize) {
 			}
 			const float3 dxv = right - left;
 			const float3 dyv = up - down;
-			out[x + y * imageSize.x] =  normalize(cross(dyv, dxv)); // switched dx and dy to get factor -1
+      // out[x + y * imageSize.x] =  normalize(cross(dyv, dxv)); // switched dx and dy to get factor -1
+      out[x + y * imageSize.x] =  normalize(cross(dxv, dyv)); // switched dx and dy to get factor -1
 		}
 	}
 	TOCK("vertex2normalKernel", imageSize.x * imageSize.y);

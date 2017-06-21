@@ -1,7 +1,13 @@
 #include <math_utils.h>
 #include "continuous/sdf_volume.hpp"
 
-void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 inputSize, 
+
+/* Raycasting implementations */ 
+#include "bfusion/rendering_impl.hpp"
+#include "kfusion/rendering_impl.hpp"
+
+template<typename T>
+void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint2 inputSize, 
     const Matrix4 view, const float nearPlane, const float farPlane, 
     const float mu, const float step, const float largestep) {
 	TICK();
@@ -13,7 +19,7 @@ void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 i
 
 			uint2 pos = make_uint2(x, y);
 
-			const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
+			const float4 hit = raycast(volume, pos, view, nearPlane, 
           farPlane, mu, step, largestep);
 			if (hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
@@ -119,7 +125,8 @@ void renderTrackKernel(uchar4* out, const TrackData* data, uint2 outSize) {
 	TOCK("renderTrackKernel", outSize.x * outSize.y);
 }
 
-void renderVolumeKernel(const Volume& volume, uchar4* out, const uint2 depthSize, const Matrix4 view, 
+template <typename T>
+void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthSize, const Matrix4 view, 
     const float nearPlane, const float farPlane, const float mu,
 		const float step, const float largestep, const float3 light,
 		const float3 ambient) {
@@ -131,13 +138,14 @@ void renderVolumeKernel(const Volume& volume, uchar4* out, const uint2 depthSize
 		for (unsigned int x = 0; x < depthSize.x; x++) {
 			const uint2 pos = make_uint2(x, y);
 
-			const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
+			const float4 hit = raycast(volume, pos, view, nearPlane, 
           farPlane, mu, step, largestep);
 			if (hit.w > 0) {
 				const float3 test = make_float3(hit);
 				const float3 surfNorm = volume.grad(test);
 				if (length(surfNorm) > 0) {
-					const float3 diff = normalize(light - test);
+					const float3 diff = (std::is_same<T, SDF>::value ?
+              normalize(light - test) : normalize(test - light));
 					const float dir = fmaxf(dot(normalize(surfNorm), diff),
 							0.f);
 					const float3 col = clamp(make_float3(dir) + ambient, 0.f,

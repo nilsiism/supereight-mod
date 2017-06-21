@@ -40,7 +40,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <parallel/algorithm>
 #include <node.hpp>
 #include <memory_pool.hpp>
-#include <algorithms/mapping.hpp>
 
 #define MAX_BITS 10
 #define CAST_STACK_DEPTH 23

@@ -49,26 +49,6 @@ inline float4 operator*(const Matrix4 & M, const float4 & v) {
 			dot(M.data[3], v));
 }
 
-static inline float __host__ __device__ bspline(float t){
-  float value = 0.f;
-  if(t >= -3.0f && t <= -1.0f) {
-    value = std::pow((3 + t), 3)/48.0f;   
-  } else if( t > -1 && t <= 1) {
-    value = 0.5f + (t*(3 + t)*(3 - t))/24.f;
-  } else if(t > 1 && t <= 3){
-    value = 1 - std::pow((3 - t), 3)/48.f;
-  } else if(t > 3) {
-    value = 1.f;
-  }
-  return value;
-}
-
-static inline __host__ __device__ float H(const float val){
-  const float Q_1 = bspline(val);
-  const float Q_2 = bspline(val - 3);
-  return Q_1 - Q_2 * 0.5f;
-}
-
 inline Matrix4 outer(const float4& a, const float4& b){
   Matrix4 mat;
   mat.data[0] = make_float4(a.x*b.x, a.x*b.y, a.x*b.z, a.x*b.w);

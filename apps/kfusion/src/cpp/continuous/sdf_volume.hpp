@@ -5,12 +5,18 @@
 #include "volume_template.hpp"
 
 // Discrete octree implementation
-#include "octree.hpp"
+#include <octree.hpp>
 
 // Data types definitions
 #include "voxel_traits.hpp"
 
-class SDF;
+/******************************************************************************
+ *
+ * KFusion Truncated Signed Distance Function voxel traits
+ *
+****************************************************************************/
+
+class SDF {};
 template<>
 struct voxel_traits<SDF> {
   typedef float2 ComputeType;
@@ -25,25 +31,39 @@ struct voxel_traits<SDF> {
   }
 };
 
-class BFusion;
+/******************************************************************************
+ *
+ * Bayesian Fusion voxel traits and algorithm specificic defines
+ *
+****************************************************************************/
+
+class BFusion {};
 template<>
 struct voxel_traits<BFusion> {
   typedef float1 ComputeType;
   typedef float1 StoredType;
-  static inline ComputeType empty(){ return make_float1(0.f); }
+  static inline ComputeType empty(){ return make_float1(-101.f); }
   static inline StoredType initValue(){ return make_float1(0.f); }
   static inline StoredType translate(const ComputeType value) {
      return value;
   }
 };
 
-/**
- * Default typedefs for the Volume Class
- * */
+// Windowing parameters
+#define DELTA_T   1.f
+#define CAPITAL_T 50.f
 
-#ifndef FIELD_TYPE
-#define FIELD_TYPE SDF
-#endif
+#define INTERP_THRESH 0.05f
+#define SURF_BOUNDARY 0.f
+#define TOP_CLAMP     100.f
+#define BOTTOM_CLAMP  (-TOP_CLAMP)
+
+/******************************************************************************
+ *
+ * Default typedefs for the Volume Class
+ * 
+******************************************************************************/
+
 
 #ifndef STORAGE_LAYOUT
 #define STORAGE_LAYOUT DynamicStorage
@@ -53,5 +73,8 @@ struct voxel_traits<BFusion> {
 #define INDEX_STRUCTURE Octree
 #endif
 
-typedef VolumeTemplate<FIELD_TYPE, STORAGE_LAYOUT, INDEX_STRUCTURE> Volume;
+typedef BFusion FieldType;
+
+template <typename T>
+using Volume = VolumeTemplate<T, STORAGE_LAYOUT, INDEX_STRUCTURE>;
 #endif

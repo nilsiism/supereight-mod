@@ -25,6 +25,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
     typedef voxel_traits<FieldType> traits_type;
     typedef typename traits_type::ComputeType compute_type;
     typedef typename traits_type::StoredType stored_type;
+    typedef FieldType field_type;
 
     void init(uint s, float d) {
       _size = s;

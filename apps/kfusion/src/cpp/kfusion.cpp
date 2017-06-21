@@ -11,7 +11,6 @@
 #include <vtk-io.h>
 #include <octree.hpp>
 #include "continuous/sdf_volume.hpp"
-#include <algorithms/raycasting.cpp>
 
 extern PerfStats Stats;
 
@@ -56,12 +55,13 @@ bool print_kernel_timing = false;
 #include "preprocessing.cpp"
 #include "tracking.cpp"
 #include "rendering.cpp"
+#include "mapping.hpp"
 
 // input once
 float * gaussian;
 
 // inter-frame
-Volume volume;
+Volume<FieldType> volume;
 float3 * vertex;
 float3 * normal;
 
@@ -284,48 +284,8 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
 
 }
 
-void Kfusion::dumpVolume(std::string filename) {
+void Kfusion::dumpVolume(std::string ) {
 
-	std::ofstream fDumpFile;
-
-	if (filename == "") {
-		return;
-	}
-
-	std::cout << "Dumping the volumetric representation on file: " << filename
-			<< std::endl;
-	fDumpFile.open((filename + ".config").c_str(), std::ios::out);
-	if (fDumpFile.fail()) {
-		std::cout << "Error opening file: " << filename << std::endl;
-		exit(1);
-	}
-
-    fDumpFile << "/*** CONFIG ***/" << std::endl;
-    fDumpFile << "resolution:" << volume._size << std::endl;
-    fDumpFile << "dimension:" << volume._dim << std::endl;
-    fDumpFile << "offset:" << _initPose.x << "," << _initPose.y << "," << _initPose.z << std::endl;
-
-    fDumpFile.close();
-
-	fDumpFile.open((filename + ".data").c_str(), std::ios::binary);
-	if (fDumpFile.fail()) {
-		std::cout << "Error opening file: " << filename << std::endl;
-		exit(1);
-	}
-    
-  
-    for(unsigned int z = 0; z < volume._size; z++){
-        for(unsigned int y = 0; y < volume._size; y++){
-            for(unsigned int x = 0; x < volume._size; x++){
-                uint3 pos = make_uint3(x,y,z);
-                float2 data = volume[pos];
-		        fDumpFile.write(reinterpret_cast<char *>(&data.x), sizeof(float));
-                fDumpFile.write(reinterpret_cast<char *>(&data.y), sizeof(float));
-            }
-        }
-    }
-
-    fDumpFile.close();
 }
 
 void Kfusion::printStats(){
@@ -340,101 +300,6 @@ void Kfusion::printStats(){
         }
      }
     std::cout << "The number of non-empty voxel is: " <<  occupiedVoxels << std::endl;
-}
-
-void raycastOrthogonal( Volume & volume, std::vector<float4> & points, const float3 origin, const float3 direction,
-        const float farPlane, const float step) {
-
-    // first walk with largesteps until we found a hit
-    float t = 0;
-    float stepsize = step;
-    float f_t = volume.interp(origin + direction * t);
-    t += step;
-    float f_tt = 1.f;
-
-    for (; t < farPlane; t += stepsize) {
-      f_tt = volume.interp(origin + direction * t);
-      if ( (std::signbit(f_tt) != std::signbit(f_t))) {     // got it, jump out of inner loop
-        float2 data_t = volume[origin + direction * (t-stepsize)];
-        float2 data_tt = volume[origin + direction * t];
-        if(f_t == 1.0 || f_tt == 1.0 || data_t.y < 6|| data_tt.y < 6 ){
-          f_t = f_tt;
-          continue;
-        }
-
-        // Else, we have found a good intersection, calculate it.
-        //            std::cout << "Interpolating on ray: " << origin.x << ", " << origin.y << ", " << origin.z << 
-        //               " at distance " << t <<  "  between f_t: " << f_t << " and f_tt: " << f_tt << " Weights: " << data_t.y << ", " << data_tt.y << std::endl;
-        t = t + stepsize * f_tt / (f_t - f_tt);
-        points.push_back(make_float4(origin + direction*t, 1));
-      }
-      if (f_tt < std::abs(0.8f))               // coming closer, reduce stepsize
-        stepsize = step;
-      f_t = f_tt;
-    }
-}
-
-
-void Kfusion::getPointCloudFromVolume(){
-
-  std::vector<float4> points;
-
-  float x = 0, y = 0, z = 0;
-
-  int3 resolution = make_int3(volume._size);
-  float3 incr = make_float3(volume._dim / resolution.x, volume._dim / resolution.y, volume._dim / resolution.z);
-
-  // XY plane
-
-  std::cout << "Raycasting from XY plane.. " << std::endl;
-  for(y = 0; y < volume._dim; y += incr.y ){
-    for(x = 0; x < volume._dim; x += incr.x){
-      raycastOrthogonal(volume, points, make_float3(x, y, 0), make_float3(0,0,1),
-          volume._dim, step);
-    }        
-  }
-
-  // ZY PLANE
-  std::cout << "Raycasting from ZY plane.. " << std::endl;
-  for(z = 0; z < volume._dim; z += incr.z ){
-    for(y = 0; y < volume._dim; y += incr.y){
-      raycastOrthogonal(volume, points, make_float3(0, y, z), make_float3(1,0,0),
-          volume._dim, step);
-    }
-  }
-
-  // ZX plane
-
-  for(z = 0; z < volume._dim; z += incr.z ){
-    for(x = 0;  x < volume._dim; x += incr.x){
-      raycastOrthogonal(volume, points, make_float3(x, 0, z), make_float3(0,1,0),
-          volume._dim, step);
-    }
-  }
-
-  int num_points = points.size();
-  std::cout << "Total number of ray-casted points : " << num_points << std::endl;
-
-  if( !getenv("TRAJ")){
-    std::cout << "Can't output the model point-cloud, unknown trajectory" << std::endl;
-    return;
-  }
-
-  int trajectory = std::atoi(getenv("TRAJ"));
-  std::stringstream filename;
-
-  filename << "./pointcloud-vanilla-traj" << trajectory << "-" << volume._size << ".ply";
-
-  // Matrix4 flipped = toMatrix4( TooN::SE3<float>(TooN::makeVector(0,0,0,0,0,0)));
-
-  // flipped.data[0].w =  (-1 * this->_initPose.x); 
-  // flipped.data[1].w =  (-1 * this->_initPose.y); 
-  // flipped.data[2].w =  (-1 * this->_initPose.z); 
-
-  //std::cout << "Generating point-cloud.. " << std::endl;
-  //for(std::vector<float4>::iterator it = points.begin(); it != points.end(); ++it){
-  //        float4 vertex = flipped * (*it); 
-  //    }
 }
 
 void Kfusion::renderVolume(uchar4 * out, uint2 outputSize, int frame,
@@ -456,3 +321,4 @@ void Kfusion::renderDepth(uchar4 * out, uint2 outputSize) {
 void synchroniseDevices() {
 	// Nothing to do in the C++ implementation
 }
+
