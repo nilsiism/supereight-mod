@@ -41,7 +41,7 @@ float interpDepth(const float * depth, const uint2 depthSize,
                       ) / ((x2 - x1) * (y2 - y1))
                     );
 
-  static constexpr float interp_thresh = 0.05f;
+  static const float interp_thresh = 0.05f;
   if (fabs(d - d11) < interp_thresh && fabs(d - d12) < interp_thresh &&
       fabs(d - d21) < interp_thresh && fabs(d - d22) < interp_thresh) 
     return d;
@@ -85,7 +85,7 @@ static inline float H(const float val){
 }
 
 static const double const_offset =  0.0000001f;
-constexpr float scale_factor = (1.f - (farPlane - nearPlane) * const_offset); 
+const float scale_factor = (1.f - (farPlane - nearPlane) * const_offset); 
 
 static inline float const_offset_integral(float t){
   float value = 0.f;
