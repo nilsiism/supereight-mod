@@ -6,14 +6,16 @@ void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 i
     const float mu, const float step, const float largestep) {
 	TICK();
 	unsigned int y;
-#pragma omp parallel for \
-	    shared(normal, vertex), private(y)
+ #pragma omp parallel for shared(normal, vertex), private(y)
 	for (y = 0; y < inputSize.y; y++)
+#pragma simd
 		for (unsigned int x = 0; x < inputSize.x; x++) {
 
 			uint2 pos = make_uint2(x, y);
 
-			const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
+			// const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
+      //     farPlane, mu, step, largestep);
+      const float4 hit = volume._map_index.raycast(pos, view, nearPlane, 
           farPlane, mu, step, largestep);
 			if (hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
@@ -125,13 +127,14 @@ void renderVolumeKernel(const Volume& volume, uchar4* out, const uint2 depthSize
 		const float3 ambient) {
 	TICK();
 	unsigned int y;
-#pragma omp parallel for \
-        shared(out), private(y)
+ #pragma omp parallel for shared(out), private(y)
 	for (y = 0; y < depthSize.y; y++) {
 		for (unsigned int x = 0; x < depthSize.x; x++) {
 			const uint2 pos = make_uint2(x, y);
 
-			const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
+			// const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
+      //     farPlane, mu, step, largestep);
+      const float4 hit = volume._map_index.raycast(pos, view, nearPlane, 
           farPlane, mu, step, largestep);
 			if (hit.w > 0) {
 				const float3 test = make_float3(hit);

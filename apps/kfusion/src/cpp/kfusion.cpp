@@ -35,9 +35,9 @@ extern PerfStats Stats;
 		std::cerr  << (( tock_clockData.tv_nsec - tick_clockData.tv_nsec) + ((tock_clockData.tv_nsec<tick_clockData.tv_nsec)?1000000000:0)) << " " <<  size << std::endl;}}
 #else
 	
-	#define TICK()    {if (true) {clock_gettime(CLOCK_MONOTONIC, &tick_clockData);}}
+	#define TICK()    {if (print_kernel_timing) {clock_gettime(CLOCK_MONOTONIC, &tick_clockData);}}
 
-	#define TOCK(str,size)  {if (true) {clock_gettime(CLOCK_MONOTONIC, &tock_clockData); /*std::cerr<< str << " "*/;\
+	#define TOCK(str,size)  {if (print_kernel_timing) {clock_gettime(CLOCK_MONOTONIC, &tock_clockData); /*std::cerr<< str << " "*/;\
 		/*if((tock_clockData.tv_sec > tick_clockData.tv_sec) && (tock_clockData.tv_nsec >= tick_clockData.tv_nsec))*/ { Stats.sample(str, (( tock_clockData.tv_nsec - tick_clockData.tv_nsec) + ((tock_clockData.tv_nsec<tick_clockData.tv_nsec)?1000000000:0)), PerfStats::TIME);  /* std::cerr<< tock_clockData.tv_sec - tick_clockData.tv_sec << std::setfill('0') << std::setw(9);*/}\
 		/*std::cerr  << (( tock_clockData.tv_nsec - tick_clockData.tv_nsec) + ((tock_clockData.tv_nsec<tick_clockData.tv_nsec)?1000000000:0)) << " " <<  size << std::endl;*/}}
 

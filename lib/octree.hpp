@@ -158,7 +158,7 @@ public:
 
   float4 raycast(const uint2 pos, const Matrix4 view,
       const float nearPlane, const float farPlane, const float mu,
-      const float step, const float largeStep);
+      const float step, const float largeStep) const;
 
   /*! \brief Get the list of allocated block. If the active switch is set to
    * true then only the visible blocks are retrieved.
@@ -695,13 +695,14 @@ inline uint3 Octree<T>::getChildFromCode(int code, int level){
 
 template <typename T>
 float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
-    const float nearPlane, const float farPlane, const float mu,
-    const float step, const float largeStep){
+    const float , const float farPlane, const float mu,
+    const float step, const float largeStep) const {
 
   const float3 origin = get_translation(view);
   float3 direction = rotate(view, make_float3(position.x, position.y, 1.f));
   struct stack_entry stack[CAST_STACK_DEPTH];
   static const float epsilon = exp2f(-log2(size_));
+  // const float voxelSize = dim_/size_
 
   if(fabsf(direction.x) < epsilon) direction.x = copysignf(epsilon, direction.x);
   if(fabsf(direction.y) < epsilon) direction.y = copysignf(epsilon, direction.y);
@@ -730,7 +731,7 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
   float t_max = fminf(fminf(t_coef.x - t_bias.x, t_coef.y - t_bias.y), t_coef.z - t_bias.z);
   float h = t_max;
   t_min = fmaxf(t_min, 0.0f);
-  t_max = fminf(t_max, farPlane/dim_);
+  t_max = fminf(t_max, farPlane);
 
   Node<T> * parent = root_;
   Node<T> * child;
@@ -740,7 +741,6 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
   float scale_exp2 = 0.5f;
   int min_scale = CAST_STACK_DEPTH - log2(size_/blockSide);
   float last_sample = 1.0f;
-  float last_t = 0;
   float stepsize = largeStep;// largeStep = 0.75*mu
 
   if (1.5f * t_coef.x- t_bias.x > t_min) idx ^= 1, pos.x = 1.5f;
@@ -758,27 +758,35 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
 
         // check against near and far plane
         float tnear = t_min  * dim_;
-        float tfar = tc_max * dim_;
+        float tfar =  tc_max * dim_;
         // const float tfar = fminf(fminf(t_corner.x, t_corner.y), t_corner.z);
         if (tnear < tfar) {
           // first walk with largesteps until we found a hit
-          float t = last_t;
+          float t = tnear;
           float f_t = last_sample;
           float f_tt = last_sample;
+          float voxstep = stepsize * size_/dim_;
+          float3 vox = (origin + direction * t) * (size_/dim_);
           if (f_t > 0.f) {
-            for (t = tnear; t < tfar; t += stepsize) {
-              f_tt = get(origin + direction * t, static_cast<VoxelBlock<T>*>(child)).x;
-              if(f_tt < 0.1f){
-                f_tt = interp(origin + direction * t);
+            for (; t < tfar; t += stepsize) {
+              typename VoxelBlock<T>::compute_type data = 
+                // get(pos, static_cast<VoxelBlock<T>*>(child));
+                get(vox.x, vox.y, vox.z);
+              f_tt = data.x;
+              if(f_tt <= 0.1 && f_tt >= -0.5f){
+                f_tt = interp(vox);
               }
               if (f_tt < 0.f)                  // got it, jump out of inner loop
                 break;
-              stepsize = fmaxf(f_tt*mu, step);
+              stepsize = fmaxf(f_tt * mu, step);
+              voxstep = stepsize * size_/dim_;
+              vox += voxstep*direction;
+              //stepsize = step;
               f_t = f_tt;
             }
             if (f_tt < 0.f) {           // got it, calculate accurate intersection
               t = t + stepsize * f_tt / (f_t - f_tt);
-              float4 hit =  make_float4(origin + direction * t, t);
+              float4 hit =  make_float4(origin + t * direction, t);
               return hit;
             }
             last_sample = f_tt;
@@ -828,6 +836,10 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
     if ((idx & step_mask) != 0) {
 
       // Get the different bits for each component.
+      // This is done by xoring the bit patterns of the new and old pos
+      // (float_as_int reinterprets a floating point number as int,
+      // it is a sort of reinterpret_cast). This work because the volume has
+      // been scaled between [1, 2]. Still digging why this is the case. 
 
       unsigned int differing_bits = 0;
       if ((step_mask & 1) != 0) differing_bits |= __float_as_int(pos.x) ^ __float_as_int(pos.x + scale_exp2);
@@ -835,6 +847,8 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
       if ((step_mask & 4) != 0) differing_bits |= __float_as_int(pos.z) ^ __float_as_int(pos.z + scale_exp2);
 
       // Get the scale at which the two differs. Here's there are different subtlelties related to how fp are stored.
+      // MIND BLOWN: differing bit (i.e. the MSB) extracted using the 
+      // exponent part of the fp representation. 
       scale = (__float_as_int((float)differing_bits) >> 23) - 127; // position of the highest bit
       scale_exp2 = __int_as_float((scale - CAST_STACK_DEPTH + 127) << 23); // exp2f(scale - s_max)
       struct stack_entry&  e = stack[scale];
