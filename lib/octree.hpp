@@ -84,6 +84,9 @@ inline float __int_as_float(int value){
 }
 
 template <typename T>
+class ray_iterator;
+
+template <typename T>
 class Octree
 {
 
@@ -214,6 +217,8 @@ private:
   float dim_;
   int max_level_;
   MemoryPool<VoxelBlock<T> > block_memory_;
+
+  friend class ray_iterator<T>;
 
   // Compile-time constant expressions
   // # of voxels per side in a voxel block
@@ -743,9 +748,9 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
   float last_sample = 1.0f;
   float stepsize = largeStep;// largeStep = 0.75*mu
 
-  if (1.5f * t_coef.x- t_bias.x > t_min) idx ^= 1, pos.x = 1.5f;
-  if (1.5f * t_coef.y- t_bias.y > t_min) idx ^= 2, pos.y = 1.5f;
-  if (1.5f * t_coef.z- t_bias.z > t_min) idx ^= 4, pos.z = 1.5f;
+  if (1.5f * t_coef.x - t_bias.x > t_min) idx ^= 1, pos.x = 1.5f;
+  if (1.5f * t_coef.y - t_bias.y > t_min) idx ^= 2, pos.y = 1.5f;
+  if (1.5f * t_coef.z - t_bias.z > t_min) idx ^= 4, pos.z = 1.5f;
 
   while (scale < CAST_STACK_DEPTH) {
     float3 t_corner = pos * t_coef - t_bias;
@@ -927,4 +932,20 @@ void Octree<T>::getAllocatedBlockList(Node<T> *n,
   }
 
 }
+/*****************************************************************************
+ *
+ *
+ * Ray iterator definition
+ *
+ * 
+*****************************************************************************/
+
+template <typename T>
+class ray_iterator {
+  public:
+    ray_iterator(const Octree<T>& m) : map(m) {};
+  private:
+    Octree<T>& map;
+};
+
 #endif // OCTREE_H
