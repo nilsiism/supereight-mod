@@ -6,17 +6,23 @@ void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 i
     const float mu, const float step, const float largestep) {
 	TICK();
 	unsigned int y;
-#pragma omp parallel for shared(normal, vertex), private(y)
+//  #pragma omp parallel for shared(normal, vertex), private(y)
 	for (y = 0; y < inputSize.y; y++)
 #pragma simd
 		for (unsigned int x = 0; x < inputSize.x; x++) {
 
 			uint2 pos = make_uint2(x, y);
 
-			// const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
-      //     farPlane, mu, step, largestep);
-      const float4 hit = volume._map_index.raycast(pos, view, nearPlane, 
+			const float4 hit = algorithms::raycast(volume, pos, view, nearPlane, 
+           farPlane, mu, step, largestep);
+      float4 hit2 = volume._map_index.raycast(pos, view, nearPlane, 
           farPlane, mu, step, largestep);
+      if((hit.w - hit2.w) > 0.001) {
+        std::cout << "Hit at pixel (" << x << ", " << y << ") "
+          << ": raycaster " << hit.w << ", hierarchical " << hit2.w << std::endl;
+        hit2 =  volume._map_index.raycast(pos, view, nearPlane, 
+          farPlane, mu, step, largestep);
+      }
 			if (hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
 				float3 surfNorm = volume.grad(make_float3(hit));

@@ -139,7 +139,6 @@ public:
    */
   float3 grad(const float3 pos) const;
 
-
   /*! \brief Cast a ray to find the closest signed distance function 
    * intersection.
    * \param pos camera pixel from which the ray is originating 
@@ -710,7 +709,8 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
 
   float voxelSize = dim_ / size_;
   // Scaling the origin to resides between coordinates [1,2]
-  const float3 scaled_origin = origin/dim_ + 1;
+  const float3 scaled_origin = origin/dim_ + 1.f;
+  const float ratio = 1 / dim_;
   // Scaling the origin in voxel space
   const float3 discrete_origin = origin/voxelSize;
 
@@ -733,8 +733,8 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
   float t_min = fmaxf(fmaxf(2.0f * t_coef.x - t_bias.x, 2.0f * t_coef.y - t_bias.y), 2.0f * t_coef.z - t_bias.z);
   float t_max = fminf(fminf(t_coef.x - t_bias.x, t_coef.y - t_bias.y), t_coef.z - t_bias.z);
   float h = t_max;
-  t_min = fmaxf(t_min, 0.0f);
-  t_max = fminf(t_max, farPlane);
+  t_min = fmaxf(t_min, 0.4f/dim_);
+  t_max = fminf(t_max, farPlane/dim_);
 
   Node<T> * parent = root_;
   Node<T> * child;
@@ -747,9 +747,9 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
   float stepsize = largeStep / voxelSize;// largeStep = 0.75*mu
   float mu_vox = mu/voxelSize;
 
-  if (1.5f * t_coef.x- t_bias.x > t_min) idx ^= 1, pos.x = 1.5f;
-  if (1.5f * t_coef.y- t_bias.y > t_min) idx ^= 2, pos.y = 1.5f;
-  if (1.5f * t_coef.z- t_bias.z > t_min) idx ^= 4, pos.z = 1.5f;
+  if (1.5f * t_coef.x - t_bias.x > t_min) idx ^= 1, pos.x = 1.5f;
+  if (1.5f * t_coef.y - t_bias.y > t_min) idx ^= 2, pos.y = 1.5f;
+  if (1.5f * t_coef.z - t_bias.z > t_min) idx ^= 4, pos.z = 1.5f;
 
   while (scale < CAST_STACK_DEPTH) {
     float3 t_corner = pos * t_coef - t_bias;
@@ -761,8 +761,8 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
     if (scale == min_scale && child != NULL){
 
         /* check against near and far plane */
-        float tnear = t_min  * size_;
-        float tfar =  t_max * size_;
+        float tnear = t_min  / (voxelSize * ratio);
+        float tfar =  tc_max / (voxelSize * ratio);
         // const float tfar = fminf(fminf(t_corner.x, t_corner.y), t_corner.z);
         if (tnear < tfar) {
           // first walk with largesteps until we found a hit
@@ -771,7 +771,8 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
           float f_tt = last_sample;
           if (f_t > 0.f) {
             float3 vox = discrete_origin + direction * t;
-            for (; t < tfar; t += stepsize, vox += direction*stepsize) { // all in voxel space
+            /* While inside the voxel block */
+            for (; t < tfar; t += stepsize, vox += direction*stepsize) {
               typename VoxelBlock<T>::compute_type data = 
                 // get(pos, static_cast<VoxelBlock<T>*>(child));
                 get(vox.x, vox.y, vox.z);
