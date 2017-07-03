@@ -398,8 +398,9 @@ inline VoxelBlock<T> * Octree<T>::fetch(const int x, const int y,
 }
 
 template <typename T>
-float Octree<T>::interp(const float3 pos) const {
-
+float Octree<T>::interp(float3 pos) const {
+  
+  pos = pos - 0.5f;
   const int3 base = make_int3(floorf(pos));
   const float3 factor = fracf(pos);
   const int3 lower = max(base, make_int3(0));
@@ -777,7 +778,7 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
                 // get(pos, static_cast<VoxelBlock<T>*>(child));
                 get(vox.x, vox.y, vox.z);
               f_tt = data.x;
-              if(f_tt <= 0.8){
+              if(f_tt <= 0.1){
                 f_tt = interp(vox);
               }
               if (f_tt < 0.f)                  // got it, jump out of inner loop
