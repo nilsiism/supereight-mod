@@ -130,7 +130,6 @@ public:
    * to the interval [0, size]
    * \return signed distance function value at voxel position (x, y, z)
    */
-  float interp(const float3 pos) const;
 
   template <typename FieldSelect>
   float interp(const float3 pos, FieldSelect f) const;
@@ -141,6 +140,9 @@ public:
    * \return gradient at voxel position pos
    */
   float3 grad(const float3 pos) const;
+
+  template <typename FieldSelect>
+  float3 grad(const float3 pos, FieldSelect selector) const;
 
   /*! \brief Cast a ray to find the closest signed distance function 
    * intersection.
@@ -401,63 +403,6 @@ inline VoxelBlock<T> * Octree<T>::fetch(const int x, const int y,
 }
 
 template <typename T>
-float Octree<T>::interp(float3 pos) const {
-  
-  pos = pos - 0.5f;
-  const int3 base = make_int3(floorf(pos));
-  const float3 factor = fracf(pos);
-  const int3 lower = max(base, make_int3(0));
-  const int3 upper = min(base + make_int3(1),
-      make_int3(size_) - make_int3(1));
-
-  VoxelBlock<T> * n = fetch(lower.x, lower.y, lower.z);
-  if(n){
-    const int3 ul = make_int3(n->coordinates() + VoxelBlock<T>::side);
-    // Local interpolation
-    if(upper.x < ul.x && upper.y < ul.y && upper.z < ul.z){
-
-      stored_type* data = n->getBlockRawPtr();
-      const uint3 offset = n->coordinates();
-      uint3 lower_offset = make_uint3(lower.x - offset.x,
-          lower.y - offset.y,
-          lower.z - offset.z);
-
-      uint3 upper_offset = make_uint3(upper.x - offset.x,
-          upper.y - offset.y,
-          upper.z - offset.z);
-
-      static constexpr uint edge = blockSide;
-      static constexpr uint edge2 = edge * edge;
-
-      float value = (((data[lower_offset.x + lower_offset.y*edge + lower_offset.z*edge2].x * (1 - factor.x)
-              + data[upper_offset.x + lower_offset.y*edge + lower_offset.z*edge2].x * factor.x) * (1 - factor.y)
-            + (data[lower_offset.x + (upper_offset.y)*edge + lower_offset.z*edge2].x * (1 - factor.x)
-              + data[upper_offset.x + (upper_offset.y)*edge + lower_offset.z*edge2].x * factor.x) * factor.y)
-          * (1 - factor.z)
-          + ((data[lower_offset.x + lower_offset.y*edge + (upper_offset.z)*edge2].x * (1 - factor.x)
-              + data[upper_offset.x + lower_offset.y*edge + (upper_offset.z)*edge2].x * factor.x)
-            * (1 - factor.y)
-            + (data[lower_offset.x + (upper_offset.y)*edge + (upper_offset.z)*edge2].x * (1 - factor.x)
-              + data[upper_offset.x + (upper_offset.y)*edge + (upper_offset.z)*edge2].x * factor.x)
-            * factor.y) * factor.z);
-      return value * 0.00003051944088f;
-    }
-  }
-
-  return (((get(lower.x, lower.y, lower.z, n).x * (1 - factor.x)
-          + get(upper.x, lower.y, lower.z, n).x * factor.x) * (1 - factor.y)
-          + ( get(lower.x, upper.y, lower.z, n).x * (1 - factor.x)
-          + get(upper.x, upper.y, lower.z, n).x * factor.x) * factor.y)
-          * (1 - factor.z)
-          + ((  get(lower.x, lower.y, upper.z, n).x * (1 - factor.x)
-          + get(upper.x, lower.y, upper.z, n).x * factor.x)
-          * (1 - factor.y)
-          + ( get(lower.x, upper.y, upper.z, n).x * (1 - factor.x)
-          + get(upper.x, upper.y, upper.z, n).x * factor.x)
-          * factor.y) * factor.z);
-}
-
-template <typename T>
 template <typename FieldSelector>
 float Octree<T>::interp(float3 pos, FieldSelector select) const {
   
@@ -603,6 +548,95 @@ float3 Octree<T>::grad(const float3 pos) const {
     * make_float3(dim_ / size_, dim_ / size_, dim_ / size_)
     * (0.5f);
 
+}
+
+template <typename T>
+template <typename FieldSelector>
+float3 Octree<T>::grad(const float3 pos, FieldSelector select) const {
+
+   int3 base = make_int3(floorf(pos));
+   float3 factor = fracf(pos);
+   int3 lower_lower = max(base - make_int3(1), make_int3(0));
+   int3 lower_upper = max(base, make_int3(0));
+   int3 upper_lower = min(base + make_int3(1),
+      make_int3(size_) - make_int3(1));
+   int3 upper_upper = min(base + make_int3(2),
+      make_int3(size_) - make_int3(1));
+   int3 & lower = lower_upper;
+   int3 & upper = upper_lower;
+
+  float3 gradient;
+
+  VoxelBlock<T> * n = fetch(base.x, base.y, base.z);
+  gradient.x = (((select(get(upper_lower.x, lower.y, lower.z, n))
+          - select(get(lower_lower.x, lower.y, lower.z, n))) * (1 - factor.x)
+        + (select(get(upper_upper.x, lower.y, lower.z, n))
+          - select(get(lower_upper.x, lower.y, lower.z, n))) * factor.x)
+      * (1 - factor.y)
+      + ((select(get(upper_lower.x, upper.y, lower.z, n))
+          - select(get(lower_lower.x, upper.y, lower.z, n))) * (1 - factor.x)
+        + (select(get(upper_upper.x, upper.y, lower.z, n))
+          - select(get(lower_upper.x, upper.y, lower.z, n)))
+        * factor.x) * factor.y) * (1 - factor.z)
+    + (((select(get(upper_lower.x, lower.y, upper.z, n))
+            - select(get(lower_lower.x, lower.y, upper.z, n))) * (1 - factor.x)
+          + (select(get(upper_upper.x, lower.y, upper.z, n))
+            - select(get(lower_upper.x, lower.y, upper.z, n)))
+          * factor.x) * (1 - factor.y)
+        + ((select(get(upper_lower.x, upper.y, upper.z, n))
+            - select(get(lower_lower.x, upper.y, upper.z, n)))
+          * (1 - factor.x)
+          + (select(get(upper_upper.x, upper.y, upper.z, n))
+            - select(get(lower_upper.x, upper.y, upper.z, n)))
+          * factor.x) * factor.y) * factor.z;
+
+  gradient.y = (((select(get(lower.x, upper_lower.y, lower.z, n))
+          - select(get(lower.x, lower_lower.y, lower.z, n))) * (1 - factor.x)
+        + (select(get(upper.x, upper_lower.y, lower.z, n))
+          - select(get(upper.x, lower_lower.y, lower.z, n))) * factor.x)
+      * (1 - factor.y)
+      + ((select(get(lower.x, upper_upper.y, lower.z, n))
+          - select(get(lower.x, lower_upper.y, lower.z, n))) * (1 - factor.x)
+        + (select(get(upper.x, upper_upper.y, lower.z, n))
+          - select(get(upper.x, lower_upper.y, lower.z, n)))
+        * factor.x) * factor.y) * (1 - factor.z)
+    + (((select(get(lower.x, upper_lower.y, upper.z, n))
+            - select(get(lower.x, lower_lower.y, upper.z, n))) * (1 - factor.x)
+          + (select(get(upper.x, upper_lower.y, upper.z, n))
+            - select(get(upper.x, lower_lower.y, upper.z, n)))
+          * factor.x) * (1 - factor.y)
+        + ((select(get(lower.x, upper_upper.y, upper.z, n))
+            - select(get(lower.x, lower_upper.y, upper.z, n)))
+          * (1 - factor.x)
+          + (select(get(upper.x, upper_upper.y, upper.z, n))
+            - select(get(upper.x, lower_upper.y, upper.z, n)))
+          * factor.x) * factor.y) * factor.z;
+
+  gradient.z = (((select(get(lower.x, lower.y, upper_lower.z, n))
+          - select(get(lower.x, lower.y, lower_lower.z, n))) * (1 - factor.x)
+        + (select(get(upper.x, lower.y, upper_lower.z, n))
+          - select(get(upper.x, lower.y, lower_lower.z, n))) * factor.x)
+      * (1 - factor.y)
+      + ((select(get(lower.x, upper.y, upper_lower.z, n))
+          - select(get(lower.x, upper.y, lower_lower.z, n))) * (1 - factor.x)
+        + (select(get(upper.x, upper.y, upper_lower.z, n))
+          - select(get(upper.x, upper.y, lower_lower.z, n)))
+        * factor.x) * factor.y) * (1 - factor.z)
+    + (((select(get(lower.x, lower.y, upper_upper.z, n))
+            - select(get(lower.x, lower.y, lower_upper.z, n))) * (1 - factor.x)
+          + (select(get(upper.x, lower.y, upper_upper.z, n))
+            - select(get(upper.x, lower.y, lower_upper.z, n)))
+          * factor.x) * (1 - factor.y)
+        + ((select(get(lower.x, upper.y, upper_upper.z, n))
+            - select(get(lower.x, upper.y, lower_upper.z, n)))
+          * (1 - factor.x)
+          + (select(get(upper.x, upper.y, upper_upper.z, n))
+            - select(get(upper.x, upper.y, lower_upper.z, n)))
+          * factor.x) * factor.y) * factor.z;
+
+  return gradient
+    * make_float3(dim_ / size_, dim_ / size_, dim_ / size_)
+    * (0.5f);
 }
 
 template <typename T>

@@ -14,7 +14,7 @@ else(CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
 
 # add_compile_options(-std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Werror -Wno-error=deprecated-declarations -Wno-error=array-bounds)
- add_compile_options(-std=c++11 )
+add_compile_options(-std=c++1y )
 
 if(APPLE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__APPLE__")
@@ -144,7 +144,7 @@ ENDIF(STATS)
 # ----------------- CPP VERSION ----------------- 
 
 add_library(${appname}-cpp  src/cpp/kfusion.cpp)
-target_compile_options(${appname}-cpp PRIVATE -std=c++11 -Wall -Wextra -Werror -Wno-unknown-pragmas)
+target_compile_options(${appname}-cpp PRIVATE -Wall -Wextra -Werror -Wno-unknown-pragmas)
 target_link_libraries(${appname}-cpp   ${common_libraries})	
 add_version(${appname} cpp "" "")
 
@@ -153,7 +153,7 @@ add_version(${appname} cpp "" "")
 if(OPENMP_FOUND)
   add_library(${appname}-openmp  src/cpp/kfusion.cpp)
   # target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -std=c++11 -Wall -Wextra  -Wno-unknown-pragmas -qopt-report=2 -qopt-report-file=./icc_report.txt -qopt-report-phase=vec)
-  target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -std=c++11 -Wall -Wextra -Werror -Wno-unknown-pragmas)
+  target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -Wall -Wextra -Werror -Wno-unknown-pragmas)
   target_link_libraries(${appname}-openmp   ${common_libraries})	
   add_version(${appname} openmp ${OpenMP_CXX_FLAGS} ${OpenMP_CXX_FLAGS})
 endif()

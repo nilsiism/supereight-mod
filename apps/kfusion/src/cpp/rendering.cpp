@@ -16,7 +16,8 @@ void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 i
           farPlane, mu, step, largestep);
 			if (hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
-				float3 surfNorm = volume.grad(make_float3(hit));
+				float3 surfNorm = volume.grad(make_float3(hit), 
+            [](const auto& val){ return val.x; });
 				if (length(surfNorm) == 0) {
 					//normal[pos] = normalize(surfNorm); // APN added
 					normal[pos.x + pos.y * inputSize.x].x = INVALID;
@@ -135,7 +136,7 @@ void renderVolumeKernel(const Volume& volume, uchar4* out, const uint2 depthSize
           farPlane, mu, step, largestep);
 			if (hit.w > 0) {
 				const float3 test = make_float3(hit);
-				const float3 surfNorm = volume.grad(test);
+				const float3 surfNorm = volume.grad(test, [](const auto& val){ return val.x; });
 				if (length(surfNorm) > 0) {
 					const float3 diff = normalize(light - test);
 					const float dir = fmaxf(dot(normalize(surfNorm), diff),

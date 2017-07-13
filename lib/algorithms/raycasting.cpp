@@ -11,7 +11,7 @@ namespace algorithms {
       const float step, const float largestep) { 
 
     const float3 origin = get_translation(view);
-    const float3 direction = rotate(view, make_float3(pos.x, pos.y, 1.f));
+    const float3 direction = normalize(rotate(view, make_float3(pos.x, pos.y, 1.f)));
 
     // intersect ray with a box
     // http://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter3.htm
@@ -39,7 +39,8 @@ namespace algorithms {
       float t = tnear;
       float stepsize = largestep;
       float3 position = origin + direction * t;
-      float f_t = volume.interp(position);
+      auto select_depth = [](const auto& val){ return val.x; };
+      float f_t = volume.interp(position, select_depth);
       float f_tt = 0;
       if (f_t > 0) { // ups, if we were already in it, then don't render anything here
         for (; t < tfar; t += stepsize) {
@@ -51,7 +52,7 @@ namespace algorithms {
           }
           f_tt = data.x;
           if(f_tt <= 0.1 && f_tt >= -0.5f){
-            f_tt = volume.interp(position);
+            f_tt = volume.interp(position, select_depth);
           }
           if (f_tt < 0)                  // got it, jump out of inner loop
             break;
