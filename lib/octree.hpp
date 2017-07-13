@@ -503,7 +503,7 @@ float Octree<T>::interp(float3 pos, FieldSelector select) const {
             + (select(data[lower_offset.x + (upper_offset.y)*edge + (upper_offset.z)*edge2]) * (1 - factor.x)
               + select(data[upper_offset.x + (upper_offset.y)*edge + (upper_offset.z)*edge2]) * factor.x)
             * factor.y) * factor.z);
-      return value * 0.00003051944088f;
+      return value;
     }
   }
 
