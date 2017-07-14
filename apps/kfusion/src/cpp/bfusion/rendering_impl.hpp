@@ -28,17 +28,18 @@ float4 raycast(const Volume<BFusion>& volume, const uint2 pos, const Matrix4 vie
   // check against near and far plane
   const float tnear = fmaxf(largest_tmin, nearPlane);
   const float tfar = fminf(smallest_tmax, farPlane);
+  auto select_occupancy = [](const auto& val){ return val.x; };
 
   if (tnear < tfar) {
     float t = tnear;
     float stepsize = step;
-    float f_t = volume.interp(origin + direction * t);
+    float f_t = volume.interp(origin + direction * t, select_occupancy);
     float f_tt = 0;
 
     // if we are not already in it
     if (f_t <= SURF_BOUNDARY) { 
       for (; t < tfar; t += stepsize) {
-        f_tt = volume.interp(origin + direction * t);
+        f_tt = volume.interp(origin + direction * t, select_occupancy);
         // got it, jump out of inner loop
         if (f_tt > SURF_BOUNDARY) break;
         f_t = f_tt;

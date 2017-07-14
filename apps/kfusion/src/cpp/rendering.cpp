@@ -12,18 +12,18 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
     const float mu, const float step, const float largestep) {
 	TICK();
 	unsigned int y;
- #pragma omp parallel for shared(normal, vertex), private(y)
+#pragma omp parallel for shared(normal, vertex), private(y)
 	for (y = 0; y < inputSize.y; y++)
 #pragma simd
 		for (unsigned int x = 0; x < inputSize.x; x++) {
 
 			uint2 pos = make_uint2(x, y);
-
       const float4 hit = volume._map_index.raycast(pos, view, nearPlane, 
           farPlane, mu, step, largestep);
 			if (hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
-				float3 surfNorm = volume.grad(make_float3(hit));
+				float3 surfNorm = volume.grad(make_float3(hit), 
+            [](const auto& val){ return val.x; });
 				if (length(surfNorm) == 0) {
 					//normal[pos] = normalize(surfNorm); // APN added
 					normal[pos.x + pos.y * inputSize.x].x = INVALID;
@@ -132,7 +132,7 @@ void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthS
 		const float3 ambient) {
 	TICK();
 	unsigned int y;
- #pragma omp parallel for shared(out), private(y)
+#pragma omp parallel for shared(out), private(y)
 	for (y = 0; y < depthSize.y; y++) {
 		for (unsigned int x = 0; x < depthSize.x; x++) {
 			const uint2 pos = make_uint2(x, y);
@@ -141,7 +141,7 @@ void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthS
           farPlane, mu, step, largestep);
 			if (hit.w > 0) {
 				const float3 test = make_float3(hit);
-				const float3 surfNorm = volume.grad(test);
+				const float3 surfNorm = volume.grad(test, [](const auto& val){ return val.x; });
 				if (length(surfNorm) > 0) {
 					const float3 diff = (std::is_same<T, SDF>::value ?
               normalize(light - test) : normalize(test - light));

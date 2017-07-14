@@ -54,21 +54,23 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       return _map_index.get(p.x, p.y, p.z);
     }
 
-    float interp(const float3 & pos) const {
+    template <typename FieldSelector>
+    float interp(const float3 & pos, FieldSelector select) const {
       const float inverseVoxelSize = _size / _dim;
       const float3 scaled_pos = make_float3((pos.x * inverseVoxelSize) - 0.5f,
           (pos.y * inverseVoxelSize) - 0.5f,
           (pos.z * inverseVoxelSize) - 0.5f);
-      return _map_index.interp(scaled_pos);
+      return _map_index.interp(scaled_pos, select);
     }
 
-    float3 grad(const float3 & pos) const {
+    template <typename FieldSelector>
+    float3 grad(const float3 & pos, FieldSelector select) const {
 
       const float inverseVoxelSize = _size / _dim;
       const float3 scaled_pos = make_float3((pos.x * inverseVoxelSize) - 0.5f,
           (pos.y * inverseVoxelSize) - 0.5f,
           (pos.z * inverseVoxelSize) - 0.5f);
-      return _map_index.grad(scaled_pos);
+      return _map_index.grad(scaled_pos, select);
     }
 
     void updateVolume(const Matrix4 &pose, const Matrix4& K,

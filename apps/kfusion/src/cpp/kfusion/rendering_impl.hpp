@@ -28,13 +28,14 @@ float4 raycast(const Volume<SDF>& volume, const uint2 pos, const Matrix4 view,
   // check against near and far plane
   const float tnear = fmaxf(largest_tmin, nearPlane);
   const float tfar = fminf(smallest_tmax, farPlane);
+  auto select_depth = [](const auto& val){ return val.x; };
 
   if (tnear < tfar) {
     // first walk with largesteps until we found a hit
     float t = tnear;
     float stepsize = largestep;
     float3 position = origin + direction * t;
-    float f_t = volume.interp(position);
+    float f_t = volume.interp(position, select_depth);
     float f_tt = 0;
     if (f_t > 0) { // ups, if we were already in it, then don't render anything here
       for (; t < tfar; t += stepsize) {
@@ -46,7 +47,7 @@ float4 raycast(const Volume<SDF>& volume, const uint2 pos, const Matrix4 view,
         }
         f_tt = data.x;
         if(f_tt <= 0.1 && f_tt >= -0.5f){
-          f_tt = volume.interp(position);
+          f_tt = volume.interp(position, select_depth);
         }
         if (f_tt < 0)                  // got it, jump out of inner loop
           break;
