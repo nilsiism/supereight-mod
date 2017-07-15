@@ -342,18 +342,19 @@ void Kfusion::printStats(){
     std::cout << "The number of non-empty voxel is: " <<  occupiedVoxels << std::endl;
 }
 
-void raycastOrthogonal( Volume & volume, std::vector<float4> & points, const float3 origin, const float3 direction,
+void raycastOrthogonal(Volume & volume, std::vector<float4> & points, const float3 origin, const float3 direction,
         const float farPlane, const float step) {
 
     // first walk with largesteps until we found a hit
+    auto select_depth =  [](const auto& val) { return val.x; };
     float t = 0;
     float stepsize = step;
-    float f_t = volume.interp(origin + direction * t);
+    float f_t = volume.interp(origin + direction * t, select_depth);
     t += step;
     float f_tt = 1.f;
 
     for (; t < farPlane; t += stepsize) {
-      f_tt = volume.interp(origin + direction * t);
+      f_tt = volume.interp(origin + direction * t, select_depth);
       if ( (std::signbit(f_tt) != std::signbit(f_t))) {     // got it, jump out of inner loop
         float2 data_t = volume[origin + direction * (t-stepsize)];
         float2 data_tt = volume[origin + direction * t];
