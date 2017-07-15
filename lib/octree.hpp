@@ -876,7 +876,7 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
             for (; t < tfar; t += stepsize, vox += direction*stepsize) {
               typename VoxelBlock<T>::compute_type data = 
                 // get(pos, static_cast<VoxelBlock<T>*>(child));
-                get(vox.x, vox.y, vox.z);
+                get(vox.x, vox.y, vox.z, static_cast<VoxelBlock<T>*>(child));
               f_tt = data.x;
               if(f_tt <= 0.1){
                 auto field_select = [](const auto& val) { return val.x; };
@@ -1030,6 +1030,7 @@ void Octree<T>::getAllocatedBlockList(Node<T> *n,
   }
 
 }
+
 /*****************************************************************************
  *
  *
@@ -1040,10 +1041,47 @@ void Octree<T>::getAllocatedBlockList(Node<T> *n,
 
 template <typename T>
 class ray_iterator {
+
   public:
-    ray_iterator(const Octree<T>& m) : map(m) {};
+    ray_iterator(const Octree<T>& m, const float3 origin, 
+        const float3 direction) : map_(m) {
+      pos_ = make_float3(1.0f, 1.0f, 1.0f);
+      idx_ = 0;
+      parent_ = m.root_;
+      child_ = NULL;
+      scale_exp2_ = 0.5f;
+      min_scale_ = CAST_STACK_DEPTH - log2(m.size_/Octree<T>::blockSide);
+      static const float epsilon = exp2f(-log2(map_.size_));
+      direction_.x = fabsf(direction_.x) < epsilon ? 
+        copysignf(epsilon, direction_.x) : direction.x;
+      direction_.y = fabsf(direction_.y) < epsilon ? 
+        copysignf(epsilon, direction_.y) : direction.y;
+      direction_.z = fabsf(direction_.z) < epsilon ? 
+        copysignf(epsilon, direction_.z) : direction.z;
+    };
+
   private:
-    Octree<T>& map;
+    struct stack_entry {
+      int scale;
+      Node<T> * parent;
+      float t_max;
+    };
+
+    Octree<T>& map_;
+    float voxelSize_; 
+    float3 origin_;
+    float3 direction_;
+    float3 t_coef_;
+    float3 t_bias_;
+    struct stack_entry stack[CAST_STACK_DEPTH];
+    Node<T> * parent_;
+    Node<T> * child_;
+    int idx_;
+    float3 pos_;
+    int min_scale_;
+    float scale_exp2_;
+
+    static constexpr int scale = CAST_STACK_DEPTH-1;
 };
 
 #endif // OCTREE_H
