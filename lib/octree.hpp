@@ -818,7 +818,7 @@ float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
   // Precomputing the coefficients of tx(x), ty(y) and tz(z)
   // The octree is assumed to reside at coordinates [1,2]
 
-  float3 t_coef = -1/fabs(direction);
+  float3 t_coef = -1.f/fabs(direction);
   float3 t_bias = t_coef * scaled_origin;
 
   // Build the octanct mask to mirror the coordinate system
@@ -1044,21 +1044,153 @@ class ray_iterator {
 
   public:
     ray_iterator(const Octree<T>& m, const float3 origin, 
-        const float3 direction) : map_(m) {
+        const float3 direction, float nearPlane, float farPlane) : map_(m) {
+
       pos_ = make_float3(1.0f, 1.0f, 1.0f);
       idx_ = 0;
-      parent_ = m.root_;
+      parent_ = map_.root_;
       child_ = NULL;
       scale_exp2_ = 0.5f;
+      scale_ = CAST_STACK_DEPTH-1;
       min_scale_ = CAST_STACK_DEPTH - log2(m.size_/Octree<T>::blockSide);
       static const float epsilon = exp2f(-log2(map_.size_));
+      
       direction_.x = fabsf(direction_.x) < epsilon ? 
         copysignf(epsilon, direction_.x) : direction.x;
       direction_.y = fabsf(direction_.y) < epsilon ? 
         copysignf(epsilon, direction_.y) : direction.y;
       direction_.z = fabsf(direction_.z) < epsilon ? 
         copysignf(epsilon, direction_.z) : direction.z;
+
+      /* Build the octrant mask to to mirror the coordinate system such that
+       * each ray component points in negative coordinates. The octree is 
+       * assumed to reside at coordinates [1, 2]
+       * 
+       */
+      octant_mask_ = 7;
+      if(direction_.x > 0.0f) octant_mask_ ^=1, t_bias_.x = 3.0f * t_coef_.x - t_bias_.x;
+      if(direction_.y > 0.0f) octant_mask_ ^=2, t_bias_.y = 3.0f * t_coef_.y - t_bias_.y;
+      if(direction_.z > 0.0f) octant_mask_ ^=4, t_bias_.z = 3.0f * t_coef_.z - t_bias_.z;
+
+      /* Scaling the origin to resides between coordinates [1,2] */
+      const float3 scaled_origin = origin_/map_.dim_ + 1.f;
+
+      /* Precomputing the ray coefficients */
+      float3 t_coef = -1.f/fabs(direction_);
+      float3 t_bias = t_coef * scaled_origin;
+
+      /* Find the min-max t ranges. */
+      t_min_ = fmaxf(
+          fmaxf(2.0f * t_coef_.x - t_bias_.x, 2.0f * t_coef_.y - t_bias_.y), 2.0f * t_coef_.z - t_bias_.z);
+      t_max_ = fminf(fminf(t_coef_.x - t_bias_.x, t_coef_.y - t_bias_.y), t_coef_.z - t_bias_.z);
+      h_ = t_max_;
+      t_min_ = fmaxf(t_min_, nearPlane/map_.dim_);
+      t_max_ = fminf(t_max_, farPlane/map_.dim_);
+
+      /*
+       * Initialise the ray position
+       */
+      if (1.5f * t_coef_.x - t_bias_.x > t_min_) idx_^= 1, pos_.x = 1.5f;
+      if (1.5f * t_coef_.y - t_bias_.y > t_min_) idx_^= 2, pos_.y = 1.5f;
+      if (1.5f * t_coef_.z - t_bias_.z > t_min_) idx_^= 4, pos_.z = 1.5f;
+
     };
+
+    /*
+     * Returns the next leaf along the ray direction.
+     */
+
+    float next() {
+
+      while (scale_ < CAST_STACK_DEPTH) {
+        float3 t_corner = pos_ * t_coef_ - t_bias_;
+        float tc_max = fminf(fminf(t_corner.x, t_corner.y), t_corner.z);
+
+        int child_idx = idx_ ^ octant_mask_ ^ 7;
+        child_ = parent_->child(child_idx);
+
+        if (scale_ == min_scale_ && child_ != NULL){
+
+        } else if (child_ != NULL && t_min_ <= t_max_){  // If the child is valid, descend the tree hierarchy.
+
+          float tv_max = fminf(t_max_, tc_max);
+          float half = scale_exp2_ * 0.5f;
+          float3 t_center = half * t_coef_ + t_corner;
+
+          // Descend to the first child if the resulting t-span is non-empty.
+
+          if (tc_max < h_) {
+            stack[scale] = {scale, parent_, t_max_};
+          }
+
+          h_ = tc_max;
+          parent_ = child_;
+
+          idx_ = 0;
+          scale_--;
+          scale_exp2_ = half;
+          if (t_center.x > t_min_) idx_ ^= 1, pos_.x += scale_exp2_;
+          if (t_center.y > t_min_) idx_ ^= 2, pos_.y += scale_exp2_;
+          if (t_center.z > t_min_) idx_ ^= 4, pos_.z += scale_exp2_;
+
+          t_max_ = tv_max;
+          child_ = NULL;
+          continue;
+        }
+
+        // ADVANCE
+        // Step along the ray.
+
+        int step_mask = 0;
+
+        if (t_corner.x <= tc_max) step_mask ^= 1, pos_.x -= scale_exp2_;
+        if (t_corner.y <= tc_max) step_mask ^= 2, pos_.y -= scale_exp2_;
+        if (t_corner.z <= tc_max) step_mask ^= 4, pos_.z -= scale_exp2_;
+
+        t_min_ = tc_max;
+        idx_ ^= step_mask;
+
+        // POP if bits flips disagree with ray direction
+
+        if ((idx_ & step_mask) != 0) {
+
+          // Get the different bits for each component.
+          // This is done by xoring the bit patterns of the new and old pos
+          // (float_as_int reinterprets a floating point number as int,
+          // it is a sort of reinterpret_cast). This work because the volume has
+          // been scaled between [1, 2]. Still digging why this is the case. 
+
+          unsigned int differing_bits = 0;
+          if ((step_mask & 1) != 0) differing_bits |= __float_as_int(pos_.x) ^ __float_as_int(pos_.x + scale_exp2_);
+          if ((step_mask & 2) != 0) differing_bits |= __float_as_int(pos_.y) ^ __float_as_int(pos_.y + scale_exp2_);
+          if ((step_mask & 4) != 0) differing_bits |= __float_as_int(pos_.z) ^ __float_as_int(pos_.z + scale_exp2_);
+
+          // Get the scale at which the two differs. Here's there are different subtlelties related to how fp are stored.
+          // MIND BLOWN: differing bit (i.e. the MSB) extracted using the 
+          // exponent part of the fp representation. 
+          scale_ = (__float_as_int((float)differing_bits) >> 23) - 127; // position of the highest bit
+          scale_exp2_ = __int_as_float((scale_ - CAST_STACK_DEPTH + 127) << 23); // exp2f(scale - s_max)
+          struct stack_entry&  e = stack[scale_];
+          parent_ = e.parent;
+          t_max_ = e.t_max;
+
+          // Round cube position and extract child slot index.
+
+          int shx = __float_as_int(pos_.x) >> scale_;
+          int shy = __float_as_int(pos_.y) >> scale_;
+          int shz = __float_as_int(pos_.z) >> scale_;
+          pos_.x = __int_as_float(shx << scale_);
+          pos_.y = __int_as_float(shy << scale_);
+          pos_.z = __int_as_float(shz << scale_);
+          idx_  = (shx & 1) | ((shy & 1) << 1) | ((shz & 1) << 2);
+
+          h_ = 0.0f;
+          child_ = NULL;
+
+        }
+      }
+      return 0.f;
+    }
 
   private:
     struct stack_entry {
@@ -1078,10 +1210,14 @@ class ray_iterator {
     Node<T> * child_;
     int idx_;
     float3 pos_;
+    int scale;
     int min_scale_;
     float scale_exp2_;
-
-    static constexpr int scale = CAST_STACK_DEPTH-1;
+    float t_min_;
+    float t_max_;
+    float h_;
+    int octant_mask_;
+    int scale_;
 };
 
 #endif // OCTREE_H
