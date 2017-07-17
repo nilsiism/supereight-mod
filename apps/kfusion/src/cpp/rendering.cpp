@@ -1,5 +1,6 @@
 #include <math_utils.h>
 #include "continuous/volume.hpp"
+#include <algorithms/raycasting.cpp>
 
 
 /* Raycasting implementations */ 
@@ -18,8 +19,12 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
 		for (unsigned int x = 0; x < inputSize.x; x++) {
 
 			uint2 pos = make_uint2(x, y);
-      const float4 hit = volume._map_index.raycast(pos, view, nearPlane, 
-          farPlane, mu, step, largestep);
+      ray_iterator<Volume::field_type> ray(volume._map_index, get_translation(view), 
+          normalize(rotate(view, make_float3(x, y, 1.f))), nearPlane, farPlane);
+      const float t_min = ray.next(); /* Get distance to the first intersected block */
+      const float4 hit = t_min > 0.f ? 
+        algorithms::raycast(volume, pos, view, t_min*volume._dim/volume._size, 
+          farPlane, mu, step, largestep) : make_float4(0.f);
 			if (hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
 				float3 surfNorm = volume.grad(make_float3(hit), 
