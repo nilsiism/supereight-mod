@@ -1,7 +1,6 @@
 #include <math_utils.h>
 #include "continuous/volume.hpp"
 
-
 /* Raycasting implementations */ 
 #include "bfusion/rendering_impl.hpp"
 #include "kfusion/rendering_impl.hpp"
