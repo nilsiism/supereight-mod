@@ -1054,13 +1054,22 @@ class ray_iterator {
       scale_ = CAST_STACK_DEPTH-1;
       min_scale_ = CAST_STACK_DEPTH - log2(m.size_/Octree<T>::blockSide);
       static const float epsilon = exp2f(-log2(map_.size_));
+      voxelSize_ = map_.dim_/map_.size_;
       
-      direction_.x = fabsf(direction_.x) < epsilon ? 
-        copysignf(epsilon, direction_.x) : direction.x;
-      direction_.y = fabsf(direction_.y) < epsilon ? 
-        copysignf(epsilon, direction_.y) : direction.y;
-      direction_.z = fabsf(direction_.z) < epsilon ? 
-        copysignf(epsilon, direction_.z) : direction.z;
+      direction_.x = fabsf(direction.x) < epsilon ? 
+        copysignf(epsilon, direction.x) : direction.x;
+      direction_.y = fabsf(direction.y) < epsilon ? 
+        copysignf(epsilon, direction.y) : direction.y;
+      direction_.z = fabsf(direction.z) < epsilon ? 
+        copysignf(epsilon, direction.z) : direction.z;
+
+      /* Scaling the origin to resides between coordinates [1,2] */
+      const float3 scaled_origin = origin/map_.dim_ + 1.f;
+
+      /* Precomputing the ray coefficients */
+      t_coef_ = -1.f/fabs(direction_);
+      t_bias_ = t_coef_ * scaled_origin;
+
 
       /* Build the octrant mask to to mirror the coordinate system such that
        * each ray component points in negative coordinates. The octree is 
@@ -1071,13 +1080,6 @@ class ray_iterator {
       if(direction_.x > 0.0f) octant_mask_ ^=1, t_bias_.x = 3.0f * t_coef_.x - t_bias_.x;
       if(direction_.y > 0.0f) octant_mask_ ^=2, t_bias_.y = 3.0f * t_coef_.y - t_bias_.y;
       if(direction_.z > 0.0f) octant_mask_ ^=4, t_bias_.z = 3.0f * t_coef_.z - t_bias_.z;
-
-      /* Scaling the origin to resides between coordinates [1,2] */
-      const float3 scaled_origin = origin_/map_.dim_ + 1.f;
-
-      /* Precomputing the ray coefficients */
-      float3 t_coef = -1.f/fabs(direction_);
-      float3 t_bias = t_coef * scaled_origin;
 
       /* Find the min-max t ranges. */
       t_min_ = fmaxf(
@@ -1110,6 +1112,7 @@ class ray_iterator {
         child_ = parent_->child(child_idx);
 
         if (scale_ == min_scale_ && child_ != NULL){
+          return t_min_ / (voxelSize_ / map_.dim_);
 
         } else if (child_ != NULL && t_min_ <= t_max_){  // If the child is valid, descend the tree hierarchy.
 
@@ -1120,7 +1123,7 @@ class ray_iterator {
           // Descend to the first child if the resulting t-span is non-empty.
 
           if (tc_max < h_) {
-            stack[scale] = {scale, parent_, t_max_};
+            stack[scale_] = {scale_, parent_, t_max_};
           }
 
           h_ = tc_max;
@@ -1199,7 +1202,7 @@ class ray_iterator {
       float t_max;
     };
 
-    Octree<T>& map_;
+    const Octree<T>& map_;
     float voxelSize_; 
     float3 origin_;
     float3 direction_;
