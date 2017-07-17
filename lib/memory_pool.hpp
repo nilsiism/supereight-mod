@@ -56,6 +56,15 @@ class MemoryPool {
         delete [] i;
       }
     }
+
+   size_t size() const { return current_block_; };
+
+   BlockType* operator[](const size_t i) const {
+      const int page_idx = i / pagesize_;
+      const int ptr_idx = i % pagesize_;
+      return pages_[page_idx] + (ptr_idx);
+   }
+
   
     void reserve(const size_t n){
       bool requires_realloc = (current_block_ + n) > reserved_;

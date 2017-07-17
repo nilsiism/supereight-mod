@@ -34,8 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <node.hpp>
 
 inline float3 voxelToPos(const uint3 p, const float voxelSize){
-  return make_float3((p.x + 0.5f) * voxelSize, (p.y + 0.5f) * voxelSize,
-    (p.z + 0.5f) * voxelSize);
+  return make_float3(p.x * voxelSize, p.y * voxelSize, p.z * voxelSize);
 }
 
 template <typename T>
