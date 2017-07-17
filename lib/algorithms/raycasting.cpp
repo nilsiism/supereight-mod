@@ -69,6 +69,5 @@ namespace algorithms {
     }
     return make_float4(0);
   }
-
 }
 #endif

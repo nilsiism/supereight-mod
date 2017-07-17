@@ -39,7 +39,11 @@ float4 raycast(const Volume<BFusion>& volume, const uint2 pos, const Matrix4 vie
     // if we are not already in it
     if (f_t <= SURF_BOUNDARY) { 
       for (; t < tfar; t += stepsize) {
-        f_tt = volume.interp(origin + direction * t, select_occupancy);
+        Volume<BFusion>::compute_type data = volume[origin + direction * t];
+        f_tt = data.x;
+        if(data.x > 0.3 && data.x < 0.9) {
+          f_tt = volume.interp(origin + direction * t, select_occupancy);
+        }
         // got it, jump out of inner loop
         if (f_tt > SURF_BOUNDARY) break;
         f_t = f_tt;
