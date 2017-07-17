@@ -406,7 +406,6 @@ template <typename T>
 template <typename FieldSelector>
 float Octree<T>::interp(float3 pos, FieldSelector select) const {
   
-  pos = pos - 0.5f;
   const int3 base = make_int3(floorf(pos));
   const float3 factor = fracf(pos);
   const int3 lower = max(base, make_int3(0));
