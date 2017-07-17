@@ -1055,7 +1055,8 @@ class ray_iterator {
       min_scale_ = CAST_STACK_DEPTH - log2(m.size_/Octree<T>::blockSide);
       static const float epsilon = exp2f(-log2(map_.size_));
       voxelSize_ = map_.dim_/map_.size_;
-      
+      state_ = INIT; 
+
       direction_.x = fabsf(direction.x) < epsilon ? 
         copysignf(epsilon, direction.x) : direction.x;
       direction_.y = fabsf(direction.y) < epsilon ? 
@@ -1098,101 +1099,114 @@ class ray_iterator {
 
     };
 
+    /* 
+     * Advance the ray.
+     */
+    inline void advance_ray() {
+
+      int step_mask = 0;
+
+      if (t_corner_.x <= tc_max_) step_mask ^= 1, pos_.x -= scale_exp2_;
+      if (t_corner_.y <= tc_max_) step_mask ^= 2, pos_.y -= scale_exp2_;
+      if (t_corner_.z <= tc_max_) step_mask ^= 4, pos_.z -= scale_exp2_;
+
+      t_min_ = tc_max_;
+      idx_ ^= step_mask;
+
+      // POP if bits flips disagree with ray direction
+
+      if ((idx_ & step_mask) != 0) {
+
+        // Get the different bits for each component.
+        // This is done by xoring the bit patterns of the new and old pos
+        // (float_as_int reinterprets a floating point number as int,
+        // it is a sort of reinterpret_cast). This work because the volume has
+        // been scaled between [1, 2]. Still digging why this is the case. 
+
+        unsigned int differing_bits = 0;
+        if ((step_mask & 1) != 0) differing_bits |= __float_as_int(pos_.x) ^ __float_as_int(pos_.x + scale_exp2_);
+        if ((step_mask & 2) != 0) differing_bits |= __float_as_int(pos_.y) ^ __float_as_int(pos_.y + scale_exp2_);
+        if ((step_mask & 4) != 0) differing_bits |= __float_as_int(pos_.z) ^ __float_as_int(pos_.z + scale_exp2_);
+
+        // Get the scale at which the two differs. Here's there are different subtlelties related to how fp are stored.
+        // MIND BLOWN: differing bit (i.e. the MSB) extracted using the 
+        // exponent part of the fp representation. 
+        scale_ = (__float_as_int((float)differing_bits) >> 23) - 127; // position of the highest bit
+        scale_exp2_ = __int_as_float((scale_ - CAST_STACK_DEPTH + 127) << 23); // exp2f(scale - s_max)
+        struct stack_entry&  e = stack[scale_];
+        parent_ = e.parent;
+        t_max_ = e.t_max;
+
+        // Round cube position and extract child slot index.
+
+        int shx = __float_as_int(pos_.x) >> scale_;
+        int shy = __float_as_int(pos_.y) >> scale_;
+        int shz = __float_as_int(pos_.z) >> scale_;
+        pos_.x = __int_as_float(shx << scale_);
+        pos_.y = __int_as_float(shy << scale_);
+        pos_.z = __int_as_float(shz << scale_);
+        idx_  = (shx & 1) | ((shy & 1) << 1) | ((shz & 1) << 2);
+
+        h_ = 0.0f;
+        child_ = NULL;
+
+      }
+    }
+
+    /* 
+     * Descend the hiararchy and compute the next child position.
+     */
+    inline void descend() {
+      float tv_max = fminf(t_max_, tc_max_);
+      float half = scale_exp2_ * 0.5f;
+      float3 t_center = half * t_coef_ + t_corner_;
+
+      // Descend to the first child if the resulting t-span is non-empty.
+
+      if (tc_max_ < h_) {
+        stack[scale_] = {scale_, parent_, t_max_};
+      }
+
+      h_ = tc_max_;
+      parent_ = child_;
+
+      idx_ = 0;
+      scale_--;
+      scale_exp2_ = half;
+      if (t_center.x > t_min_) idx_ ^= 1, pos_.x += scale_exp2_;
+      if (t_center.y > t_min_) idx_ ^= 2, pos_.y += scale_exp2_;
+      if (t_center.z > t_min_) idx_ ^= 4, pos_.z += scale_exp2_;
+
+      t_max_ = tv_max;
+      child_ = NULL;
+    }
+
     /*
      * Returns the next leaf along the ray direction.
      */
 
     float next() {
 
-      while (scale_ < CAST_STACK_DEPTH) {
-        float3 t_corner = pos_ * t_coef_ - t_bias_;
-        float tc_max = fminf(fminf(t_corner.x, t_corner.y), t_corner.z);
+      if(state_ == ADVANCE) advance_ray();
+      else if (state_ == FINISHED) return -1.f;
 
-        int child_idx = idx_ ^ octant_mask_ ^ 7;
-        child_ = parent_->child(child_idx);
+      while (scale_ < CAST_STACK_DEPTH) {
+        t_corner_ = pos_ * t_coef_ - t_bias_;
+        tc_max_ = fminf(fminf(t_corner_.x, t_corner_.y), t_corner_.z);
+
+        child_ = parent_->child(idx_ ^ octant_mask_ ^ 7);
 
         if (scale_ == min_scale_ && child_ != NULL){
+          state_ = ADVANCE;
           return t_min_ / (voxelSize_ / map_.dim_);
 
         } else if (child_ != NULL && t_min_ <= t_max_){  // If the child is valid, descend the tree hierarchy.
-
-          float tv_max = fminf(t_max_, tc_max);
-          float half = scale_exp2_ * 0.5f;
-          float3 t_center = half * t_coef_ + t_corner;
-
-          // Descend to the first child if the resulting t-span is non-empty.
-
-          if (tc_max < h_) {
-            stack[scale_] = {scale_, parent_, t_max_};
-          }
-
-          h_ = tc_max;
-          parent_ = child_;
-
-          idx_ = 0;
-          scale_--;
-          scale_exp2_ = half;
-          if (t_center.x > t_min_) idx_ ^= 1, pos_.x += scale_exp2_;
-          if (t_center.y > t_min_) idx_ ^= 2, pos_.y += scale_exp2_;
-          if (t_center.z > t_min_) idx_ ^= 4, pos_.z += scale_exp2_;
-
-          t_max_ = tv_max;
-          child_ = NULL;
+          descend();
           continue;
         }
-
-        // ADVANCE
-        // Step along the ray.
-
-        int step_mask = 0;
-
-        if (t_corner.x <= tc_max) step_mask ^= 1, pos_.x -= scale_exp2_;
-        if (t_corner.y <= tc_max) step_mask ^= 2, pos_.y -= scale_exp2_;
-        if (t_corner.z <= tc_max) step_mask ^= 4, pos_.z -= scale_exp2_;
-
-        t_min_ = tc_max;
-        idx_ ^= step_mask;
-
-        // POP if bits flips disagree with ray direction
-
-        if ((idx_ & step_mask) != 0) {
-
-          // Get the different bits for each component.
-          // This is done by xoring the bit patterns of the new and old pos
-          // (float_as_int reinterprets a floating point number as int,
-          // it is a sort of reinterpret_cast). This work because the volume has
-          // been scaled between [1, 2]. Still digging why this is the case. 
-
-          unsigned int differing_bits = 0;
-          if ((step_mask & 1) != 0) differing_bits |= __float_as_int(pos_.x) ^ __float_as_int(pos_.x + scale_exp2_);
-          if ((step_mask & 2) != 0) differing_bits |= __float_as_int(pos_.y) ^ __float_as_int(pos_.y + scale_exp2_);
-          if ((step_mask & 4) != 0) differing_bits |= __float_as_int(pos_.z) ^ __float_as_int(pos_.z + scale_exp2_);
-
-          // Get the scale at which the two differs. Here's there are different subtlelties related to how fp are stored.
-          // MIND BLOWN: differing bit (i.e. the MSB) extracted using the 
-          // exponent part of the fp representation. 
-          scale_ = (__float_as_int((float)differing_bits) >> 23) - 127; // position of the highest bit
-          scale_exp2_ = __int_as_float((scale_ - CAST_STACK_DEPTH + 127) << 23); // exp2f(scale - s_max)
-          struct stack_entry&  e = stack[scale_];
-          parent_ = e.parent;
-          t_max_ = e.t_max;
-
-          // Round cube position and extract child slot index.
-
-          int shx = __float_as_int(pos_.x) >> scale_;
-          int shy = __float_as_int(pos_.y) >> scale_;
-          int shz = __float_as_int(pos_.z) >> scale_;
-          pos_.x = __int_as_float(shx << scale_);
-          pos_.y = __int_as_float(shy << scale_);
-          pos_.z = __int_as_float(shz << scale_);
-          idx_  = (shx & 1) | ((shy & 1) << 1) | ((shz & 1) << 2);
-
-          h_ = 0.0f;
-          child_ = NULL;
-
-        }
+        advance_ray();
       }
-      return 0.f;
+      return -1.f;
     }
 
   private:
@@ -1201,6 +1215,12 @@ class ray_iterator {
       Node<T> * parent;
       float t_max;
     };
+    
+    typedef enum STATE {
+      INIT,
+      ADVANCE,
+      FINISHED
+    } STATE;
 
     const Octree<T>& map_;
     float voxelSize_; 
@@ -1218,9 +1238,12 @@ class ray_iterator {
     float scale_exp2_;
     float t_min_;
     float t_max_;
+    float tc_max_;
+    float3 t_corner_;
     float h_;
     int octant_mask_;
     int scale_;
+    STATE state_;
 };
 
 #endif // OCTREE_H
