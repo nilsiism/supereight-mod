@@ -114,7 +114,7 @@ static inline float applyWindow(const float occupancy, const float boundary,
 
 void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize, 
     const float voxelSize, const Matrix4 world2cam, const Matrix4 K, 
-    const float noiseFactor, const float ) {
+    const float noiseFactor, const float timestamp) {
 
   const float3 delta = rotate(world2cam, make_float3(voxelSize, 0, 0));
   const float3 cameraDelta = rotate(K, delta);
@@ -159,10 +159,12 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
         // const float diff = (camera_voxel.z - depthSample)/(noiseFactor*sq(camera_voxel.z));
         const float diff = (camera_voxel.z - depthSample)/(noiseFactor);
         const float sample = HNew(diff, camera_voxel.z);
+        if(sample == 0.5f) continue;
 
         typename VoxelBlock<BFusion>::compute_type data = block->data(pix); // should do an offsetted access here
-        data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
         data.x = applyWindow(data.x, SURF_BOUNDARY, DELTA_T, CAPITAL_T);
+        data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
+        data.y = timestamp;
         block->data(pix, data);
       }
     }
