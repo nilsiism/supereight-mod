@@ -156,9 +156,10 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
         const float depthSample = interpDepth(depth, depthSize, pixel);
         if (depthSample <=  0) continue;
 
-        // const float diff = (camera_voxel.z - depthSample)/(noiseFactor*sq(camera_voxel.z));
-        const float diff = (camera_voxel.z - depthSample)/(noiseFactor);
+        const float diff = (camera_voxel.z - depthSample)/(noiseFactor)
+          * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
         const float sample = HNew(diff, camera_voxel.z);
+        if(sample == 0.5f) continue;
 
         typename VoxelBlock<BFusion>::compute_type data = block->data(pix); // should do an offsetted access here
         data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
