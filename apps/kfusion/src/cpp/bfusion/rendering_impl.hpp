@@ -6,7 +6,7 @@ float4 raycast(const Volume<BFusion>& volume, const uint2 pos, const Matrix4 vie
     const float step, const float)
 {
   const float3 origin = get_translation(view);
-  const float3 direction = rotate(view, make_float3(pos.x, pos.y, 1.f));
+  const float3 direction = normalize(rotate(view, make_float3(pos.x, pos.y, 1.f)));
 
   // intersect ray with a box
   // http://www.siggraph.org/education/materials/HyperGraph/raytrace/rtinter3.htm
