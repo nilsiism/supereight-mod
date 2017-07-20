@@ -23,7 +23,7 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
       const float4 hit = t_min > 0.f ? 
         raycast(volume, pos, view, t_min*volume._dim/volume._size, 
           farPlane, mu, step, largestep) : make_float4(0.f);
-			if (hit.w > 0.0) {
+			if(hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
 				float3 surfNorm = volume.grad(make_float3(hit), 
             [](const auto& val){ return val.x; });
