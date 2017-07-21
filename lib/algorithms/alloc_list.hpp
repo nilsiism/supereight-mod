@@ -49,7 +49,8 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
       if(depthmap[x + y*imageSize.x] == 0)
         continue;
       const float depth = depthmap[x + y*imageSize.x];
-      float3 worldVertex = (kPose * make_float3(x * depth, y * depth, depth));
+      float3 worldVertex = (kPose * make_float3((x + 0.5f) * depth, 
+            (y + 0.5f) * depth, depth));
 
       float3 direction = normalize(worldVertex - camera);
       const float3 origin = worldVertex - band * direction;
