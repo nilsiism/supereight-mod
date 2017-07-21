@@ -6,6 +6,8 @@
 #include <data.hpp>
 #include <type_traits>
 #include <algorithms/alloc_list.hpp>
+#include <algorithms/filter.hpp>
+#include <functional>
 
 template <typename T>
 class Void {};
@@ -76,6 +78,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
                             const uint2 frameSize, const float mu,
                             const int frame) {
 
+      using namespace std::placeholders;
       int num_vox_per_pix = (2 * mu)/(_dim/_size);
       _allocationList.reserve(num_vox_per_pix * frameSize.x * frameSize.y);
       const int allocated = 
@@ -85,7 +88,17 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       _map_index.allocate(_allocationList.data(), allocated);
 
       std::vector<VoxelBlock<FieldType> *> active_list;
-      _map_index.getBlockList(active_list, true);
+      const MemoryPool<VoxelBlock<FieldType> >& block_array = 
+        _map_index.getBlockBuffer();
+
+      auto in_frustum_predicate = 
+        std::bind(algorithms::in_frustum<VoxelBlock<FieldType>>, _1, 
+         _dim/_size, K*inverse(pose), make_int2(frameSize)); 
+      auto is_active_predicate = [](const VoxelBlock<FieldType>* b) {
+        return b->active();
+      };
+      
+      algorithms::filter(active_list, block_array, is_active_predicate, in_frustum_predicate);
       VoxelBlock<FieldType> ** list = active_list.data();
       unsigned int num_active = active_list.size();
       integratePass(list, num_active, depthmap, frameSize, _dim/_size,

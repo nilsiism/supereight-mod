@@ -98,7 +98,7 @@ class VoxelBlock: public Node<T> {
 
     bool isLeaf(){ return true; }
 
-    uint3 coordinates(){ return coordinates_; }
+    uint3 coordinates() const { return coordinates_; }
     void coordinates(const uint3 c){ coordinates_ = c; }
 
     compute_type data(const uint3 pos) const;
@@ -119,7 +119,7 @@ class VoxelBlock: public Node<T> {
     }
 
     void active(const bool a){ active_ = a; }
-    bool active(){ return active_; }
+    bool active() const { return active_; }
 
     stored_type * getBlockRawPtr(){ return voxel_block_; }
     static constexpr int size(){ return sizeof(VoxelBlock<T>); }

@@ -171,7 +171,7 @@ public:
    * blocks, false to retrieve all allocated blocks.
    */
   void getBlockList(std::vector<VoxelBlock<T> *>& blocklist, bool active);
-
+  MemoryPool<VoxelBlock<T> >& getBlockBuffer(){ return block_memory_; };
   /*! \brief Computes the morton code of the block containing voxel 
    * at coordinates (x,y,z)
    * \param x x coordinate in interval [0, size]
