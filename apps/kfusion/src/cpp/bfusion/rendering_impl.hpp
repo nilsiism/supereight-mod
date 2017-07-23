@@ -41,7 +41,7 @@ float4 raycast(const Volume<BFusion>& volume, const uint2 pos, const Matrix4 vie
       for (; t < tfar; t += stepsize) {
         Volume<BFusion>::compute_type data = volume[origin + direction * t];
         f_tt = data.x;
-        if(data.x > 0.3 && data.x < 0.9) {
+        if(data.x > -0.5 && data.x < 0.5) {
           f_tt = volume.interp(origin + direction * t, select_occupancy);
         }
         // got it, jump out of inner loop
