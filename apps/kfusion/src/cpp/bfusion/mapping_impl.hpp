@@ -59,12 +59,6 @@ float interpDepth(const float * depth, const uint2 depthSize,
   //         );
 }
 
-
-inline float3 voxelToPos(const uint3 p, const float voxelSize){
-  return make_float3((p.x + 0.5f) * voxelSize, (p.y + 0.5f) * voxelSize,
-    (p.z + 0.5f) * voxelSize);
-}
-
 static inline float bspline(float t){
   float value = 0.f;
   if(t >= -3.0f && t <= -1.0f) {
@@ -143,8 +137,8 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
   for(z = blockCoord.z; z < zlast; ++z)
     for (y = blockCoord.y; y < ylast; ++y){
       uint3 pix = make_uint3(blockCoord.x, y, z);
-      float3 start = world2cam * make_float3((pix.x + 0.5f) * voxelSize, 
-          (pix.y + 0.5f) * voxelSize, (pix.z + 0.5f) * voxelSize);
+      float3 start = world2cam * make_float3((pix.x) * voxelSize, 
+          (pix.y) * voxelSize, (pix.z) * voxelSize);
       float3 camerastart = K * start;
 #pragma simd
       for (unsigned int x = 0; x < blockSide; ++x){
@@ -163,8 +157,8 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
         // if (depthSample ==  0) continue;
 
         // Interpolation version
-        const float2 pixel = make_float2( camera_voxel.x / camera_voxel.z,
-            camera_voxel.y / camera_voxel.z);
+        const float2 pixel = make_float2( camera_voxel.x / camera_voxel.z + 0.5f,
+            camera_voxel.y / camera_voxel.z + 0.5f);
         if (pixel.x < 0.5f || pixel.x > depthSize.x - 1.5f || 
             pixel.y < 0.5f || pixel.y > depthSize.y - 1.5f) continue;
         // const float depthSample = interpDepth(depth, depthSize, pixel);
@@ -174,7 +168,7 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
 
         const float diff = (camera_voxel.z - depthSample)
           * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
-        const float sample = HNew(diff/(noiseFactor), camera_voxel.z);
+        const float sample = HNew(diff/(noiseFactor*sq(camera_voxel.z)), camera_voxel.z);
         if(sample == 0.5f) continue;
 
         typename VoxelBlock<BFusion>::compute_type data = block->data(pix); // should do an offsetted access here
