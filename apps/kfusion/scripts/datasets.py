@@ -34,7 +34,7 @@ TUM_RGB_FR1_XYZ.init_pose = '0.5,0.5,0.5'
 TUM_RGB_FR1_XYZ.rgb_image = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_xyz/rgb/')
 TUM_RGB_FR1_XYZ.pre_assoc_file_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_xyz/timing.assoc.txt')
 TUM_RGB_FR1_XYZ.ate_associate_identity = False
-TUM_RGB_FR1_XYZ.descr = 'fr2_xyz'
+TUM_RGB_FR1_XYZ.descr = 'fr1_xyz'
 
 #
 # TUM RGB-D fr2/desk Settings
@@ -63,6 +63,35 @@ TUM_RGB_FR1_DESK.pre_assoc_file_path = os.path.join(DATASETS_PATH, 'rgbd_dataset
 TUM_RGB_FR1_DESK.descr = 'fr1_desk'
 TUM_RGB_FR1_DESK.ate_associate_identity = False
 
+#
+# TUM RGB-D fr1/plant Settings
+#
+TUM_RGB_FR1_PLANT = Dataset()
+TUM_RGB_FR1_PLANT.dataset_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_plant/scene.raw')
+TUM_RGB_FR1_PLANT.ground_truth = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_plant/groundtruth.txt')
+TUM_RGB_FR1_PLANT.camera = '591.1,590.1,331.0,234.0'
+TUM_RGB_FR1_PLANT.quat = '0.6529,-0.5483,0.3248,-0.4095'
+TUM_RGB_FR1_PLANT.init_pose = '0.5,0.5,0'
+TUM_RGB_FR1_PLANT.pre_assoc_file_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_plant/timings.assoc.txt')
+TUM_RGB_FR1_PLANT.descr = 'fr1_plant'
+TUM_RGB_FR1_PLANT.ate_associate_identity = False
+
+#
+# TUM RGB-D fr1/floor Settings
+#
+TUM_RGB_FR1_FLOOR = Dataset()
+TUM_RGB_FR1_FLOOR.dataset_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_floor/scene.raw')
+TUM_RGB_FR1_FLOOR.ground_truth = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_floor/groundtruth.txt')
+TUM_RGB_FR1_FLOOR.camera = '591.1,590.1,331.0,234.0'
+TUM_RGB_FR1_FLOOR.quat = '0.6529,-0.5483,0.3248,-0.4095'
+TUM_RGB_FR1_FLOOR.init_pose = '0.5,0.5,0'
+TUM_RGB_FR1_FLOOR.pre_assoc_file_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_floor/timings.assoc.txt')
+TUM_RGB_FR1_FLOOR.descr = 'fr1_floor'
+TUM_RGB_FR1_FLOOR.ate_associate_identity = False
+
+#
+# TUM RGB-D fr3/desk Settings
+#
 TUM_RGB_FR3_DESK = Dataset()
 TUM_RGB_FR3_DESK.dataset_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg3_long_office_household/scene.raw')
 TUM_RGB_FR3_DESK.ground_truth = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg3_long_office_household/groundtruth.txt')
@@ -71,6 +100,30 @@ TUM_RGB_FR3_DESK.init_pose = '0.5,0.5,0'
 TUM_RGB_FR3_DESK.pre_assoc_file_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg3_long_office_household/timings.assoc.txt')
 TUM_RGB_FR3_DESK.descr = 'fr3_desk'
 TUM_RGB_FR3_DESK.ate_associate_identity = False
+
+#
+# TUM RGB-D fr3/cabinet Settings
+#
+TUM_RGB_FR3_CABINET = Dataset()
+TUM_RGB_FR3_CABINET.dataset_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg3_cabinet/scene.raw')
+TUM_RGB_FR3_CABINET.ground_truth = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg3_cabinet/groundtruth.txt')
+TUM_RGB_FR3_CABINET.camera = '567.6,570.2,324.7,250.1'
+TUM_RGB_FR3_CABINET.init_pose = '0.5,0.5,0'
+TUM_RGB_FR3_CABINET.pre_assoc_file_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg3_cabinet/timings.assoc.txt')
+TUM_RGB_FR3_CABINET.descr = 'fr3_cabinet'
+TUM_RGB_FR3_CABINET.ate_associate_identity = False
+
+#
+# TUM RGB-D fr3/cabinet Settings
+#
+TUM_RGB_FR3_LARGE_CABINET = Dataset()
+TUM_RGB_FR3_LARGE_CABINET.dataset_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg3_large_cabinet/scene.raw')
+TUM_RGB_FR3_LARGE_CABINET.ground_truth = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg3_large_cabinet/groundtruth.txt')
+TUM_RGB_FR3_LARGE_CABINET.camera = '567.6,570.2,324.7,250.1'
+TUM_RGB_FR3_LARGE_CABINET.init_pose = '0.5,0.5,0'
+TUM_RGB_FR3_LARGE_CABINET.pre_assoc_file_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg3_large_cabinet/timings.assoc.txt')
+TUM_RGB_FR3_LARGE_CABINET.descr = 'fr3_large_cabinet'
+TUM_RGB_FR3_LARGE_CABINET.ate_associate_identity = False
 
 
 #
