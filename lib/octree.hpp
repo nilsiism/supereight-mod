@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OCTREE_H
 #define OCTREE_H
 
+#include <cstring>
 #include <math_utils.h>
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
@@ -375,7 +376,9 @@ void Octree<T>::init(int size, float dim) {
   max_level_ = log2(size);
   root_ = new Node<T>();
   // root_->edge(size_);
-  reserved_ = 0;
+  reserved_ = 1024;
+  keys_at_level_ = new unsigned int[reserved_];
+  std::memset(keys_at_level_, 0, reserved_);
 }
 
 template <typename T>
