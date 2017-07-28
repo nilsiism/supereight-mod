@@ -39,9 +39,8 @@ TEST_F(InterpTest, Init) {
 
 TEST_F(InterpTest, GatherLocal) {
   float points[8];
-  VoxelBlock<testT> * block = oct_.fetch(136, 128, 136);
   const uint3 base = {136, 128, 136};
-  gather_local(block, base, [](const auto& val){ return val; }, points);
+  gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {
     EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
@@ -50,18 +49,17 @@ TEST_F(InterpTest, GatherLocal) {
 
 TEST_F(InterpTest, Gather4Case1) {
   float points[8];
-  const uint3 base = {135, 128, 136};
+  const uint blockSize = VoxelBlock<testT>::side;
+  const uint3 base = {132, 128, 135};
+  unsigned int crossmask = ((base.x % blockSize) == blockSize - 1 << 2) | 
+                           ((base.y % blockSize) == blockSize - 1 << 1) |
+                            (base.z % blockSize) == blockSize - 1;
+  ASSERT_EQ(crossmask, 1);
   VoxelBlock<testT> * block = oct_.fetch(base.x, base.y, base.z);
-
-  const unsigned int offs1[4] = {0, 2, 4, 6};
-  gather_4(block, base, [](const auto& val){ return val; }, offs1, points);
-
-  const unsigned int offs2[4] = {1, 3, 5, 7};
-  const uint3 base1 = base + offs2[0];
-  block = oct_.fetch(base1.x, base1.y, base1.z);
-  gather_4(block, base, [](const auto& val){ return val; }, offs2, points);
+  gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {
     EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
   }
 }
+
