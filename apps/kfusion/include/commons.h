@@ -143,18 +143,6 @@ inline uchar4 gs2rgb(double h) {
 	return rgb;
 }
 
-template <typename T>
-inline int unique(T* keys, int num_keys){
-  int end = 1;
-  for (int i = 1; i < num_keys; ++i){
-    if(keys[i] != keys[i-1]){
-      keys[end] = keys[i];
-      ++end;
-    }
-  }
-  return end;
-}
-
 typedef struct Triangle {
   float3 vertexes[3];
   float3 vnormals[3];

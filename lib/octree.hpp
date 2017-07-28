@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <node.hpp>
 #include <memory_pool.hpp>
 #include <algorithms/mapping.hpp>
+#include <algorithms/unique.hpp>
 
 #define MAX_BITS 10
 #define CAST_STACK_DEPTH 23
@@ -714,7 +715,7 @@ bool Octree<T>::allocate(uint *keys, int num_elem){
 std::sort(keys, keys+num_elem);
 #endif
 
-  num_elem = unique(keys, num_elem);
+  num_elem = algorithms::unique(keys, num_elem);
   reserveBuffers(num_elem);
 
   int last_elem = 0;
@@ -722,7 +723,7 @@ std::sort(keys, keys+num_elem);
   const int leaf_level = max_level_ - log2(blockSide);
   for (int level = 1; level <= leaf_level; level++){
     getKeysAtLevel(keys, keys_at_level_, num_elem, level);
-    last_elem = unique(keys_at_level_, num_elem);
+    last_elem = algorithms::unique(keys_at_level_, num_elem);
     success = allocateLevel(keys_at_level_, last_elem, level);
   }
   return success;
