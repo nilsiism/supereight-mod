@@ -10,3 +10,4 @@ add_compile_options(-std=c++1y )
 include_directories(../../lib ../../utils)
 
 add_subdirectory(allocation)
+add_subdirectory(interp)

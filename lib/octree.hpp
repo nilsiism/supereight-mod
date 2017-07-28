@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory_pool.hpp>
 #include <algorithms/mapping.hpp>
 #include <algorithms/unique.hpp>
+#include <interp_gather.hpp>
 
 #define MAX_BITS 10
 #define CAST_STACK_DEPTH 23
