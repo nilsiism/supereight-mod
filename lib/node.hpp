@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define NODE_H
 
 #include <time.h>
-#include <commons.h>
 #include <math_utils.h>
 #include <atomic>
 #include <octree_defines.h>

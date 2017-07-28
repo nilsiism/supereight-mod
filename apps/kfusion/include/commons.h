@@ -79,9 +79,6 @@ void read_input(std::string inputfile, T * in) {
 	}
 }
 
-inline float sq(float r) {
-	return r * r;
-}
 
 inline uchar4 gs2rgb(double h) {
 	uchar4 rgb;
@@ -632,17 +629,6 @@ struct TrackData {
 	float J[6];
 };
 
-inline __host__      __device__ float3 operator*(const Matrix4 & M,
-		const float3 & v) {
-	return make_float3(dot(make_float3(M.data[0]), v) + M.data[0].w,
-			dot(make_float3(M.data[1]), v) + M.data[1].w,
-			dot(make_float3(M.data[2]), v) + M.data[2].w);
-}
-
-inline float3 rotate(const Matrix4 & M, const float3 & v) {
-	return make_float3(dot(make_float3(M.data[0]), v),
-			dot(make_float3(M.data[1]), v), dot(make_float3(M.data[2]), v));
-}
 
 inline Matrix4 getCameraMatrix(const float4 & k) {
 	Matrix4 K;
