@@ -231,9 +231,6 @@ private:
   uint * keys_at_level_;
   int reserved_;
 
-  // Camera parameters
-  float maxweight_;  // maximum weight
-
   // Private implementation of cached methods
   compute_type get(const int x, const int y, const int z, VoxelBlock<T>* cached) const;
   compute_type get(const float3 pos, VoxelBlock<T>* cached) const;
@@ -378,7 +375,6 @@ void Octree<T>::init(int size, float dim) {
   root_ = new Node<T>();
   // root_->edge(size_);
   reserved_ = 0;
-  maxweight_ = maxweight; // from constant_parameters.h
 }
 
 template <typename T>
