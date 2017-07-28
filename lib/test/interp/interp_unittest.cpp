@@ -47,3 +47,21 @@ TEST_F(InterpTest, GatherLocal) {
     EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
   }
 }
+
+TEST_F(InterpTest, Gather4Case1) {
+  float points[8];
+  const uint3 base = {135, 128, 136};
+  VoxelBlock<testT> * block = oct_.fetch(base.x, base.y, base.z);
+
+  const unsigned int offs1[4] = {0, 2, 4, 6};
+  gather_4(block, base, [](const auto& val){ return val; }, offs1, points);
+
+  const unsigned int offs2[4] = {1, 3, 5, 7};
+  const uint3 base1 = base + offs2[0];
+  block = oct_.fetch(base1.x, base1.y, base1.z);
+  gather_4(block, base, [](const auto& val){ return val; }, offs2, points);
+
+  for(int i = 0; i < 8; ++i) {
+    EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
+  }
+}
