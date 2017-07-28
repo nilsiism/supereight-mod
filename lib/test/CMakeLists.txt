@@ -6,6 +6,7 @@ set(GTEST_ROOT ~/software/googletest/googletest)
 find_package(GTest REQUIRED)
 
 enable_testing()
+add_compile_options(-std=c++1y )
 include_directories(../../lib ../../utils)
 
 add_subdirectory(allocation)
