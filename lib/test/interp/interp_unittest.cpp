@@ -47,7 +47,7 @@ TEST_F(InterpTest, GatherLocal) {
   }
 }
 
-TEST_F(InterpTest, Gather4Case1) {
+TEST_F(InterpTest, ZCrosses) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
   const uint3 base = {132, 128, 135};
@@ -63,3 +63,98 @@ TEST_F(InterpTest, Gather4Case1) {
   }
 }
 
+TEST_F(InterpTest, YCrosses) {
+  float points[8];
+  const uint blockSize = VoxelBlock<testT>::side;
+  const uint3 base = {132, 135, 132};
+  unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
+                           ((base.y % blockSize == blockSize - 1) << 1) |
+                            ((base.z % blockSize) == blockSize - 1);
+  ASSERT_EQ(crossmask, 2);
+  VoxelBlock<testT> * block = oct_.fetch(base.x, base.y, base.z);
+  gather_points(oct_, base, [](const auto& val){ return val; }, points);
+
+  for(int i = 0; i < 8; ++i) {
+    EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
+  }
+}
+
+TEST_F(InterpTest, XCrosses) {
+  float points[8];
+  const uint blockSize = VoxelBlock<testT>::side;
+  const uint3 base = {135, 132, 132};
+  unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
+                           ((base.y % blockSize == blockSize - 1) << 1) |
+                            ((base.z % blockSize) == blockSize - 1);
+  ASSERT_EQ(crossmask, 4);
+  VoxelBlock<testT> * block = oct_.fetch(base.x, base.y, base.z);
+  gather_points(oct_, base, [](const auto& val){ return val; }, points);
+
+  for(int i = 0; i < 8; ++i) {
+    EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
+  }
+}
+
+TEST_F(InterpTest, YZCross) {
+  float points[8];
+  const uint blockSize = VoxelBlock<testT>::side;
+  const uint3 base = {129, 135, 135};
+  unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
+                           ((base.y % blockSize == blockSize - 1) << 1) |
+                            ((base.z % blockSize) == blockSize - 1);
+  ASSERT_EQ(crossmask, 3);
+  VoxelBlock<testT> * block = oct_.fetch(base.x, base.y, base.z);
+  gather_points(oct_, base, [](const auto& val){ return val; }, points);
+
+  for(int i = 0; i < 8; ++i) {
+    EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
+  }
+}
+
+TEST_F(InterpTest, XZCross) {
+  float points[8];
+  const uint blockSize = VoxelBlock<testT>::side;
+  const uint3 base = {135, 131, 135};
+  unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
+                           ((base.y % blockSize == blockSize - 1) << 1) |
+                            ((base.z % blockSize) == blockSize - 1);
+  ASSERT_EQ(crossmask, 5);
+  VoxelBlock<testT> * block = oct_.fetch(base.x, base.y, base.z);
+  gather_points(oct_, base, [](const auto& val){ return val; }, points);
+
+  for(int i = 0; i < 8; ++i) {
+    EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
+  }
+}
+
+TEST_F(InterpTest, XYCross) {
+  float points[8];
+  const uint blockSize = VoxelBlock<testT>::side;
+  const uint3 base = {135, 135, 138};
+  unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
+                           ((base.y % blockSize == blockSize - 1) << 1) |
+                            ((base.z % blockSize) == blockSize - 1);
+  ASSERT_EQ(crossmask, 6);
+  VoxelBlock<testT> * block = oct_.fetch(base.x, base.y, base.z);
+  gather_points(oct_, base, [](const auto& val){ return val; }, points);
+
+  for(int i = 0; i < 8; ++i) {
+    EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
+  }
+}
+
+TEST_F(InterpTest, AllCross) {
+  float points[8];
+  const uint blockSize = VoxelBlock<testT>::side;
+  const uint3 base = {135, 135, 135};
+  unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
+                           ((base.y % blockSize == blockSize - 1) << 1) |
+                            ((base.z % blockSize) == blockSize - 1);
+  ASSERT_EQ(crossmask, 7);
+  VoxelBlock<testT> * block = oct_.fetch(base.x, base.y, base.z);
+  gather_points(oct_, base, [](const auto& val){ return val; }, points);
+
+  for(int i = 0; i < 8; ++i) {
+    EXPECT_EQ(points[i], voxel_traits<testT>::initValue());
+  }
+}

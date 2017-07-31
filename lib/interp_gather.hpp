@@ -54,7 +54,21 @@ inline void gather_4(const VoxelBlock<FieldType>* block, const uint3 base,
   points[offsets[2]] = select(block->data(base + interp_offsets[offsets[2]]));
   points[offsets[3]] = select(block->data(base + interp_offsets[offsets[3]]));
   return;
+}
 
+template <typename FieldType, typename FieldSelector>
+inline void gather_2(const VoxelBlock<FieldType>* block, const uint3 base, 
+    FieldSelector select, const unsigned int offsets[2], float points[8]) {
+
+  if(!block) {
+    points[offsets[0]] = select(VoxelBlock<FieldType>::empty());
+    points[offsets[1]] = select(VoxelBlock<FieldType>::empty());
+    return;
+  }
+
+  points[offsets[0]] = select(block->data(base + interp_offsets[offsets[0]]));
+  points[offsets[1]] = select(block->data(base + interp_offsets[offsets[1]]));
+  return;
 }
 
 template <typename FieldType, template<typename FieldType> class MapIndex,
@@ -63,9 +77,9 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
     FieldSelector select, float points[8]) {
  
   unsigned int blockSize =  VoxelBlock<FieldType>::side;
-  unsigned int crossmask = ((base.x % blockSize) == blockSize - 1 << 2) | 
-                           ((base.y % blockSize) == blockSize - 1 << 1) |
-                            (base.z % blockSize) == blockSize - 1;
+  unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
+                           ((base.y % blockSize == blockSize - 1) << 1) |
+                           ((base.z % blockSize) == blockSize - 1);
 
   switch(crossmask) {
     case 0: /* all local */
@@ -79,30 +93,21 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs1[4] = {0, 1, 2, 3};
         const unsigned int offs2[4] = {4, 5, 6, 7};
         VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
-        if(!block) {
-          std::cerr << "Fetched wrong block" << std::endl;
-          points[offs1[0]] = select(VoxelBlock<FieldType>::empty());
-          points[offs1[1]] = select(VoxelBlock<FieldType>::empty());
-          points[offs1[2]] = select(VoxelBlock<FieldType>::empty());
-          points[offs1[3]] = select(VoxelBlock<FieldType>::empty());
-        }
-        gather_4(block, base, [](const auto& val){ return val; }, offs1, points);
+        gather_4(block, base, select, offs1, points);
         const uint3 base1 = base + interp_offsets[offs2[0]];
         block = fetcher.fetch(base1.x, base1.y, base1.z);
-        if(!block) {
-          std::cerr << "Fetched wrong block" << std::endl;
-          points[offs2[0]] = select(VoxelBlock<FieldType>::empty());
-          points[offs2[1]] = select(VoxelBlock<FieldType>::empty());
-          points[offs2[2]] = select(VoxelBlock<FieldType>::empty());
-          points[offs2[3]] = select(VoxelBlock<FieldType>::empty());
-        }
-        gather_4(block, base, [](const auto& val){ return val; }, offs2, points);
+        gather_4(block, base, select, offs2, points);
       }
       break;
     case 2: /* y crosses */ 
       {
         const unsigned int offs1[4] = {0, 1, 4, 5};
         const unsigned int offs2[4] = {2, 3, 6, 7};
+        VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
+        gather_4(block, base, select, offs1, points);
+        const uint3 base1 = base + interp_offsets[offs2[0]];
+        block = fetcher.fetch(base1.x, base1.y, base1.z);
+        gather_4(block, base, select, offs2, points);
       }
       break;
     case 3: /* y, z cross */ 
@@ -111,12 +116,28 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs2[2] = {2, 3};
         const unsigned int offs3[2] = {4, 5};
         const unsigned int offs4[2] = {6, 7};
+        const uint3 base2 = base + interp_offsets[offs2[0]];
+        const uint3 base3 = base + interp_offsets[offs3[0]];
+        const uint3 base4 = base + interp_offsets[offs4[0]];
+        VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
+        gather_2(block, base, select, offs1, points);
+        block = fetcher.fetch(base2.x, base2.y, base2.z);
+        gather_2(block, base, select, offs2, points);
+        block = fetcher.fetch(base3.x, base3.y, base3.z);
+        gather_2(block, base, select, offs3, points);
+        block = fetcher.fetch(base4.x, base4.y, base4.z);
+        gather_2(block, base, select, offs4, points);
       }
       break;
     case 4: /* x crosses */ 
       {
         const unsigned int offs1[4] = {0, 2, 4, 6};
         const unsigned int offs2[4] = {1, 3, 5, 7};
+        VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
+        gather_4(block, base, select, offs1, points);
+        const uint3 base1 = base + interp_offsets[offs2[0]];
+        block = fetcher.fetch(base1.x, base1.y, base1.z);
+        gather_4(block, base, select, offs2, points);
       }
       break;
     case 5: /* x,z cross */ 
@@ -125,17 +146,59 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs2[2] = {1, 3};
         const unsigned int offs3[2] = {4, 6};
         const unsigned int offs4[2] = {5, 7};
+        const uint3 base2 = base + interp_offsets[offs2[0]];
+        const uint3 base3 = base + interp_offsets[offs3[0]];
+        const uint3 base4 = base + interp_offsets[offs4[0]];
+        VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
+        gather_2(block, base, select, offs1, points);
+        block = fetcher.fetch(base2.x, base2.y, base2.z);
+        gather_2(block, base, select, offs2, points);
+        block = fetcher.fetch(base3.x, base3.y, base3.z);
+        gather_2(block, base, select, offs3, points);
+        block = fetcher.fetch(base4.x, base4.y, base4.z);
+        gather_2(block, base, select, offs4, points);
       }
       break;
-// static constexpr const uint3 interp_offsets[8] = 
-//   {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0}, 
-//    {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};
     case 6: /* x,y cross */ 
       {
         const unsigned int offs1[2] = {0, 4};
         const unsigned int offs2[2] = {1, 5};
         const unsigned int offs3[2] = {2, 6};
         const unsigned int offs4[2] = {3, 7};
+        const uint3 base2 = base + interp_offsets[offs2[0]];
+        const uint3 base3 = base + interp_offsets[offs3[0]];
+        const uint3 base4 = base + interp_offsets[offs4[0]];
+        VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
+        gather_2(block, base, select, offs1, points);
+        block = fetcher.fetch(base2.x, base2.y, base2.z);
+        gather_2(block, base, select, offs2, points);
+        block = fetcher.fetch(base3.x, base3.y, base3.z);
+        gather_2(block, base, select, offs3, points);
+        block = fetcher.fetch(base4.x, base4.y, base4.z);
+        gather_2(block, base, select, offs4, points);
+      }
+      break;
+
+    case 7:
+      {
+        uint3 vox[8];
+        vox[0] = base + interp_offsets[0];
+        vox[1] = base + interp_offsets[1];
+        vox[2] = base + interp_offsets[2];
+        vox[3] = base + interp_offsets[3];
+        vox[4] = base + interp_offsets[4];
+        vox[5] = base + interp_offsets[5];
+        vox[6] = base + interp_offsets[6];
+        vox[7] = base + interp_offsets[7];
+
+        points[0] = select(fetcher.get(vox[0].x, vox[0].y, vox[0].z));
+        points[1] = select(fetcher.get(vox[1].x, vox[1].y, vox[1].z));
+        points[2] = select(fetcher.get(vox[2].x, vox[2].y, vox[2].z));
+        points[3] = select(fetcher.get(vox[3].x, vox[3].y, vox[3].z));
+        points[4] = select(fetcher.get(vox[4].x, vox[4].y, vox[4].z));
+        points[5] = select(fetcher.get(vox[5].x, vox[5].y, vox[5].z));
+        points[6] = select(fetcher.get(vox[6].x, vox[6].y, vox[6].z));
+        points[7] = select(fetcher.get(vox[7].x, vox[7].y, vox[7].z));
       }
       break;
   }
