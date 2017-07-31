@@ -6,12 +6,12 @@
  * Interpolation's point gather offsets
  */
 
-static constexpr const uint3 interp_offsets[8] = 
+static constexpr const int3 interp_offsets[8] = 
   {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0}, 
    {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};
 
 template <typename FieldType, typename FieldSelector>
-inline void gather_local(const VoxelBlock<FieldType>* block, const uint3 base, 
+inline void gather_local(const VoxelBlock<FieldType>* block, const int3 base, 
     FieldSelector select, float points[8]) {
 
   if(!block) {
@@ -38,7 +38,7 @@ inline void gather_local(const VoxelBlock<FieldType>* block, const uint3 base,
 }
 
 template <typename FieldType, typename FieldSelector>
-inline void gather_4(const VoxelBlock<FieldType>* block, const uint3 base, 
+inline void gather_4(const VoxelBlock<FieldType>* block, const int3 base, 
     FieldSelector select, const unsigned int offsets[4], float points[8]) {
 
   if(!block) {
@@ -57,7 +57,7 @@ inline void gather_4(const VoxelBlock<FieldType>* block, const uint3 base,
 }
 
 template <typename FieldType, typename FieldSelector>
-inline void gather_2(const VoxelBlock<FieldType>* block, const uint3 base, 
+inline void gather_2(const VoxelBlock<FieldType>* block, const int3 base, 
     FieldSelector select, const unsigned int offsets[2], float points[8]) {
 
   if(!block) {
@@ -73,7 +73,7 @@ inline void gather_2(const VoxelBlock<FieldType>* block, const uint3 base,
 
 template <typename FieldType, template<typename FieldType> class MapIndex,
          class FieldSelector>
-inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base, 
+inline void gather_points(const MapIndex<FieldType>& fetcher, const int3 base, 
     FieldSelector select, float points[8]) {
  
   unsigned int blockSize =  VoxelBlock<FieldType>::side;
@@ -94,7 +94,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs2[4] = {4, 5, 6, 7};
         VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
         gather_4(block, base, select, offs1, points);
-        const uint3 base1 = base + interp_offsets[offs2[0]];
+        const int3 base1 = base + interp_offsets[offs2[0]];
         block = fetcher.fetch(base1.x, base1.y, base1.z);
         gather_4(block, base, select, offs2, points);
       }
@@ -105,7 +105,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs2[4] = {2, 3, 6, 7};
         VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
         gather_4(block, base, select, offs1, points);
-        const uint3 base1 = base + interp_offsets[offs2[0]];
+        const int3 base1 = base + interp_offsets[offs2[0]];
         block = fetcher.fetch(base1.x, base1.y, base1.z);
         gather_4(block, base, select, offs2, points);
       }
@@ -116,9 +116,9 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs2[2] = {2, 3};
         const unsigned int offs3[2] = {4, 5};
         const unsigned int offs4[2] = {6, 7};
-        const uint3 base2 = base + interp_offsets[offs2[0]];
-        const uint3 base3 = base + interp_offsets[offs3[0]];
-        const uint3 base4 = base + interp_offsets[offs4[0]];
+        const int3 base2 = base + interp_offsets[offs2[0]];
+        const int3 base3 = base + interp_offsets[offs3[0]];
+        const int3 base4 = base + interp_offsets[offs4[0]];
         VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
         gather_2(block, base, select, offs1, points);
         block = fetcher.fetch(base2.x, base2.y, base2.z);
@@ -135,7 +135,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs2[4] = {1, 3, 5, 7};
         VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
         gather_4(block, base, select, offs1, points);
-        const uint3 base1 = base + interp_offsets[offs2[0]];
+        const int3 base1 = base + interp_offsets[offs2[0]];
         block = fetcher.fetch(base1.x, base1.y, base1.z);
         gather_4(block, base, select, offs2, points);
       }
@@ -146,9 +146,9 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs2[2] = {1, 3};
         const unsigned int offs3[2] = {4, 6};
         const unsigned int offs4[2] = {5, 7};
-        const uint3 base2 = base + interp_offsets[offs2[0]];
-        const uint3 base3 = base + interp_offsets[offs3[0]];
-        const uint3 base4 = base + interp_offsets[offs4[0]];
+        const int3 base2 = base + interp_offsets[offs2[0]];
+        const int3 base3 = base + interp_offsets[offs3[0]];
+        const int3 base4 = base + interp_offsets[offs4[0]];
         VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
         gather_2(block, base, select, offs1, points);
         block = fetcher.fetch(base2.x, base2.y, base2.z);
@@ -165,9 +165,9 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs2[2] = {1, 5};
         const unsigned int offs3[2] = {2, 6};
         const unsigned int offs4[2] = {3, 7};
-        const uint3 base2 = base + interp_offsets[offs2[0]];
-        const uint3 base3 = base + interp_offsets[offs3[0]];
-        const uint3 base4 = base + interp_offsets[offs4[0]];
+        const int3 base2 = base + interp_offsets[offs2[0]];
+        const int3 base3 = base + interp_offsets[offs3[0]];
+        const int3 base4 = base + interp_offsets[offs4[0]];
         VoxelBlock<FieldType> * block = fetcher.fetch(base.x, base.y, base.z);
         gather_2(block, base, select, offs1, points);
         block = fetcher.fetch(base2.x, base2.y, base2.z);
@@ -181,7 +181,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
 
     case 7:
       {
-        uint3 vox[8];
+        int3 vox[8];
         vox[0] = base + interp_offsets[0];
         vox[1] = base + interp_offsets[1];
         vox[2] = base + interp_offsets[2];
