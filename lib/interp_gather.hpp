@@ -14,6 +14,18 @@ template <typename FieldType, typename FieldSelector>
 inline void gather_local(const VoxelBlock<FieldType>* block, const uint3 base, 
     FieldSelector select, float points[8]) {
 
+  if(!block) {
+    points[0] = select(VoxelBlock<FieldType>::empty());
+    points[1] = select(VoxelBlock<FieldType>::empty());
+    points[2] = select(VoxelBlock<FieldType>::empty());
+    points[3] = select(VoxelBlock<FieldType>::empty());
+    points[4] = select(VoxelBlock<FieldType>::empty());
+    points[5] = select(VoxelBlock<FieldType>::empty());
+    points[6] = select(VoxelBlock<FieldType>::empty());
+    points[7] = select(VoxelBlock<FieldType>::empty());
+    return;
+  }
+
   points[0] = select(block->data(base + interp_offsets[0]));
   points[1] = select(block->data(base + interp_offsets[1]));
   points[2] = select(block->data(base + interp_offsets[2]));
@@ -22,17 +34,27 @@ inline void gather_local(const VoxelBlock<FieldType>* block, const uint3 base,
   points[5] = select(block->data(base + interp_offsets[5]));
   points[6] = select(block->data(base + interp_offsets[6]));
   points[7] = select(block->data(base + interp_offsets[7]));
-
+  return;
 }
 
 template <typename FieldType, typename FieldSelector>
 inline void gather_4(const VoxelBlock<FieldType>* block, const uint3 base, 
     FieldSelector select, const unsigned int offsets[4], float points[8]) {
 
+  if(!block) {
+    points[offsets[0]] = select(VoxelBlock<FieldType>::empty());
+    points[offsets[1]] = select(VoxelBlock<FieldType>::empty());
+    points[offsets[2]] = select(VoxelBlock<FieldType>::empty());
+    points[offsets[3]] = select(VoxelBlock<FieldType>::empty());
+    return;
+  }
+
   points[offsets[0]] = select(block->data(base + interp_offsets[offsets[0]]));
   points[offsets[1]] = select(block->data(base + interp_offsets[offsets[1]]));
   points[offsets[2]] = select(block->data(base + interp_offsets[offsets[2]]));
   points[offsets[3]] = select(block->data(base + interp_offsets[offsets[3]]));
+  return;
+
 }
 
 template <typename FieldType, template<typename FieldType> class MapIndex,
@@ -65,7 +87,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
           points[offs1[3]] = select(VoxelBlock<FieldType>::empty());
         }
         gather_4(block, base, [](const auto& val){ return val; }, offs1, points);
-        const uint3 base1 = base + offs2[0];
+        const uint3 base1 = base + interp_offsets[offs2[0]];
         block = fetcher.fetch(base1.x, base1.y, base1.z);
         if(!block) {
           std::cerr << "Fetched wrong block" << std::endl;
@@ -96,6 +118,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs1[4] = {0, 2, 4, 6};
         const unsigned int offs2[4] = {1, 3, 5, 7};
       }
+      break;
     case 5: /* x,z cross */ 
       {
         const unsigned int offs1[2] = {0, 2};
@@ -103,6 +126,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs3[2] = {4, 6};
         const unsigned int offs4[2] = {5, 7};
       }
+      break;
 // static constexpr const uint3 interp_offsets[8] = 
 //   {{0, 0, 0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0}, 
 //    {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};
@@ -113,6 +137,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const uint3 base,
         const unsigned int offs3[2] = {2, 6};
         const unsigned int offs4[2] = {3, 7};
       }
+      break;
   }
 }
 #endif
