@@ -265,13 +265,13 @@ template <typename T>
 inline typename Octree<T>::compute_type Octree<T>::get(const float3 p, 
     VoxelBlock<T>* cached) const {
 
-  const uint3 pos = make_uint3((p.x * size_ / dim_),
-                               (p.y * size_ / dim_),
-                               (p.z * size_ / dim_));
+  const int3 pos = make_int3((p.x * size_ / dim_),
+      (p.y * size_ / dim_),
+      (p.z * size_ / dim_));
 
   if(cached != NULL){
-    uint3 lower = cached->coordinates();
-    uint3 upper = lower + (blockSide-1);
+    int3 lower = cached->coordinates();
+    int3 upper = lower + (blockSide-1);
     if(in(pos.x, lower.x, upper.x) && in(pos.y, lower.y, upper.y) &&
        in(pos.z, lower.z, upper.z)){
       return cached->data(pos);
@@ -287,7 +287,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const float3 p,
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    n = n->child((pos.x & edge) > 0u, (pos.y & edge) > 0u, (pos.z & edge) > 0u);
+    n = n->child((pos.x & edge) > 0, (pos.y & edge) > 0, (pos.z & edge) > 0);
     if(!n){
     return empty();
     }
@@ -306,34 +306,27 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     return empty();
   }
 
-  const uint ux = x;
-  const uint uy = y;
-  const uint uz = z;
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    n = n->child((ux & edge) > 0u, (uy & edge) > 0u, (uz & edge) > 0u);
+    n = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!n){
       return empty();
     }
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(make_uint3(x, y, z));
+  return static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z));
 }
 
 template <typename T>
 inline typename Octree<T>::compute_type Octree<T>::get(const int x,
    const int y, const int z, VoxelBlock<T>* cached) const {
 
-  const uint ux = x;
-  const uint uy = y;
-  const uint uz = z;
-
   if(cached != NULL){
-    const uint3 lower = cached->coordinates();
-    const uint3 upper = lower + (blockSide-1);
+    const int3 lower = cached->coordinates();
+    const int3 upper = lower + (blockSide-1);
     if(in(x, lower.x, upper.x) && in(y, lower.y, upper.y) &&
        in(z, lower.z, upper.z)){
-      return cached->data(make_uint3(x, y, z));
+      return cached->data(make_int3(x, y, z));
     }
   }
 
@@ -344,13 +337,13 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    n = n->child((ux & edge) > 0u, (uy & edge) > 0u, (uz & edge) > 0u);
+    n = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!n){
       return empty();
     }
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(make_uint3(ux, uy, uz));
+  return static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z));
 }
 
 template <typename T>
@@ -411,7 +404,7 @@ float Octree<T>::interp(float3 pos, FieldSelector select) const {
   const int3 lower = max(base, make_int3(0));
 
   float points[8];
-  gather_points(*this, make_uint3(lower), select, points);
+  gather_points(*this, lower, select, points);
 
   return (((points[0] * (1 - factor.x)
           + points[1] * factor.x) * (1 - factor.y)
@@ -720,7 +713,7 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
       if(!(*n)){
         if(level == leaves_level){
           *n = block_memory_.acquire_block();
-          static_cast<VoxelBlock<T> *>(*n)->coordinates(unpack_morton(myKey));
+          static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
         }
         else  *n = new Node<T>();
