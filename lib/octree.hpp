@@ -409,53 +409,20 @@ float Octree<T>::interp(float3 pos, FieldSelector select) const {
   const int3 base = make_int3(floorf(pos));
   const float3 factor = fracf(pos);
   const int3 lower = max(base, make_int3(0));
-  const int3 upper = min(base + make_int3(1),
-      make_int3(size_) - make_int3(1));
 
-  VoxelBlock<T> * n = fetch(lower.x, lower.y, lower.z);
-  if(n){
-    const int3 ul = make_int3(n->coordinates() + VoxelBlock<T>::side);
-    // Local interpolation
-    if(upper.x < ul.x && upper.y < ul.y && upper.z < ul.z){
+  float points[8];
+  gather_points(*this, make_uint3(lower), select, points);
 
-      stored_type* data = n->getBlockRawPtr();
-      const uint3 offset = n->coordinates();
-      uint3 lower_offset = make_uint3(lower.x - offset.x,
-          lower.y - offset.y,
-          lower.z - offset.z);
-
-      uint3 upper_offset = make_uint3(upper.x - offset.x,
-          upper.y - offset.y,
-          upper.z - offset.z);
-
-      static constexpr uint edge = blockSide;
-      static constexpr uint edge2 = edge * edge;
-
-      float value = (((select(data[lower_offset.x + lower_offset.y*edge + lower_offset.z*edge2]) * (1 - factor.x)
-              + select(data[upper_offset.x + lower_offset.y*edge + lower_offset.z*edge2]) * factor.x) * (1 - factor.y)
-            + (select(data[lower_offset.x + (upper_offset.y)*edge + lower_offset.z*edge2]) * (1 - factor.x)
-              + select(data[upper_offset.x + (upper_offset.y)*edge + lower_offset.z*edge2]) * factor.x) * factor.y)
+  return (((points[0] * (1 - factor.x)
+          + points[1] * factor.x) * (1 - factor.y)
+          + (points[2] * (1 - factor.x)
+          + points[3] * factor.x) * factor.y)
           * (1 - factor.z)
-          + ((select(data[lower_offset.x + lower_offset.y*edge + (upper_offset.z)*edge2]) * (1 - factor.x)
-              + select(data[upper_offset.x + lower_offset.y*edge + (upper_offset.z)*edge2]) * factor.x)
-            * (1 - factor.y)
-            + (select(data[lower_offset.x + (upper_offset.y)*edge + (upper_offset.z)*edge2]) * (1 - factor.x)
-              + select(data[upper_offset.x + (upper_offset.y)*edge + (upper_offset.z)*edge2]) * factor.x)
-            * factor.y) * factor.z);
-      return value;
-    }
-  }
-
-  return (((select(get(lower.x, lower.y, lower.z, n)) * (1 - factor.x)
-          + select(get(upper.x, lower.y, lower.z, n)) * factor.x) * (1 - factor.y)
-          + (select(get(lower.x, upper.y, lower.z, n)) * (1 - factor.x)
-          + select(get(upper.x, upper.y, lower.z, n)) * factor.x) * factor.y)
-          * (1 - factor.z)
-          + ((  select(get(lower.x, lower.y, upper.z, n)) * (1 - factor.x)
-          + select(get(upper.x, lower.y, upper.z, n)) * factor.x)
+          + ((points[4] * (1 - factor.x)
+          + points[5] * factor.x)
           * (1 - factor.y)
-          + ( select(get(lower.x, upper.y, upper.z, n)) * (1 - factor.x)
-          + select(get(upper.x, upper.y, upper.z, n)) * factor.x)
+          + (points[6] * (1 - factor.x)
+          + points[7] * factor.x)
           * factor.y) * factor.z);
 }
 
