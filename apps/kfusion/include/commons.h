@@ -768,6 +768,21 @@ inline void compareMatrix4(std::string str, Matrix4 l, Matrix4 r) {
 	compareFloat4(str, l.data, r.data, 4);
 }
 
+inline bool compareFloat4(float4* l, float4 * r, uint size) {
+	for (unsigned int i = 0; i < size; i++) {
+		if ((std::abs(l[i].x - r[i].x) > epsilon) ||
+		    (std::abs(l[i].y - r[i].y) > epsilon) ||
+		    (std::abs(l[i].z - r[i].z) > epsilon) ||
+		    (std::abs(l[i].w - r[i].w) > epsilon))
+     return false; 
+	}
+  return true;
+}
+
+inline bool compareMatrix4(Matrix4 l, Matrix4 r) {
+	return compareFloat4(l.data, r.data, 4);
+}
+
 inline void printMatrix4(std::string str, Matrix4 l) {
 	std::cout << "printMatrix4 : " << str << std::endl;
 	for (int i = 0; i < 4; i++) {
