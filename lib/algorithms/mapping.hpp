@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MAPPING_HPP
 #include <node.hpp>
 
-inline float3 voxelToPos(const uint3 p, const float voxelSize){
+inline float3 voxelToPos(const int3 p, const float voxelSize){
   return make_float3(p.x * voxelSize, p.y * voxelSize, p.z * voxelSize);
 }
 
@@ -58,7 +58,7 @@ void integrate(VoxelBlock<T> * block, const float * depth, uint2 depthSize,
 
   const float3 delta = rotate(invTrack, make_float3(voxelSize, 0, 0));
   const float3 cameraDelta = rotate(K, delta);
-  const uint3 blockCoord = block->coordinates();
+  const uint3 blockCoord = make_uint3(block->coordinates());
   bool is_visible = false;
   block->active(is_visible);
 
@@ -68,7 +68,7 @@ void integrate(VoxelBlock<T> * block, const float * depth, uint2 depthSize,
   unsigned int zlast = blockCoord.z + blockSide;
   for(z = blockCoord.z; z < zlast; ++z)
     for (y = blockCoord.y; y < ylast; ++y){
-      uint3 pix = make_uint3(blockCoord.x, y, z);
+      int3 pix = make_int3(blockCoord.x, y, z);
       float3 start = invTrack * voxelToPos(pix, voxelSize);
 			float3 camerastart = K * start;
 #pragma simd

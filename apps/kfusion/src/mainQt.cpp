@@ -213,9 +213,6 @@ int processAll(DepthReader *reader, bool processFrame, bool renderImages,
 		if (powerMonitor != NULL && !firstFrame)
 			powerMonitor->start();
 
-		pos = kfusion->getPosition();
-		pose = kfusion->getPose();
-
 		timings[1] = tock();
 
 		kfusion->preprocessing(inputDepth, inputSize, config->bilateralFilter);
@@ -224,6 +221,9 @@ int processAll(DepthReader *reader, bool processFrame, bool renderImages,
 
 		tracked = kfusion->tracking(camera, config->icp_threshold,
 				config->tracking_rate, frame);
+
+		pos = kfusion->getPosition();
+		pose = kfusion->getPose();
 
 		timings[3] = tock();
 
