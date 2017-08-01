@@ -69,5 +69,45 @@ namespace algorithms {
     }
     return make_float4(0);
   }
+
+  float4 raycast(const Volume& volume, const float3 origin, const float3 direction, 
+      const float tnear, const float tfar, const float mu, 
+      const float step, const float largestep) { 
+
+    if (tnear < tfar) {
+      // first walk with largesteps until we found a hit
+      float t = tnear;
+      float stepsize = largestep;
+      float3 position = origin + direction * t;
+      auto select_depth = [](const auto& val){ return val.x; };
+      float f_t = volume.interp(position, select_depth);
+      float f_tt = 0;
+      if (f_t > 0) { // ups, if we were already in it, then don't render anything here
+        for (; t < tfar; t += stepsize) {
+          Volume::compute_type data = volume[position];
+          if(data.y < 0){
+            stepsize = largestep;
+            position += stepsize*direction;
+            continue;
+          }
+          f_tt = data.x;
+          if(f_tt <= 0.1f && f_tt >= -0.5f){
+            f_tt = volume.interp(position, select_depth);
+          }
+          if (f_tt < 0)                  // got it, jump out of inner loop
+            break;
+          stepsize = fmaxf(f_tt * mu, step);
+          position += stepsize*direction;
+          //stepsize = step;
+          f_t = f_tt;
+        }
+        if (f_tt < 0) {           // got it, calculate accurate intersection
+          t = t + stepsize * f_tt / (f_t - f_tt);
+          return make_float4(origin + direction * t, t);
+        }
+      }
+    }
+    return make_float4(0);
+  }
 }
 #endif

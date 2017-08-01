@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
 #include <algorithm>
+#include <tuple>
 #include <parallel/algorithm>
 #include <node.hpp>
 #include <memory_pool.hpp>
@@ -1144,10 +1145,10 @@ class ray_iterator {
      * Returns the next leaf along the ray direction.
      */
 
-    float next() {
+    std::tuple<float, float, float> next() {
 
       if(state_ == ADVANCE) advance_ray();
-      else if (state_ == FINISHED) return -1.f;
+      else if (state_ == FINISHED) return std::make_tuple(-1.f, -1.f, -1.f);
 
       while (scale_ < CAST_STACK_DEPTH) {
         t_corner_ = pos_ * t_coef_ - t_bias_;
@@ -1157,15 +1158,16 @@ class ray_iterator {
 
         if (scale_ == min_scale_ && child_ != NULL){
           state_ = ADVANCE;
-          return t_min_ / (voxelSize_ / map_.dim_);
-
+          return std::make_tuple(t_min_ * map_.dim_ /voxelSize_, 
+              t_min_ * map_.dim_ /voxelSize_,
+              stack[CAST_STACK_DEPTH-1].t_max * map_.dim_ /voxelSize_);
         } else if (child_ != NULL && t_min_ <= t_max_){  // If the child is valid, descend the tree hierarchy.
           descend();
           continue;
         }
         advance_ray();
       }
-      return -1.f;
+      return std::make_tuple(-1.f, -1.f, -1.f);
     }
 
   private:
