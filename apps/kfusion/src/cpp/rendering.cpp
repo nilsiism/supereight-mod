@@ -1,6 +1,7 @@
 #include <math_utils.h>
 #include <algorithms/raycasting.cpp>
 #include "continuous/sdf_volume.hpp"
+#include <tuple>
 
 void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 inputSize, 
     const Matrix4 view, const float nearPlane, const float farPlane, 
@@ -15,7 +16,8 @@ void raycastKernel(const Volume& volume, float3* vertex, float3* normal, uint2 i
 			uint2 pos = make_uint2(x, y);
       ray_iterator<Volume::field_type> ray(volume._map_index, get_translation(view), 
           normalize(rotate(view, make_float3(x, y, 1.f))), nearPlane, farPlane);
-      const float t_min = ray.next(); /* Get distance to the first intersected block */
+      const std::tuple<float, float, float> t = ray.next(); /* Get distance to the first intersected block */
+      float t_min = std::get<0>(t);
       const float4 hit = t_min > 0.f ? 
         algorithms::raycast(volume, pos, view, t_min*volume._dim/volume._size, 
           farPlane, mu, step, largestep) : make_float4(0.f);
