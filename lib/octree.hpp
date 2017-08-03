@@ -45,21 +45,31 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithms/unique.hpp>
 #include <interp_gather.hpp>
 
-#define MAX_BITS 10
+#define MAX_BITS 21
 #define CAST_STACK_DEPTH 23
 
-
-uint MASK[] = {
-  0x38000000, // 111 000 000 000 000 000 000 000 000 000
-  0x3F000000, // 111 111 000 000 000 000 000 000 000 000
-  0x3FE00000, // 111 111 111 000 000 000 000 000 000 000
-  0x3FFC0000, // 111 111 111 111 000 000 000 000 000 000
-  0x3FFF8000, // 111 111 111 111 111 000 000 000 000 000
-  0x3FFFF000, // 111 111 111 111 111 111 000 000 000 000
-  0x3FFFFE00, // 111 111 111 111 111 111 111 000 000 000
-  0x3FFFFFC0, // 111 111 111 111 111 111 111 111 000 000
-  0x3FFFFFF8, // 111 111 111 111 111 111 111 111 111 000
-  0x3FFFFFFF  // 111 111 111 111 111 111 111 111 111 111
+unsigned long long  MASK[] = {
+  0xf000000000000000,
+  0xfe00000000000000,
+  0xffc0000000000000,
+  0xfff8000000000000,
+  0xffff000000000000,
+  0xffffe00000000000,
+  0xfffffc0000000000,
+  0xffffff8000000000,
+  0xfffffff000000000,
+  0xfffffffe00000000,
+  0xffffffffc0000000,
+  0xfffffffff8000000,
+  0xffffffffff000000,
+  0xffffffffffe00000,
+  0xfffffffffffc0000,
+  0xffffffffffff8000,
+  0xfffffffffffff000,
+  0xfffffffffffffe00,
+  0xffffffffffffffc0,
+  0xfffffffffffffff8,
+  0xffffffffffffffff
 };
 
 inline int __float_as_int(float value){
@@ -184,9 +194,9 @@ public:
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
    */
-  unsigned int hash(const int x, const int y, const int z) {
+  morton_type hash(const int x, const int y, const int z) {
     constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
-    return compute_morton(make_uint3(x, y, z)) & MASK[morton_mask];   
+    return compute_morton(x, y, z) & MASK[morton_mask];   
   }
  
 
@@ -195,7 +205,7 @@ public:
    * morton number)
    * \param number of keys in the keys array
    */
-  bool allocate(uint *keys, int num_elem);
+  bool allocate(morton_type *keys, int num_elem);
 
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
@@ -236,8 +246,7 @@ private:
   static constexpr unsigned int block_depth = max_depth - log2_const(BLOCK_SIDE);
 
   // Allocation specific variables
-  uint * allocationList_;
-  uint * keys_at_level_;
+  morton_type * keys_at_level_;
   int reserved_;
 
   // Private implementation of cached methods
@@ -246,14 +255,14 @@ private:
 
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
-  bool allocateLevel(uint * keys, int num_tasks, int target_level);
+  bool allocateLevel(morton_type * keys, int num_tasks, int target_level);
 
   // Masks code with the appropriate bitmask for the input three level.
   unsigned int getMortonAtLevel(uint code, int level);
 
   void reserveBuffers(const int n);
-  bool getKeysAtLevel(const uint * inputKeys, uint *outpuKeys, unsigned int num_keys, int level);
-  uint3 getChildFromCode(int code, int level);
+  bool getKeysAtLevel(const morton_type * inputKeys, morton_type *outpuKeys, unsigned int num_keys, int level);
+  uint3 getChildFromCode(morton_type code, int level);
 
   // General helpers
 
@@ -377,7 +386,7 @@ void Octree<T>::init(int size, float dim) {
   root_ = new Node<T>();
   // root_->edge(size_);
   reserved_ = 1024;
-  keys_at_level_ = new unsigned int[reserved_];
+  keys_at_level_ = new morton_type[reserved_];
   std::memset(keys_at_level_, 0, reserved_);
 }
 
@@ -652,8 +661,8 @@ inline uint Octree<T>::getMortonAtLevel(uint code, int level){
 }
 
 template <typename T>
-inline bool Octree<T>::getKeysAtLevel(const uint * inputKeys, uint * outputKeys,  
-    unsigned int num_keys, int level){
+inline bool Octree<T>::getKeysAtLevel(const morton_type * inputKeys, 
+    morton_type * outputKeys,  unsigned int num_keys, int level){
 
   const int shift = MAX_BITS - max_level_;
   outputKeys[0] = inputKeys[0] & MASK[level + shift-1];
@@ -670,14 +679,14 @@ void Octree<T>::reserveBuffers(const int n){
   if(n > reserved_){
     // std::cout << "Reserving " << n << " entries in allocation buffers" << std::endl;
     delete[] keys_at_level_;
-    keys_at_level_ = new uint[n];
+    keys_at_level_ = new morton_type[n];
     reserved_ = n;
   }
   block_memory_.reserve(n);
 }
 
 template <typename T>
-bool Octree<T>::allocate(uint *keys, int num_elem){
+bool Octree<T>::allocate(morton_type *keys, int num_elem){
 
 #ifdef _OPENMP
   __gnu_parallel::sort(keys, keys+num_elem);
@@ -700,14 +709,14 @@ std::sort(keys, keys+num_elem);
 }
 
 template <typename T>
-bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
+bool Octree<T>::allocateLevel(morton_type * keys, int num_tasks, int target_level){
 
   int leaves_level = max_level_ - log2(blockSide);
 
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
     Node<T> ** n = &root_;
-    int myKey = keys[i];
+    morton_type myKey = keys[i];
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
@@ -733,7 +742,7 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
 
 
 template <typename T>
-inline uint3 Octree<T>::getChildFromCode(int code, int level){
+inline uint3 Octree<T>::getChildFromCode(morton_type code, int level){
 
   int shift = max_level_ - level;
   code = code >> shift*3;

@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define BLOCK_SIDE 8
 
-typedef unsigned int morton_type; 
+typedef unsigned long long int morton_type; 
 //   typedef long long int morton_type; 
 
 #endif

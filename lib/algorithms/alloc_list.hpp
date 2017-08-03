@@ -21,8 +21,8 @@
  * \param voxelSize spacing between two consegutive voxels, in metric space
  * \param band maximum extent of the allocating region, per ray
  */
-template <typename FieldType, template <typename> class IndexType>
-unsigned int buildAllocationList(uint * allocationList, size_t reserved,
+template <typename FieldType, template <typename> class IndexType, typename HashType>
+unsigned int buildAllocationList(HashType * allocationList, size_t reserved,
     IndexType<FieldType>& map_index, const Matrix4 &pose, const Matrix4& K, 
     const float *depthmap, const uint2 &imageSize, const unsigned int size,  
     const float voxelSize, const float band) {
@@ -66,7 +66,7 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
           voxel = make_int3(voxelScaled);
           VoxelBlock<FieldType> * n = map_index.fetch(voxel.x, voxel.y, voxel.z);
           if(!n){
-            uint k = map_index.hash(voxel.x, voxel.y, voxel.z);
+            HashType k = map_index.hash(voxel.x, voxel.y, voxel.z);
             unsigned int idx = ++voxelCount;
             if(idx < reserved) {
               allocationList[idx] = k;

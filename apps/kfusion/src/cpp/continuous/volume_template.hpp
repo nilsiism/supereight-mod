@@ -108,7 +108,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
 
     unsigned int _size;
     float _dim;
-    std::vector<uint> _allocationList;
+    std::vector<morton_type> _allocationList;
     Indexer<FieldType> _map_index; 
 
   private:
