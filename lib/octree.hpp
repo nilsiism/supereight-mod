@@ -1065,10 +1065,12 @@ class ray_iterator {
     inline void advance_ray() {
 
       int step_mask = 0;
-
-      if (t_corner_.x <= tc_max_) step_mask ^= 1, pos_.x -= scale_exp2_;
-      if (t_corner_.y <= tc_max_) step_mask ^= 2, pos_.y -= scale_exp2_;
-      if (t_corner_.z <= tc_max_) step_mask ^= 4, pos_.z -= scale_exp2_;
+      
+      step_mask = (t_corner_.x <= tc_max_) | 
+          ((t_corner_.y <= tc_max_) << 1) | ((t_corner_.z <= tc_max_) << 2);
+      pos_.x -= scale_exp2_ * bool(step_mask & 1);
+      pos_.y -= scale_exp2_ * bool(step_mask & 2);
+      pos_.z -= scale_exp2_ * bool(step_mask & 4);
 
       t_min_ = tc_max_;
       idx_ ^= step_mask;
@@ -1133,9 +1135,12 @@ class ray_iterator {
       idx_ = 0;
       scale_--;
       scale_exp2_ = half;
-      if (t_center.x > t_min_) idx_ ^= 1, pos_.x += scale_exp2_;
-      if (t_center.y > t_min_) idx_ ^= 2, pos_.y += scale_exp2_;
-      if (t_center.z > t_min_) idx_ ^= 4, pos_.z += scale_exp2_;
+      idx_ = (t_center.x > t_min_) | 
+          ((t_center.y > t_min_) << 1) | ((t_center.z > t_min_) << 2);
+
+      pos_.x += scale_exp2_ * bool(idx_ & 1);
+      pos_.y += scale_exp2_ * bool(idx_ & 2);
+      pos_.z += scale_exp2_ * bool(idx_ & 4);
 
       t_max_ = tv_max;
       child_ = NULL;
