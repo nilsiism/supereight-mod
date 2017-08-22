@@ -1,5 +1,6 @@
 #include <math_utils.h>
-#include "continuous/volume.hpp"
+#include "continuous/volume_instance.hpp"
+#include <tuple>
 
 /* Raycasting implementations */ 
 #include "bfusion/rendering_impl.hpp"
@@ -19,7 +20,8 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
 			uint2 pos = make_uint2(x, y);
       ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, get_translation(view), 
           normalize(rotate(view, make_float3(x, y, 1.f))), nearPlane, farPlane);
-      const float t_min = ray.next(); /* Get distance to the first intersected block */
+      const std::tuple<float, float, float> t = ray.next(); /* Get distance to the first intersected block */
+      float t_min = std::get<0>(t);
       const float4 hit = t_min > 0.f ? 
         raycast(volume, pos, view, t_min*volume._dim/volume._size, 
           farPlane, mu, step, largestep) : make_float4(0.f);
@@ -132,16 +134,16 @@ template <typename T>
 void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthSize, const Matrix4 view, 
     const float nearPlane, const float farPlane, const float mu,
 		const float step, const float largestep, const float3 light,
-		const float3 ambient) {
+		const float3 ambient, bool ) {
 	TICK();
-	unsigned int y;
+  unsigned int y;
 #pragma omp parallel for shared(out), private(y)
 	for (y = 0; y < depthSize.y; y++) {
 		for (unsigned int x = 0; x < depthSize.x; x++) {
 			const uint2 pos = make_uint2(x, y);
       ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, get_translation(view), 
           normalize(rotate(view, make_float3(x, y, 1.f))), nearPlane, farPlane);
-      const float t_min = ray.next(); /* Get distance to the first intersected block */
+      const float t_min = std::get<0>(ray.next()); /* Get distance to the first intersected block */
       const float4 hit = t_min > 0.f ? 
         raycast(volume, pos, view, t_min*volume._dim/volume._size, 
           farPlane, mu, step, largestep) : make_float4(0.f);

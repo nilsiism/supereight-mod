@@ -79,9 +79,6 @@ void read_input(std::string inputfile, T * in) {
 	}
 }
 
-inline float sq(float r) {
-	return r * r;
-}
 
 inline uchar4 gs2rgb(double h) {
 	uchar4 rgb;
@@ -144,18 +141,6 @@ inline uchar4 gs2rgb(double h) {
 	rgb.z = b * 255;
 	rgb.w = 0; // Only for padding purposes 
 	return rgb;
-}
-
-template <typename T>
-inline int unique(T* keys, int num_keys){
-  int end = 1;
-  for (int i = 1; i < num_keys; ++i){
-    if(keys[i] != keys[i-1]){
-      keys[end] = keys[i];
-      ++end;
-    }
-  }
-  return end;
 }
 
 typedef struct Triangle {
@@ -632,17 +617,6 @@ struct TrackData {
 	float J[6];
 };
 
-inline __host__      __device__ float3 operator*(const Matrix4 & M,
-		const float3 & v) {
-	return make_float3(dot(make_float3(M.data[0]), v) + M.data[0].w,
-			dot(make_float3(M.data[1]), v) + M.data[1].w,
-			dot(make_float3(M.data[2]), v) + M.data[2].w);
-}
-
-inline float3 rotate(const Matrix4 & M, const float3 & v) {
-	return make_float3(dot(make_float3(M.data[0]), v),
-			dot(make_float3(M.data[1]), v), dot(make_float3(M.data[2]), v));
-}
 
 inline Matrix4 getCameraMatrix(const float4 & k) {
 	Matrix4 K;
@@ -792,6 +766,21 @@ inline void compareFloat4(std::string str, float4* l, float4 * r, uint size) {
 
 inline void compareMatrix4(std::string str, Matrix4 l, Matrix4 r) {
 	compareFloat4(str, l.data, r.data, 4);
+}
+
+inline bool compareFloat4(float4* l, float4 * r, uint size) {
+	for (unsigned int i = 0; i < size; i++) {
+		if ((std::abs(l[i].x - r[i].x) > epsilon) ||
+		    (std::abs(l[i].y - r[i].y) > epsilon) ||
+		    (std::abs(l[i].z - r[i].z) > epsilon) ||
+		    (std::abs(l[i].w - r[i].w) > epsilon))
+     return false; 
+	}
+  return true;
+}
+
+inline bool compareMatrix4(Matrix4 l, Matrix4 r) {
+	return compareFloat4(l.data, r.data, 4);
 }
 
 inline void printMatrix4(std::string str, Matrix4 l) {

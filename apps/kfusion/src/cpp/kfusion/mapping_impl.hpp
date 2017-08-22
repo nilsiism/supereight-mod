@@ -1,6 +1,7 @@
 #ifndef KFUSION_MAPPING_HPP
 #define KFUSION_MAPPING_HPP
 #include <node.hpp>
+#include "../continuous/volume_traits.hpp"
 
 void integrate(VoxelBlock<SDF> * block, const float * depth, uint2 depthSize, 
     const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
@@ -9,7 +10,7 @@ void integrate(VoxelBlock<SDF> * block, const float * depth, uint2 depthSize,
   using VoxelBlockT = VoxelBlock<SDF>;
   const float3 delta = rotate(invTrack, make_float3(voxelSize, 0, 0));
   const float3 cameraDelta = rotate(K, delta);
-  const uint3 blockCoord = block->coordinates();
+  const int3 blockCoord = block->coordinates();
   bool is_visible = false;
   block->active(is_visible);
 
@@ -19,7 +20,7 @@ void integrate(VoxelBlock<SDF> * block, const float * depth, uint2 depthSize,
   unsigned int zlast = blockCoord.z + blockSide;
   for(z = blockCoord.z; z < zlast; ++z)
     for (y = blockCoord.y; y < ylast; ++y){
-      uint3 pix = make_uint3(blockCoord.x, y, z);
+      int3 pix = make_int3(blockCoord.x, y, z);
       float3 start = invTrack * make_float3((pix.x + 0.5f) * voxelSize, 
           (pix.y + 0.5f) * voxelSize, (pix.z + 0.5f) * voxelSize);
 			float3 camerastart = K * start;

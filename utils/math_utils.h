@@ -1,6 +1,7 @@
 #ifndef MATH_UTILS_H
 #define MATH_UTILS_H
 
+#include <cmath>
 #ifndef CUDA
 #include "vector_types.h"
 #else
@@ -49,6 +50,10 @@ inline float4 operator*(const Matrix4 & M, const float4 & v) {
 			dot(M.data[3], v));
 }
 
+inline float sq(float r) {
+	return r * r;
+}
+
 inline Matrix4 outer(const float4& a, const float4& b){
   Matrix4 mat;
   mat.data[0] = make_float4(a.x*b.x, a.x*b.y, a.x*b.z, a.x*b.w);
@@ -56,6 +61,18 @@ inline Matrix4 outer(const float4& a, const float4& b){
   mat.data[2] = make_float4(a.z*b.x, a.z*b.y, a.z*b.z, a.z*b.w);
   mat.data[3] = make_float4(a.w*b.x, a.w*b.y, a.w*b.z, a.w*b.w);
   return mat;
+}
+
+inline __host__      __device__ float3 operator*(const Matrix4 & M,
+		const float3 & v) {
+	return make_float3(dot(make_float3(M.data[0]), v) + M.data[0].w,
+			dot(make_float3(M.data[1]), v) + M.data[1].w,
+			dot(make_float3(M.data[2]), v) + M.data[2].w);
+}
+
+inline float3 rotate(const Matrix4 & M, const float3 & v) {
+	return make_float3(dot(make_float3(M.data[0]), v),
+			dot(make_float3(M.data[1]), v), dot(make_float3(M.data[2]), v));
 }
 
 // Converting quaternion and trans to SE3 matrix 

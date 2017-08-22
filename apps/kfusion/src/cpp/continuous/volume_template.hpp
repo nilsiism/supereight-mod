@@ -8,6 +8,7 @@
 #include <algorithms/alloc_list.hpp>
 #include <algorithms/filter.hpp>
 #include <functional>
+#include "../mapping.hpp"
 
 template <typename T>
 class Void {};

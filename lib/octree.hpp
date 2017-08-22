@@ -32,14 +32,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OCTREE_H
 #define OCTREE_H
 
+#include <cstring>
 #include <math_utils.h>
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
-#include <commons.h>
 #include <algorithm>
+#include <tuple>
 #include <parallel/algorithm>
 #include <node.hpp>
 #include <memory_pool.hpp>
+#include <algorithms/unique.hpp>
+#include <interp_gather.hpp>
 
 #define MAX_BITS 10
 #define CAST_STACK_DEPTH 23
@@ -236,9 +239,6 @@ private:
   uint * keys_at_level_;
   int reserved_;
 
-  // Camera parameters
-  float maxweight_;  // maximum weight
-
   // Private implementation of cached methods
   compute_type get(const int x, const int y, const int z, VoxelBlock<T>* cached) const;
   compute_type get(const float3 pos, VoxelBlock<T>* cached) const;
@@ -270,13 +270,13 @@ template <typename T>
 inline typename Octree<T>::compute_type Octree<T>::get(const float3 p, 
     VoxelBlock<T>* cached) const {
 
-  const uint3 pos = make_uint3((p.x * size_ / dim_),
-                               (p.y * size_ / dim_),
-                               (p.z * size_ / dim_));
+  const int3 pos = make_int3((p.x * size_ / dim_),
+      (p.y * size_ / dim_),
+      (p.z * size_ / dim_));
 
   if(cached != NULL){
-    uint3 lower = cached->coordinates();
-    uint3 upper = lower + (blockSide-1);
+    int3 lower = cached->coordinates();
+    int3 upper = lower + (blockSide-1);
     if(in(pos.x, lower.x, upper.x) && in(pos.y, lower.y, upper.y) &&
        in(pos.z, lower.z, upper.z)){
       return cached->data(pos);
@@ -292,7 +292,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const float3 p,
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    n = n->child((pos.x & edge) > 0u, (pos.y & edge) > 0u, (pos.z & edge) > 0u);
+    n = n->child((pos.x & edge) > 0, (pos.y & edge) > 0, (pos.z & edge) > 0);
     if(!n){
     return empty();
     }
@@ -311,34 +311,27 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     return empty();
   }
 
-  const uint ux = x;
-  const uint uy = y;
-  const uint uz = z;
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    n = n->child((ux & edge) > 0u, (uy & edge) > 0u, (uz & edge) > 0u);
+    n = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!n){
       return empty();
     }
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(make_uint3(x, y, z));
+  return static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z));
 }
 
 template <typename T>
 inline typename Octree<T>::compute_type Octree<T>::get(const int x,
    const int y, const int z, VoxelBlock<T>* cached) const {
 
-  const uint ux = x;
-  const uint uy = y;
-  const uint uz = z;
-
   if(cached != NULL){
-    const uint3 lower = cached->coordinates();
-    const uint3 upper = lower + (blockSide-1);
+    const int3 lower = cached->coordinates();
+    const int3 upper = lower + (blockSide-1);
     if(in(x, lower.x, upper.x) && in(y, lower.y, upper.y) &&
        in(z, lower.z, upper.z)){
-      return cached->data(make_uint3(x, y, z));
+      return cached->data(make_int3(x, y, z));
     }
   }
 
@@ -349,13 +342,13 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    n = n->child((ux & edge) > 0u, (uy & edge) > 0u, (uz & edge) > 0u);
+    n = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!n){
       return empty();
     }
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(make_uint3(ux, uy, uz));
+  return static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z));
 }
 
 template <typename T>
@@ -382,8 +375,9 @@ void Octree<T>::init(int size, float dim) {
   max_level_ = log2(size);
   root_ = new Node<T>();
   // root_->edge(size_);
-  reserved_ = 0;
-  maxweight_ = maxweight; // from constant_parameters.h
+  reserved_ = 1024;
+  keys_at_level_ = new unsigned int[reserved_];
+  std::memset(keys_at_level_, 0, reserved_);
 }
 
 template <typename T>
@@ -413,53 +407,20 @@ float Octree<T>::interp(float3 pos, FieldSelector select) const {
   const int3 base = make_int3(floorf(pos));
   const float3 factor = fracf(pos);
   const int3 lower = max(base, make_int3(0));
-  const int3 upper = min(base + make_int3(1),
-      make_int3(size_) - make_int3(1));
 
-  VoxelBlock<T> * n = fetch(lower.x, lower.y, lower.z);
-  if(n){
-    const int3 ul = make_int3(n->coordinates() + VoxelBlock<T>::side);
-    // Local interpolation
-    if(upper.x < ul.x && upper.y < ul.y && upper.z < ul.z){
+  float points[8];
+  gather_points(*this, lower, select, points);
 
-      stored_type* data = n->getBlockRawPtr();
-      const uint3 offset = n->coordinates();
-      uint3 lower_offset = make_uint3(lower.x - offset.x,
-          lower.y - offset.y,
-          lower.z - offset.z);
-
-      uint3 upper_offset = make_uint3(upper.x - offset.x,
-          upper.y - offset.y,
-          upper.z - offset.z);
-
-      static constexpr uint edge = blockSide;
-      static constexpr uint edge2 = edge * edge;
-
-      float value = (((select(data[lower_offset.x + lower_offset.y*edge + lower_offset.z*edge2]) * (1 - factor.x)
-              + select(data[upper_offset.x + lower_offset.y*edge + lower_offset.z*edge2]) * factor.x) * (1 - factor.y)
-            + (select(data[lower_offset.x + (upper_offset.y)*edge + lower_offset.z*edge2]) * (1 - factor.x)
-              + select(data[upper_offset.x + (upper_offset.y)*edge + lower_offset.z*edge2]) * factor.x) * factor.y)
+  return (((points[0] * (1 - factor.x)
+          + points[1] * factor.x) * (1 - factor.y)
+          + (points[2] * (1 - factor.x)
+          + points[3] * factor.x) * factor.y)
           * (1 - factor.z)
-          + ((select(data[lower_offset.x + lower_offset.y*edge + (upper_offset.z)*edge2]) * (1 - factor.x)
-              + select(data[upper_offset.x + lower_offset.y*edge + (upper_offset.z)*edge2]) * factor.x)
-            * (1 - factor.y)
-            + (select(data[lower_offset.x + (upper_offset.y)*edge + (upper_offset.z)*edge2]) * (1 - factor.x)
-              + select(data[upper_offset.x + (upper_offset.y)*edge + (upper_offset.z)*edge2]) * factor.x)
-            * factor.y) * factor.z);
-      return value;
-    }
-  }
-
-  return (((select(get(lower.x, lower.y, lower.z, n)) * (1 - factor.x)
-          + select(get(upper.x, lower.y, lower.z, n)) * factor.x) * (1 - factor.y)
-          + (select(get(lower.x, upper.y, lower.z, n)) * (1 - factor.x)
-          + select(get(upper.x, upper.y, lower.z, n)) * factor.x) * factor.y)
-          * (1 - factor.z)
-          + ((  select(get(lower.x, lower.y, upper.z, n)) * (1 - factor.x)
-          + select(get(upper.x, lower.y, upper.z, n)) * factor.x)
+          + ((points[4] * (1 - factor.x)
+          + points[5] * factor.x)
           * (1 - factor.y)
-          + ( select(get(lower.x, upper.y, upper.z, n)) * (1 - factor.x)
-          + select(get(upper.x, upper.y, upper.z, n)) * factor.x)
+          + (points[6] * (1 - factor.x)
+          + points[7] * factor.x)
           * factor.y) * factor.z);
 }
 
@@ -723,7 +684,7 @@ bool Octree<T>::allocate(uint *keys, int num_elem){
 std::sort(keys, keys+num_elem);
 #endif
 
-  num_elem = unique(keys, num_elem);
+  num_elem = algorithms::unique(keys, num_elem);
   reserveBuffers(num_elem);
 
   int last_elem = 0;
@@ -731,7 +692,7 @@ std::sort(keys, keys+num_elem);
   const int leaf_level = max_level_ - log2(blockSide);
   for (int level = 1; level <= leaf_level; level++){
     getKeysAtLevel(keys, keys_at_level_, num_elem, level);
-    last_elem = unique(keys_at_level_, num_elem);
+    last_elem = algorithms::unique(keys_at_level_, num_elem);
     success = allocateLevel(keys_at_level_, last_elem, level);
   }
   return success;
@@ -757,7 +718,7 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
       if(!(*n)){
         if(level == leaves_level){
           *n = block_memory_.acquire_block();
-          static_cast<VoxelBlock<T> *>(*n)->coordinates(unpack_morton(myKey));
+          static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
         }
         else  *n = new Node<T>();
@@ -1103,10 +1064,12 @@ class ray_iterator {
     inline void advance_ray() {
 
       int step_mask = 0;
-
-      if (t_corner_.x <= tc_max_) step_mask ^= 1, pos_.x -= scale_exp2_;
-      if (t_corner_.y <= tc_max_) step_mask ^= 2, pos_.y -= scale_exp2_;
-      if (t_corner_.z <= tc_max_) step_mask ^= 4, pos_.z -= scale_exp2_;
+      
+      step_mask = (t_corner_.x <= tc_max_) | 
+          ((t_corner_.y <= tc_max_) << 1) | ((t_corner_.z <= tc_max_) << 2);
+      pos_.x -= scale_exp2_ * bool(step_mask & 1);
+      pos_.y -= scale_exp2_ * bool(step_mask & 2);
+      pos_.z -= scale_exp2_ * bool(step_mask & 4);
 
       t_min_ = tc_max_;
       idx_ ^= step_mask;
@@ -1171,9 +1134,12 @@ class ray_iterator {
       idx_ = 0;
       scale_--;
       scale_exp2_ = half;
-      if (t_center.x > t_min_) idx_ ^= 1, pos_.x += scale_exp2_;
-      if (t_center.y > t_min_) idx_ ^= 2, pos_.y += scale_exp2_;
-      if (t_center.z > t_min_) idx_ ^= 4, pos_.z += scale_exp2_;
+      idx_ = (t_center.x > t_min_) | 
+          ((t_center.y > t_min_) << 1) | ((t_center.z > t_min_) << 2);
+
+      pos_.x += scale_exp2_ * bool(idx_ & 1);
+      pos_.y += scale_exp2_ * bool(idx_ & 2);
+      pos_.z += scale_exp2_ * bool(idx_ & 4);
 
       t_max_ = tv_max;
       child_ = NULL;
@@ -1183,10 +1149,10 @@ class ray_iterator {
      * Returns the next leaf along the ray direction.
      */
 
-    float next() {
+    std::tuple<float, float, float> next() {
 
       if(state_ == ADVANCE) advance_ray();
-      else if (state_ == FINISHED) return -1.f;
+      else if (state_ == FINISHED) return std::make_tuple(-1.f, -1.f, -1.f);
 
       while (scale_ < CAST_STACK_DEPTH) {
         t_corner_ = pos_ * t_coef_ - t_bias_;
@@ -1196,15 +1162,16 @@ class ray_iterator {
 
         if (scale_ == min_scale_ && child_ != NULL){
           state_ = ADVANCE;
-          return t_min_ / (voxelSize_ / map_.dim_);
-
+          return std::make_tuple(t_min_ * map_.dim_ /voxelSize_, 
+              t_min_ * map_.dim_ /voxelSize_,
+              stack[CAST_STACK_DEPTH-1].t_max * map_.dim_ /voxelSize_);
         } else if (child_ != NULL && t_min_ <= t_max_){  // If the child is valid, descend the tree hierarchy.
           descend();
           continue;
         }
         advance_ray();
       }
-      return -1.f;
+      return std::make_tuple(-1.f, -1.f, -1.f);
     }
 
   private:

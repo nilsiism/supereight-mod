@@ -33,7 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define NODE_H
 
 #include <time.h>
-#include <commons.h>
 #include <math_utils.h>
 #include <atomic>
 #include <octree_defines.h>
@@ -50,8 +49,8 @@ public:
 
     virtual ~Node(){};
 
-    Node *& child(const unsigned int x, const unsigned int y, 
-        const unsigned int z) {
+    Node *& child(const int x, const int y, 
+        const int z) {
       return child_ptr_[x + y*2 + z*4];
     };
 
@@ -91,24 +90,18 @@ class VoxelBlock: public Node<T> {
 
     VoxelBlock(){
       timestamp_ = 0;
-      coordinates_ = make_uint3(0);
+      coordinates_ = make_int3(0);
       for (unsigned int i = 0; i < side*sideSq; i++)
         voxel_block_[i] = initValue();
     }
 
     bool isLeaf(){ return true; }
 
-    uint3 coordinates() const { return coordinates_; }
-    void coordinates(const uint3 c){ coordinates_ = c; }
+    int3 coordinates() const { return coordinates_; }
+    void coordinates(const int3 c){ coordinates_ = c; }
 
-    compute_type data(const uint3 pos) const;
-    void data(const uint3 pos, compute_type& value);
-
-    inline float vs3(const uint x, const uint y, const uint z) const {
-      return voxel_block_[(x) +
-        (y)*side +
-        (z)*sideSq].x;
-    }
+    compute_type data(const int3 pos) const;
+    void data(const int3 pos, compute_type& value);
 
     void timestamp(const time_t frame){ 
       timestamp_ = frame;
@@ -126,24 +119,24 @@ class VoxelBlock: public Node<T> {
 
   private:
     VoxelBlock(const VoxelBlock&) = delete;
-    uint3 coordinates_;
+    int3 coordinates_;
     stored_type voxel_block_[side*sideSq]; // Brick of data.
     time_t timestamp_;
     bool active_;
 };
 
 template <typename T>
-inline typename VoxelBlock<T>::compute_type VoxelBlock<T>::data(const uint3 pos) const {
-  uint3 offset = pos - coordinates_;
+inline typename VoxelBlock<T>::compute_type VoxelBlock<T>::data(const int3 pos) const {
+  int3 offset = pos - coordinates_;
   const stored_type& data = voxel_block_[offset.x + offset.y*side + 
                                          offset.z*sideSq];
   return translate(data);
 }
 
 template <typename T>
-inline void VoxelBlock<T>::data(const uint3 pos, 
+inline void VoxelBlock<T>::data(const int3 pos, 
                                compute_type &value){
-  uint3 offset = pos - coordinates_;
+  int3 offset = pos - coordinates_;
   voxel_block_[offset.x + offset.y*side + offset.z*sideSq] = translate(value);
 }
 #endif

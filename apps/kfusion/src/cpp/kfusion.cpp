@@ -10,7 +10,7 @@
 #include <perfstats.h>
 #include <vtk-io.h>
 #include <octree.hpp>
-#include "continuous/volume.hpp"
+#include "continuous/volume_instance.hpp"
 
 extern PerfStats Stats;
 
@@ -398,9 +398,11 @@ void Kfusion::getPointCloudFromVolume(){
 void Kfusion::renderVolume(uchar4 * out, uint2 outputSize, int frame,
 		int raycast_rendering_rate, float4 k, float largestep) {
 	if (frame % raycast_rendering_rate == 0)
-		renderVolumeKernel(volume, out, outputSize, 
+		renderVolumeKernel(volume, out, outputSize,
         *(this->viewPose) * getInverseCameraMatrix(k), nearPlane, 
-        farPlane * 2.0f, _mu, step, largestep, get_translation(*(this->viewPose)), ambient);
+        farPlane * 2.0f, _mu, step, largestep, 
+        get_translation(*(this->viewPose)), ambient, 
+        !compareMatrix4(*(this->viewPose), raycastPose));
 }
 
 void Kfusion::renderTrack(uchar4 * out, uint2 outputSize) {

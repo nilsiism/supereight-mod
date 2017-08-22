@@ -29,6 +29,54 @@ namespace algorithms {
       return predicate(el) || satisfies(el, others...);
     }
 
+#ifdef _OPENMP
+  template <typename BlockType, typename... Predicates>
+    void filter(std::vector<BlockType *>& out,
+        const MemoryPool<BlockType>& block_array, Predicates... ps) {
+
+      std::vector<BlockType *> temp;
+      int num_elem = block_array.size();
+      temp.resize(num_elem);
+
+      int * thread_start = new int[omp_get_max_threads()];
+      int * thread_end = new int[omp_get_max_threads()];
+      int spawn_threads;
+#pragma omp parallel
+      {
+        int threadid = omp_get_thread_num(); 
+        int num_threads = omp_get_num_threads();
+        int my_start = thread_start[threadid] = (threadid) * num_elem / num_threads;
+        int my_end   = (threadid+1) * num_elem / num_threads;
+        int count = 0;
+#pragma omp simd
+        for(int i = my_start; i < my_end; ++i) {
+          if(satisfies(block_array[i], ps...)){
+            temp[my_start + count] = block_array[i];
+            count++;
+          }
+        } 
+        /* Store the actual end */
+        thread_end[threadid] = count;
+        if(threadid == 0) spawn_threads = num_threads;
+      }
+      
+      int total = 0;
+      for(int i = 0; i < spawn_threads; ++i) {
+        total += thread_end[i];
+      }
+      out.resize(total);
+      /* Copy the first */
+      std::memcpy(out.data(), temp.data(), sizeof(BlockType *) * thread_end[0]);
+      int copied = thread_end[0];
+      /* Copy the rest */
+      for(int i = 1; i < spawn_threads; ++i) {
+        std::memcpy(out.data() + copied, 
+            temp.data() + thread_start[i], sizeof(BlockType *) * thread_end[i]);
+        copied += thread_end[i];
+      }
+    }
+
+#else
   template <typename BlockType, typename... Predicates>
     void filter(std::vector<BlockType *>& out,
         const MemoryPool<BlockType>& block_array, Predicates... ps) {
@@ -38,5 +86,6 @@ namespace algorithms {
         }
       } 
     }
+#endif
 }
 #endif

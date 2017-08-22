@@ -1,12 +1,6 @@
 #ifndef VOLUME_H
 #define VOLUME_H
 
-// Continuous volume template implementation
-#include "volume_template.hpp"
-
-// Discrete octree implementation
-#include <octree.hpp>
-
 // Data types definitions
 #include "voxel_traits.hpp"
 
@@ -55,23 +49,4 @@ struct voxel_traits<BFusion> {
 #define TOP_CLAMP     100.f
 #define BOTTOM_CLAMP  (-TOP_CLAMP)
 
-/******************************************************************************
- *
- * Default typedefs for the Volume Class
- * 
-******************************************************************************/
-
-
-#ifndef STORAGE_LAYOUT
-#define STORAGE_LAYOUT DynamicStorage
-#endif
-
-#ifndef INDEX_STRUCTURE
-#define INDEX_STRUCTURE Octree
-#endif
-
-typedef BFusion FieldType;
-
-template <typename T>
-using Volume = VolumeTemplate<T, STORAGE_LAYOUT, INDEX_STRUCTURE>;
 #endif
