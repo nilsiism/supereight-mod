@@ -1,6 +1,7 @@
 #ifndef MORTON_UTILS_HPP
 #define MORTON_UTILS_HPP
 #include <math_utils.h>
+#include <cstdint>
 
 // inline unsigned int expand(unsigned int value){
 //   unsigned int x;
