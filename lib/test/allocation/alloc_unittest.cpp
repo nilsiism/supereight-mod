@@ -40,3 +40,21 @@ TEST(AllocationTest, SetSingleVoxel) {
   const float read_val = oct.get(vox.x, vox.y, vox.z);
   EXPECT_EQ(written_val, read_val);
 }
+
+TEST(AllocationTest4096, SetSingleVoxel) {
+  typedef Octree<float> OctreeF;
+  OctreeF oct;
+  oct.init(4096, 5);
+  const int3 vox = {25, 2022, 1980};
+  const morton_type code = oct.hash(vox.x, vox.y, vox.z); 
+  morton_type allocList[1] = {code};
+  oct.allocate(allocList, 1);
+
+  VoxelBlock<float> * block = oct.fetch(vox.x, vox.y, vox.z);
+  ASSERT_TRUE(block);
+  float written_val = 2.f;
+  block->data(vox, written_val);
+
+  const float read_val = oct.get(vox.x, vox.y, vox.z);
+  EXPECT_EQ(written_val, read_val);
+}
