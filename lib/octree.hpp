@@ -99,6 +99,7 @@ public:
   typedef typename traits_type::ComputeType compute_type;
   typedef typename traits_type::StoredType stored_type;
   compute_type empty() const { return traits_type::empty(); }
+  compute_type init_val() const { return traits_type::initValue(); }
 
   Octree(){
   };
@@ -188,6 +189,11 @@ public:
     constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
     return compute_morton(make_uint3(x, y, z)) & MASK[morton_mask];   
   }
+
+  unsigned int hash(const int x, const int y, const int z, const int scale) {
+    constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
+    return compute_morton(make_uint3(x, y, z)) & MASK[morton_mask];   
+  }
  
 
   /*! \brief allocate a set of voxel blocks via their positional key  
@@ -196,6 +202,9 @@ public:
    * \param number of keys in the keys array
    */
   bool allocate(uint *keys, int num_elem);
+
+  template <typename UpdateFunctor>
+  bool alloc_update(uint *keys, int num_elem, const int max_depth, UpdateFunctor f);
 
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
@@ -247,6 +256,10 @@ private:
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
   bool allocateLevel(uint * keys, int num_tasks, int target_level);
+
+  template <typename UpdateFunctor>
+  bool updateLevel(uint * keys, int num_tasks, int target_level, 
+      UpdateFunctor f);
 
   // Masks code with the appropriate bitmask for the input three level.
   unsigned int getMortonAtLevel(uint code, int level);
@@ -309,15 +322,16 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
 
   Node<T> * n = root_;
   if(!n) {
-    return empty();
+    return init_val();
   }
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    n = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
-    if(!n){
-      return empty();
+    Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
+    if(!tmp){
+      return n->value_;
     }
+    n = tmp;
   }
 
   return static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z));
@@ -338,14 +352,14 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
 
   Node<T> * n = root_;
   if(!n) {
-    return empty();
+    return init_val();
   }
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
     n = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!n){
-      return empty();
+      return init_val();
     }
   }
 
@@ -700,6 +714,29 @@ std::sort(keys, keys+num_elem);
 }
 
 template <typename T>
+template <typename UpdateFunctor>
+bool Octree<T>::alloc_update(uint *keys, int num_elem, const int max_depth, 
+    UpdateFunctor f){
+
+#ifdef _OPENMP
+  __gnu_parallel::sort(keys, keys+num_elem);
+#else
+std::sort(keys, keys+num_elem);
+#endif
+
+  num_elem = algorithms::unique(keys, num_elem);
+  reserveBuffers(num_elem);
+
+  int last_elem = 0;
+  bool success = false;
+  for (int level = 1; level <= max_depth; level++){
+    getKeysAtLevel(keys, keys_at_level_, num_elem, level);
+    last_elem = algorithms::unique(keys_at_level_, num_elem);
+    success = updateLevel(keys_at_level_, last_elem, level, f);
+  }
+  return success;
+}
+template <typename T>
 bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
 
   int leaves_level = max_level_ - log2(blockSide);
@@ -723,6 +760,42 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
           static_cast<VoxelBlock<T> *>(*n)->active(true);
         }
         else  *n = new Node<T>();
+      }
+      edge /= 2;
+    }
+  }
+  return true;
+}
+
+template <typename T>
+template <typename UpdateFunctor>
+bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
+    UpdateFunctor f){
+
+  int leaves_level = max_level_ - log2(blockSide);
+
+#pragma omp parallel for
+  for (int i = 0; i < num_tasks; i++){
+    Node<T> ** n = &root_;
+    int myKey = keys[i];
+    int edge = size_/2;
+
+    for (int level = 1; level <= target_level; ++level){
+
+      uint3 child = getChildFromCode(myKey, level);
+      int index = child.x + child.y*2 + child.z*4;
+      n = &(*n)->child(index);
+
+      if(!(*n)){
+        if(level == leaves_level){
+          *n = block_memory_.acquire_block();
+          static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
+          static_cast<VoxelBlock<T> *>(*n)->active(true);
+        }
+        else  *n = new Node<T>();
+      } else {
+        const int3 coordinates = make_int3(unpack_morton(myKey));
+        f(*n, coordinates.x, coordinates.y, coordinates.z);
       }
       edge /= 2;
     }

@@ -11,3 +11,4 @@ include_directories(../../lib ../../utils)
 
 add_subdirectory(allocation)
 add_subdirectory(interp)
+add_subdirectory(multiscale)

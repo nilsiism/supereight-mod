@@ -7,6 +7,7 @@
 #include <type_traits>
 #include <algorithms/alloc_list.hpp>
 #include <algorithms/filter.hpp>
+#include <algorithms/mapping.hpp>
 #include <functional>
 
 template <typename T>
@@ -87,6 +88,16 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
           _map_index, pose, K, depthmap, frameSize, _size, 
           _dim/_size, mu);
       _map_index.allocate(_allocationList.data(), allocated);
+
+      // const float step = 0.5f;
+      // const int updated = 
+      //   buildIntersectionList(_allocationList.data(), _allocationList.capacity(),  
+      //     _map_index, pose, K, depthmap, frameSize, _size, 
+      //     _dim/_size, step, mu);
+      // auto compute_sdf = std::bind(algorithms::integrate<FieldType>, _1, _2,
+      //     _3, _4, depthmap, frameSize, _dim/_size, inverse(pose), K,  mu, 100);
+
+      // _map_index.alloc_update(_allocationList.data(), updated, 5, compute_sdf);
 
       std::vector<VoxelBlock<FieldType> *> active_list;
       const MemoryPool<VoxelBlock<FieldType> >& block_array = 

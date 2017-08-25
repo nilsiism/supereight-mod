@@ -103,4 +103,38 @@ void integrate(VoxelBlock<T> * block, const float * depth, uint2 depthSize,
   block->active(is_visible);
 }
 
+namespace algorithms {
+  template <typename T>
+    void integrate(Node<T> * node, const int x, const int y, const int z,
+        const float * depth, uint2 depthSize, 
+        const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
+        const float mu, const float maxweight) { 
+
+      const int3 voxel = make_int3(x, y, z);
+      float3 pos = invTrack * voxelToPos(voxel, voxelSize);
+      float3 cameraX = K * pos;
+      if (pos.z < 0.0001f) // some near plane constraint
+        return;
+      const float2 pixel = make_float2(cameraX.x / cameraX.z + 0.5f,
+          cameraX.y / cameraX.z + 0.5f);
+      if (pixel.x < 0 || pixel.x > depthSize.x - 1 || pixel.y < 0
+          || pixel.y > depthSize.y - 1)
+        return;
+      const uint2 px = make_uint2(pixel.x, pixel.y);
+      if (depth[px.x + px.y * depthSize.x] == 0)
+        return;
+      const float diff =
+        (depth[px.x + px.y * depthSize.x] - cameraX.z)
+        * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
+      if (diff > -mu) {
+        const float sdf = fminf(1.f, diff / mu);
+        typename VoxelBlock<T>::compute_type data = node->value_; // should do an offsetted access here
+        data.x = clamp((data.y * data.x + sdf) / (data.y + 1), -1.f,
+            1.f);
+        data.y = fminf(data.y + 1, maxweight);
+        node->value_ = data;
+      }
+    }
+}
+
 #endif

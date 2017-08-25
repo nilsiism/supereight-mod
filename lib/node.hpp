@@ -42,7 +42,18 @@ template <typename T>
 class Node {
 
 public:
+  typedef voxel_traits<T> traits_type;
+  typedef typename traits_type::ComputeType compute_type;
+  typedef typename traits_type::StoredType stored_type;
+  compute_type empty() const { return traits_type::empty(); }
+  compute_type init_val() const { return traits_type::initValue(); }
+
+  compute_type value_;
+  time_t timestamp_;
+  char chid_mask_;
+
   Node(){
+//    value_ = init_val();
     for (unsigned int i = 0; i < 8; i++)
       child_ptr_[i] = NULL;
     }
