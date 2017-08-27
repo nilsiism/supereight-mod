@@ -715,7 +715,7 @@ std::sort(keys, keys+num_elem);
 
 template <typename T>
 template <typename UpdateFunctor>
-bool Octree<T>::alloc_update(uint *keys, int num_elem, const int max_depth, 
+bool Octree<T>::alloc_update(uint *keys, int num_elem, const int max_level, 
     UpdateFunctor f){
 
 #ifdef _OPENMP
@@ -729,7 +729,7 @@ std::sort(keys, keys+num_elem);
 
   int last_elem = 0;
   bool success = false;
-  for (int level = 1; level <= max_depth; level++){
+  for (int level = 1; level <= max_level; level++){
     getKeysAtLevel(keys, keys_at_level_, num_elem, level);
     last_elem = algorithms::unique(keys_at_level_, num_elem);
     success = updateLevel(keys_at_level_, last_elem, level, f);
@@ -793,10 +793,10 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
           static_cast<VoxelBlock<T> *>(*n)->active(true);
         }
         else  *n = new Node<T>();
-      } else {
-        const int3 coordinates = make_int3(unpack_morton(myKey));
-        f(*n, coordinates.x, coordinates.y, coordinates.z);
       }
+
+      const int3 coordinates = make_int3(unpack_morton(myKey));
+      f(*n, coordinates.x, coordinates.y, coordinates.z);
       edge /= 2;
     }
   }
