@@ -113,7 +113,7 @@ void save3DSlice(const MapType& in, const int3 lower, const int3 upper,
   for(int z = lower.z; z < upper.z; ++z)
     for(int y = lower.y; y < upper.y; ++y)
       for(int x = lower.x; x < upper.x; ++x) {
-        const float data = in[make_uint3(x, y, z)].y;
+        const float data = in[make_uint3(x, y, z)].x;
         scalars << data  << std::endl;
       }
 
