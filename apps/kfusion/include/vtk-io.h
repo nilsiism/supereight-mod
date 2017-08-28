@@ -86,6 +86,53 @@ void save3DSlice(const T* in, const uint3 lower, const uint3 upper,
   f.close();
 } 
 
+template <typename MapType>
+void save3DSlice(const MapType& in, const int3 lower, const int3 upper, 
+    const int3, const char* filename){
+  std::stringstream x_coordinates, y_coordinates, z_coordinates, scalars;
+  std::ofstream f;
+  f.open(filename);
+ 
+  const int dimX = upper.x - lower.x;
+  const int dimY = upper.y - lower.y;
+  const int dimZ = upper.z - lower.z;
+
+  f << "# vtk DataFile Version 1.0" << std::endl;
+  f << "vtk mesh generated from KFusion" << std::endl;
+  f << "ASCII" << std::endl;
+  f << "DATASET RECTILINEAR_GRID" << std::endl;
+  f << "DIMENSIONS " << dimX << " " << dimY << " " << dimZ << std::endl;
+
+  for(int x = lower.x; x < upper.x; ++x)
+    x_coordinates << x << " ";  
+  for(int y = lower.y; y < upper.y; ++y)
+    y_coordinates << y << " ";  
+  for(int z = lower.z; z < upper.z; ++z)
+    z_coordinates << z << " ";  
+
+  for(int z = lower.z; z < upper.z; ++z)
+    for(int y = lower.y; y < upper.y; ++y)
+      for(int x = lower.x; x < upper.x; ++x) {
+        const float data = in[make_uint3(x, y, z)].x;
+        scalars << data  << std::endl;
+      }
+
+  f << "X_COORDINATES " << dimX << " int " << std::endl;
+  f << x_coordinates.str() << std::endl;
+
+  f << "Y_COORDINATES " << dimY << " int " << std::endl;
+  f << y_coordinates.str() << std::endl;
+
+  f << "Z_COORDINATES " << dimZ << " int " << std::endl;
+  f << z_coordinates.str() << std::endl;
+
+  f << "POINT_DATA " << dimX*dimY*dimZ << std::endl;
+  f << "SCALARS scalars float 1" << std::endl;
+  f << "LOOKUP_TABLE default" << std::endl;
+  f << scalars.str() << std::endl;
+  f.close();
+} 
+
 void printNormals(const float3* in, const unsigned int xdim, 
                  const unsigned int ydim, const char* filename) {
   unsigned char* image = new unsigned char [xdim * ydim * 4];

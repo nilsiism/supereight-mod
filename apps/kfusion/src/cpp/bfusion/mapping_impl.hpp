@@ -173,4 +173,34 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
   block->active(is_visible);
 }
 
+void integrate_bfusion(Node<BFusion> * node, const int x, const int y, const int z,
+    const float * depth, uint2 depthSize, 
+    const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
+    const float noiseFactor, const float ) { 
+
+  const int3 voxel = make_int3(x, y, z);
+  float3 pos = invTrack * (make_float3(voxel) * voxelSize);
+  float3 camera_voxel = K * pos;
+  if (pos.z < 0.0001f) // some near plane constraint
+    return;
+  // Interpolation version
+  const float2 pixel = make_float2(camera_voxel.x / camera_voxel.z + 0.5f,
+      camera_voxel.y / camera_voxel.z + 0.5f);
+  if (pixel.x < 0.5f || pixel.x > depthSize.x - 1.5f || 
+      pixel.y < 0.5f || pixel.y > depthSize.y - 1.5f) return;
+  // const float depthSample = interpDepth(depth, depthSize, pixel);
+  const uint2 px = make_uint2(pixel.x, pixel.y);
+  const float depthSample = depth[px.x + depthSize.x*px.y];
+  if (depthSample <=  0) return;
+
+  const float diff = (camera_voxel.z - depthSample)
+    * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
+  const float sample = HNew(diff/(noiseFactor*sq(camera_voxel.z)), camera_voxel.z);
+  if(sample == 0.5f) return;
+  typename VoxelBlock<BFusion>::compute_type data = node->value_; // should do an offsetted access here
+  data.x = applyWindow(data.x, SURF_BOUNDARY, DELTA_T, CAPITAL_T);
+  data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
+  node ->value_ = data;
+}
+
 #endif

@@ -33,7 +33,7 @@ template<>
 struct voxel_traits<BFusion> {
   typedef float2 ComputeType;
   typedef float2 StoredType;
-  static inline ComputeType empty(){ return make_float2(-101.f, 0.f); }
+  static inline ComputeType empty(){ return make_float2(0.f, 0.f); }
   static inline StoredType initValue(){ return make_float2(0.f, 0.f); }
   static inline StoredType translate(const ComputeType value) {
      return value;

@@ -19,7 +19,7 @@ class InterpTest : public ::testing::Test {
   protected:
     virtual void SetUp() {
       oct_.init(512, 5);
-      const uint3 blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
+      const int3 blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
       {136, 128, 128}, {128, 136, 128}, {136, 136, 128}, 
       {128, 128, 136}, {136, 128, 136}, {128, 136, 136}, {136, 136, 136}};
       unsigned int alloc_list[10];
@@ -39,7 +39,7 @@ TEST_F(InterpTest, Init) {
 
 TEST_F(InterpTest, GatherLocal) {
   float points[8];
-  const uint3 base = {136, 128, 136};
+  const int3 base = {136, 128, 136};
   gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {
@@ -50,7 +50,7 @@ TEST_F(InterpTest, GatherLocal) {
 TEST_F(InterpTest, ZCrosses) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
-  const uint3 base = {132, 128, 135};
+  const int3 base = {132, 128, 135};
   unsigned int crossmask = ((base.x % blockSize) == blockSize - 1 << 2) | 
                            ((base.y % blockSize) == blockSize - 1 << 1) |
                             (base.z % blockSize) == blockSize - 1;
@@ -66,7 +66,7 @@ TEST_F(InterpTest, ZCrosses) {
 TEST_F(InterpTest, YCrosses) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
-  const uint3 base = {132, 135, 132};
+  const int3 base = {132, 135, 132};
   unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
                            ((base.y % blockSize == blockSize - 1) << 1) |
                             ((base.z % blockSize) == blockSize - 1);
@@ -82,7 +82,7 @@ TEST_F(InterpTest, YCrosses) {
 TEST_F(InterpTest, XCrosses) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
-  const uint3 base = {135, 132, 132};
+  const int3 base = {135, 132, 132};
   unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
                            ((base.y % blockSize == blockSize - 1) << 1) |
                             ((base.z % blockSize) == blockSize - 1);
@@ -98,7 +98,7 @@ TEST_F(InterpTest, XCrosses) {
 TEST_F(InterpTest, YZCross) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
-  const uint3 base = {129, 135, 135};
+  const int3 base = {129, 135, 135};
   unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
                            ((base.y % blockSize == blockSize - 1) << 1) |
                             ((base.z % blockSize) == blockSize - 1);
@@ -114,7 +114,7 @@ TEST_F(InterpTest, YZCross) {
 TEST_F(InterpTest, XZCross) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
-  const uint3 base = {135, 131, 135};
+  const int3 base = {135, 131, 135};
   unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
                            ((base.y % blockSize == blockSize - 1) << 1) |
                             ((base.z % blockSize) == blockSize - 1);
@@ -130,7 +130,7 @@ TEST_F(InterpTest, XZCross) {
 TEST_F(InterpTest, XYCross) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
-  const uint3 base = {135, 135, 138};
+  const int3 base = {135, 135, 138};
   unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
                            ((base.y % blockSize == blockSize - 1) << 1) |
                             ((base.z % blockSize) == blockSize - 1);
@@ -146,7 +146,7 @@ TEST_F(InterpTest, XYCross) {
 TEST_F(InterpTest, AllCross) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
-  const uint3 base = {135, 135, 135};
+  const int3 base = {135, 135, 135};
   unsigned int crossmask = ((base.x % blockSize == blockSize - 1) << 2) | 
                            ((base.y % blockSize == blockSize - 1) << 1) |
                             ((base.z % blockSize) == blockSize - 1);

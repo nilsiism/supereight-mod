@@ -271,10 +271,10 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
   if ((doIntegrate && ((frame % integration_rate) == 0)) || (frame <= 3)) {
 
     volume.updateVolume(pose, getCameraMatrix(k), floatDepth, computationSize, mu, frame);
-    // std::stringstream f;
-    // f << "./slices/integration_" << (bayesian ? "bayesian_" : "tsdf_" )<< frame << ".vtk";
-    // save3DSlice(volume._data.raw_data(), make_uint3(0, volume._size/2, 0),
-    //   make_uint3(volume._size, volume._size/2 + 1, volume._size), make_uint3(volume._size), f.str().c_str());
+    std::stringstream f;
+    f << "./slices/integration_" << (bayesian ? "bayesian_" : "tsdf_" )<< frame << ".vtk";
+    save3DSlice(volume, make_int3(0, volume._size/2, 0),
+      make_int3(volume._size, volume._size/2 + 1, volume._size), make_int3(volume._size), f.str().c_str());
     doIntegrate = true;
   } else {
     doIntegrate = false;
