@@ -116,6 +116,13 @@ public:
   inline int size(){ return size_; }
   inline float3 dim() const { return dim_; }
 
+  /*! \brief Retrieves voxel value at coordinates (x,y,z), if not present it 
+   * allocates it. This method is not thread safe.
+   * \param x x coordinate in interval [0, size]
+   * \param y y coordinate in interval [0, size]
+   * \param z z coordinate in interval [0, size]
+   */
+  void set(const int x, const int y, const int z, const compute_type val);
 
   /*! \brief Retrieves voxel value at coordinates (x,y,z)
    * \param x x coordinate in interval [0, size]
@@ -316,6 +323,28 @@ inline typename Octree<T>::compute_type Octree<T>::get(const float3 p,
 }
 
 template <typename T>
+inline void  Octree<T>::set(const int x,
+    const int y, const int z, const compute_type val) {
+
+  Node<T> * n = root_;
+  if(!n) {
+    return;
+  }
+
+  uint edge = size_ >> 1;
+  for(; edge >= blockSide; edge = edge >> 1){
+    Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
+    if(!tmp){
+      return;
+    }
+    n = tmp;
+  }
+
+  static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z), val);
+}
+
+
+template <typename T>
 inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     const int y, const int z) const {
 
@@ -328,6 +357,11 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
   for(; edge >= blockSide; edge = edge >> 1){
     Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!tmp){
+      if((x == 0) && (z == 0)) {
+        uint3 coords = unpack_morton(n->code);
+        printf("Vox: %d, %d, %d: %f, edge: %d, parent coords: %d, %d, %d\n",
+            x, y, z, n->value_.x, edge, coords.x, coords.y, coords.z);
+      }
       return n->value_;
     }
     n = tmp;
@@ -757,8 +791,12 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
           *n = block_memory_.acquire_block();
           static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
+          (*n)->code = myKey;
         }
-        else  *n = new Node<T>();
+        else {
+          *n = new Node<T>();
+          (*n)->code = myKey;
+        }
       }
       edge /= 2;
     }
@@ -783,6 +821,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
 
       uint3 child = getChildFromCode(myKey, level);
       int index = child.x + child.y*2 + child.z*4;
+      Node<T> * parent = *n;
       n = &(*n)->child(index);
 
       if(!(*n)){
@@ -790,8 +829,14 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
           *n = block_memory_.acquire_block();
           static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
+          (*n)->code = myKey;
         }
-        else  *n = new Node<T>();
+        else  {
+          *n = new Node<T>();
+          (*n)->value_ = parent->value_;
+          (*n)->code = myKey;
+          parent->value_ = init_val();
+        }
       }
 
       const int3 coordinates = make_int3(unpack_morton(myKey));

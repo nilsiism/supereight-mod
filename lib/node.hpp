@@ -49,6 +49,7 @@ public:
   compute_type init_val() const { return traits_type::initValue(); }
 
   compute_type value_;
+  unsigned int code;
   time_t timestamp_;
   char chid_mask_;
 
@@ -112,7 +113,7 @@ class VoxelBlock: public Node<T> {
     void coordinates(const int3 c){ coordinates_ = c; }
 
     compute_type data(const int3 pos) const;
-    void data(const int3 pos, compute_type& value);
+    void data(const int3 pos, const compute_type& value);
 
     void timestamp(const time_t frame){ 
       timestamp_ = frame;
@@ -146,7 +147,7 @@ inline typename VoxelBlock<T>::compute_type VoxelBlock<T>::data(const int3 pos) 
 
 template <typename T>
 inline void VoxelBlock<T>::data(const int3 pos, 
-                               compute_type &value){
+                                const compute_type &value){
   int3 offset = pos - coordinates_;
   voxel_block_[offset.x + offset.y*side + offset.z*sideSq] = translate(value);
 }

@@ -200,6 +200,10 @@ void integrate_bfusion(Node<BFusion> * node, const int x, const int y, const int
   typename VoxelBlock<BFusion>::compute_type data = node->value_; // should do an offsetted access here
   data.x = applyWindow(data.x, SURF_BOUNDARY, DELTA_T, CAPITAL_T);
   data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
+  uint3 coords = unpack_morton(node->code);
+  if((coords.x == 0) && coords.y == 256 && (coords.z == 0)) {
+    printf("Vox: %d, %d, %d\n", x, y, z);
+  }
   node ->value_ = data;
 }
 
