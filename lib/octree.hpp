@@ -839,7 +839,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
         }
       }
 
-      const int3 coordinates = make_int3(unpack_morton(myKey));
+      const int3 coordinates = make_int3(unpack_morton((*n)->code));
       f(*n, coordinates.x, coordinates.y, coordinates.z);
       edge /= 2;
     }
