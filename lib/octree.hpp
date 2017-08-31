@@ -357,11 +357,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
   for(; edge >= blockSide; edge = edge >> 1){
     Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!tmp){
-      if((x == 0) && (z == 0)) {
-        uint3 coords = unpack_morton(n->code);
-        printf("Vox: %d, %d, %d: %f, edge: %d, parent coords: %d, %d, %d\n",
-            x, y, z, n->value_.x, edge, coords.x, coords.y, coords.z);
-      }
+      if(edge >= 32) return init_val();
       return n->value_;
     }
     n = tmp;
@@ -784,6 +780,7 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
 
       uint3 child = getChildFromCode(myKey, level);
       int index = child.x + child.y*2 + child.z*4;
+      Node<T> * parent = *n;
       n = &(*n)->child(index);
 
       if(!(*n)){
@@ -821,7 +818,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
 
       uint3 child = getChildFromCode(myKey, level);
       int index = child.x + child.y*2 + child.z*4;
-      Node<T> * parent = *n;
+      // Node<T> * parent = *n;
       n = &(*n)->child(index);
 
       if(!(*n)){
@@ -833,9 +830,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
         }
         else  {
           *n = new Node<T>();
-          (*n)->value_ = parent->value_;
           (*n)->code = myKey;
-          parent->value_ = init_val();
         }
       }
 
