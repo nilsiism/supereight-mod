@@ -138,6 +138,15 @@ public:
    */
   VoxelBlock<T> * fetch(const int x, const int y, const int z) const;
 
+  /*! \brief Fetch the voxel block at which contains voxel  (x,y,z)
+   * \param x x coordinate in interval [0, size]
+   * \param y y coordinate in interval [0, size]
+   * \param z z coordinate in interval [0, size]
+   * \param depth maximum depth to be searched 
+   */
+  Node<T> * fetch_octant(const int x, const int y, const int z, 
+      const int depth) const;
+
   /*! \brief Interp voxel value at voxel position  (x,y,z)
    * \param pos three-dimensional coordinates in which each component belongs 
    * to the interval [0, size]
@@ -442,6 +451,26 @@ inline VoxelBlock<T> * Octree<T>::fetch(const int x, const int y,
     }
   }
   return static_cast<VoxelBlock<T>* > (n);
+}
+
+template <typename T>
+inline Node<T> * Octree<T>::fetch_octant(const int x, const int y, 
+   const int z, const int depth) const {
+
+  Node<T> * n = root_;
+  if(!n) {
+    return NULL;
+  }
+
+  // Get the block.
+  uint edge = size_ / 2;
+  for(int d = 1; edge >= blockSide && d <= depth; edge /= 2, ++d){
+    n = n->child((x & edge) > 0u, (y & edge) > 0u, (z & edge) > 0u);
+    if(!n){
+      return NULL;
+    }
+  }
+  return n;
 }
 
 template <typename T>
