@@ -80,6 +80,13 @@ class MemoryPool {
       return ptr;
     }
 
+    BlockType * operator[](const int i){
+      const int page_idx = i / pagesize_;
+      const int ptr_idx = i % pagesize_;
+      BlockType * ptr = pages_[page_idx] + (ptr_idx);
+      return ptr;
+    }
+
   private:
 
     size_t reserved_;
