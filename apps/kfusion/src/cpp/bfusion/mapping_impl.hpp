@@ -178,6 +178,7 @@ void integrate_bfusion(Node<BFusion> * node,
     const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
     const float noiseFactor, const float ) { 
 
+  if(node->child(0)) return;
   const int3 voxel = make_int3(unpack_morton(node->code));
   float3 pos = invTrack * (make_float3(voxel) * voxelSize);
   float3 camera_voxel = K * pos;
