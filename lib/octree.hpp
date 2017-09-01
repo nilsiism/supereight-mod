@@ -248,6 +248,7 @@ private:
   float dim_;
   int max_level_;
   MemoryPool<VoxelBlock<T> > block_memory_;
+  MemoryPool<Node<T> > nodes_buffer_;
 
   friend class ray_iterator<T>;
 
@@ -798,6 +799,7 @@ template <typename T>
 bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
 
   int leaves_level = max_level_ - log2(blockSide);
+  nodes_buffer_.reserve(num_tasks);
 
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
@@ -820,7 +822,7 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
           (*n)->code = myKey;
         }
         else {
-          *n = new Node<T>();
+          *n = nodes_buffer_.acquire_block();;
           (*n)->code = myKey;
         }
       }
@@ -836,6 +838,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
     UpdateFunctor f){
 
   int leaves_level = max_level_ - log2(blockSide);
+  nodes_buffer_.reserve(num_tasks);
 
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
@@ -858,7 +861,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
           (*n)->code = myKey;
         }
         else  {
-          *n = new Node<T>();
+          *n = nodes_buffer_.acquire_block();;
           (*n)->code = myKey;
         }
       }
