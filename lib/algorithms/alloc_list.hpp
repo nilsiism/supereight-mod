@@ -88,12 +88,13 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
 template <typename FieldType, template <typename> class IndexType>
 unsigned int buildIntersectionList(uint * allocationList, size_t reserved,
     IndexType<FieldType>& map_index, const Matrix4 &pose, const Matrix4& K, 
-    const float *depthmap, const uint2 &imageSize, const unsigned int size,  
+    const float *depthmap, const uint2 &imageSize, const unsigned int tree_depth,  
     const float voxelSize, const float stepsize, const float band) {
 
   const float inverseVoxelSize = 1.f/voxelSize;
   Matrix4 invK = inverse(K);
   const Matrix4 kPose = pose * invK;
+  const int size = map_index.size();
 
 #ifdef _OPENMP
   std::atomic<unsigned int> voxelCount;
@@ -128,10 +129,12 @@ unsigned int buildIntersectionList(uint * allocationList, size_t reserved,
             (voxelScaled.z < size) && (voxelScaled.x >= 0) &&
             (voxelScaled.y >= 0) && (voxelScaled.z >= 0)){
           voxel = make_int3(voxelScaled);
-          uint k = map_index.hash(voxel.x, voxel.y, voxel.z);
-          unsigned int idx = ++voxelCount;
-          if(idx < reserved) {
-            allocationList[idx] = k;
+          if(!map_index.fetch_octant(voxel.x, voxel.y, voxel.z, tree_depth)){
+            uint k = map_index.hash(voxel.x, voxel.y, voxel.z);
+            unsigned int idx = ++voxelCount;
+            if(idx < reserved) {
+              allocationList[idx] = k;
+            }
           }
         }
         voxelPos +=step;
