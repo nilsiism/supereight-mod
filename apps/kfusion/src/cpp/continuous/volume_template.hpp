@@ -84,8 +84,8 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       using namespace std::placeholders;
       int num_vox_per_pix = (3 * mu)/(_dim/_size);
 
-     auto compute_sdf = std::bind(integrate_bfusion, _1, _2,
-         _3, _4, depthmap, frameSize, _dim/_size, inverse(pose), K,  mu, 100);
+     auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
+         _dim/_size, inverse(pose), K,  mu, 100);
 
       _allocationList.reserve(num_vox_per_pix * frameSize.x * frameSize.y);
       const int allocated = 
@@ -94,12 +94,13 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
           _dim/_size, mu);
       _map_index.alloc_update(_allocationList.data(), allocated, 7, compute_sdf);
 
-     const float step = 0.15f;
+     const int max_depth = 5;
+     const float step = _dim/std::pow(2, 5);
      const int updated = 
        buildIntersectionList(_allocationList.data(), _allocationList.capacity(),  
-         _map_index, pose, K, depthmap, frameSize, _size, 
+         _map_index, pose, K, depthmap, frameSize, max_depth, 
          _dim/_size, step, mu);
-     _map_index.alloc_update(_allocationList.data(), updated, 5, compute_sdf);
+     _map_index.alloc_update(_allocationList.data(), updated, max_depth, compute_sdf);
 
       std::vector<VoxelBlock<FieldType> *> active_list;
       const MemoryPool<VoxelBlock<FieldType> >& block_array = 
@@ -117,6 +118,11 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       unsigned int num_active = active_list.size();
       integratePass(list, num_active, depthmap, frameSize, _dim/_size,
           inverse(pose), K,  mu, 100, frame);
+
+      MemoryPool<Node<FieldType> >& nodes_array =
+        _map_index.getNodesBuffer();
+      const int size = nodes_array.size();
+      integratePass(nodes_array, size, compute_sdf);
     }
 
     unsigned int _size;

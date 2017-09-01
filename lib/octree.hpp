@@ -194,6 +194,7 @@ public:
    */
   void getBlockList(std::vector<VoxelBlock<T> *>& blocklist, bool active);
   MemoryPool<VoxelBlock<T> >& getBlockBuffer(){ return block_memory_; };
+  MemoryPool<Node<T> >& getNodesBuffer(){ return nodes_buffer_; };
   /*! \brief Computes the morton code of the block containing voxel 
    * at coordinates (x,y,z)
    * \param x x coordinate in interval [0, size]
@@ -835,7 +836,7 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
 template <typename T>
 template <typename UpdateFunctor>
 bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
-    UpdateFunctor f){
+    UpdateFunctor ){
 
   int leaves_level = max_level_ - log2(blockSide);
   nodes_buffer_.reserve(num_tasks);
@@ -865,9 +866,6 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
           (*n)->code = myKey;
         }
       }
-
-      const int3 coordinates = make_int3(unpack_morton((*n)->code));
-      f(*n, coordinates.x, coordinates.y, coordinates.z);
       edge /= 2;
     }
   }

@@ -173,12 +173,12 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
   block->active(is_visible);
 }
 
-void integrate_bfusion(Node<BFusion> * node, const int x, const int y, const int z,
+void integrate_bfusion(Node<BFusion> * node,
     const float * depth, uint2 depthSize, 
     const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
     const float noiseFactor, const float ) { 
 
-  const int3 voxel = make_int3(x, y, z);
+  const int3 voxel = make_int3(unpack_morton(node->code));
   float3 pos = invTrack * (make_float3(voxel) * voxelSize);
   float3 camera_voxel = K * pos;
   if (pos.z < 0.0001f) // some near plane constraint
@@ -200,10 +200,6 @@ void integrate_bfusion(Node<BFusion> * node, const int x, const int y, const int
   typename VoxelBlock<BFusion>::compute_type data = node->value_; // should do an offsetted access here
   data.x = applyWindow(data.x, SURF_BOUNDARY, DELTA_T, CAPITAL_T);
   data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
-  uint3 coords = unpack_morton(node->code);
-  if((coords.x == 0) && coords.y == 256 && (coords.z == 0)) {
-    printf("Vox: %d, %d, %d\n", x, y, z);
-  }
   node ->value_ = data;
 }
 
