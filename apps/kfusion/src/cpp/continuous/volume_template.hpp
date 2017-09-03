@@ -82,25 +82,35 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
                             const int frame) {
 
       using namespace std::placeholders;
-      int num_vox_per_pix = (3 * mu)/(_dim/_size);
+      int num_vox_per_pix = _dim/((VoxelBlock<FieldType>::side)*(_dim/_size));
 
      auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
          _dim/_size, inverse(pose), K,  mu, 100);
 
-      _allocationList.reserve(num_vox_per_pix * frameSize.x * frameSize.y);
+      _allocationList[0].reserve(num_vox_per_pix * frameSize.x * frameSize.y);
+      _allocationList[1].reserve(num_vox_per_pix * frameSize.x * frameSize.y);
       const int allocated = 
-        buildAllocationList(_allocationList.data(), _allocationList.capacity(),  
+        buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
           _map_index, pose, K, depthmap, frameSize, _size, 
-          _dim/_size, mu);
-      _map_index.alloc_update(_allocationList.data(), allocated, 7, compute_sdf);
+          _dim/_size, 2*mu);
+      _map_index.alloc_update(_allocationList[0].data(), allocated, 7, compute_sdf);
 
-     const int max_depth = 5;
-     const float step = _dim/std::pow(2, 5);
-     const int updated = 
-       buildIntersectionList(_allocationList.data(), _allocationList.capacity(),  
+     const unsigned int max_depth[2] = {4, 6};
+     float step[2]; 
+     step[0] = _dim/std::pow(2, max_depth[0]);
+     step[1] = _dim/std::pow(2, max_depth[1]);
+
+     uint * data_ptr[2] = {_allocationList[0].data(), _allocationList[1].data()};
+     size_t data_size[2] = {_allocationList[0].capacity(), _allocationList[1].capacity()};
+     size_t written[2] = {0, 0};
+
+     buildOctantList(data_ptr, data_size, written,
          _map_index, pose, K, depthmap, frameSize, max_depth, 
          _dim/_size, step, mu);
-     _map_index.alloc_update(_allocationList.data(), updated, max_depth, compute_sdf);
+     printf("To be allocated: %d, %d\n", (int) written[0], (int) written[1]);
+     _map_index.alloc_update(_allocationList[0].data(), written[0], max_depth[0], compute_sdf);
+     _map_index.alloc_update(_allocationList[1].data(), written[1], max_depth[1], compute_sdf);
+
 
       std::vector<VoxelBlock<FieldType> *> active_list;
       const MemoryPool<VoxelBlock<FieldType> >& block_array = 
@@ -127,7 +137,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
 
     unsigned int _size;
     float _dim;
-    std::vector<uint> _allocationList;
+    std::vector<uint> _allocationList[2];
     Indexer<FieldType> _map_index; 
 
   private:
