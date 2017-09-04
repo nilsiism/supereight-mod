@@ -104,7 +104,6 @@ public:
   };
 
   ~Octree(){
-    deallocateTree();
   }
 
   /*! \brief Initialises the octree attributes

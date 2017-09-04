@@ -107,7 +107,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
      buildOctantList(data_ptr, data_size, written,
          _map_index, pose, K, depthmap, frameSize, max_depth, 
          _dim/_size, step, mu);
-     printf("To be allocated: %d, %d\n", (int) written[0], (int) written[1]);
+     // printf("To be allocated: %d, %d\n", (int) written[0], (int) written[1]);
      _map_index.alloc_update(_allocationList[0].data(), written[0], max_depth[0], compute_sdf);
      _map_index.alloc_update(_allocationList[1].data(), written[1], max_depth[1], compute_sdf);
 
