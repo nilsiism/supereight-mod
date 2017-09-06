@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef MAPPING_HPP
 #define MAPPING_HPP
 #include <node.hpp>
+#include <ctime>
 
 #include "bfusion/mapping_impl.hpp"
 #include "kfusion/mapping_impl.hpp"
@@ -40,12 +41,12 @@ template <typename T>
 void integratePass(VoxelBlock<T> ** blockList, unsigned int list_size, 
     const float * depth, uint2 depthSize, const float voxelSize, 
     const Matrix4 invTrack, const Matrix4 K, const float mu, 
-    const float maxweight, const int current_frame) {
+    const float , const int current_frame) {
 
 #pragma omp parallel for
   for(unsigned int i = 0; i < list_size; ++i){
       integrate(blockList[i], depth, depthSize, voxelSize,
-          invTrack, K, mu, maxweight);
+          invTrack, K, mu, std::time(nullptr));
       blockList[i]->timestamp(current_frame);
   }
 }

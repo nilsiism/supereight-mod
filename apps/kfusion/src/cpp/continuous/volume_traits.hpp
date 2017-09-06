@@ -31,10 +31,13 @@ struct voxel_traits<SDF> {
 class BFusion {};
 template<>
 struct voxel_traits<BFusion> {
-  typedef float2 ComputeType;
-  typedef float2 StoredType;
-  static inline ComputeType empty(){ return make_float2(-101.f, 0.f); }
-  static inline StoredType initValue(){ return make_float2(0.f, 0.f); }
+  typedef struct ComputeType {
+    float x;
+    time_t y;
+  } ComputeType;
+  typedef ComputeType StoredType;
+  static inline ComputeType empty(){ return {-101.f, 0}; }
+  static inline StoredType initValue(){ return {0.f, 0}; }
   static inline StoredType translate(const ComputeType value) {
      return value;
   }
