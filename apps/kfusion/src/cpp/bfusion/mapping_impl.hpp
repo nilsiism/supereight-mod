@@ -115,15 +115,16 @@ static inline float updateLogs(const float prior, const float sample){
   return (prior + log2(sample / (1.f - sample)));
 }
 
-static inline float applyWindow(const float occupancy, const float boundary, 
+static inline float applyWindow(const float occupancy, const float , 
     const float delta_t, const float tau){
-  float fraction = 1.f / (1.f + delta_t / tau);
-  return occupancy * fraction + boundary * (1.f - fraction);
+  float fraction = 1.f / (1.f + (delta_t / tau));
+  fraction = std::max(0.5f,fraction);
+  return occupancy * fraction;
 }
 
 void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize, 
     const float voxelSize, const Matrix4 world2cam, const Matrix4 K, 
-    const float noiseFactor, const time_t timestamp) {
+    const float noiseFactor, const double timestamp) {
 
   const float3 delta = rotate(world2cam, make_float3(voxelSize, 0, 0));
   const float3 cameraDelta = rotate(K, delta);
@@ -164,9 +165,9 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
         if(sample == 0.5f) continue;
         is_visible = true;
         typename VoxelBlock<BFusion>::compute_type data = block->data(pix); 
-        // const double delta_t = std::difftime(timestamp, data.y);
+        const double delta_t = timestamp - data.y;
         // std::cout << "Delta_T : " << delta_t << std::endl;
-        data.x = applyWindow(data.x, SURF_BOUNDARY, DELTA_T, CAPITAL_T);
+        data.x = applyWindow(data.x, SURF_BOUNDARY, delta_t, CAPITAL_T);
         data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
         data.y = timestamp;
         block->data(pix, data);

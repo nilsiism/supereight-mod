@@ -43,11 +43,12 @@ void integratePass(VoxelBlock<T> ** blockList, unsigned int list_size,
     const Matrix4 invTrack, const Matrix4 K, const float mu, 
     const float , const int current_frame) {
 
+ double current = current_frame * (1.f/30.f);
 #pragma omp parallel for
   for(unsigned int i = 0; i < list_size; ++i){
       integrate(blockList[i], depth, depthSize, voxelSize,
-          invTrack, K, mu, std::time(nullptr));
-      blockList[i]->timestamp(current_frame);
+          invTrack, K, mu, current);
+      // blockList[i]->timestamp(current_frame);
   }
 }
 

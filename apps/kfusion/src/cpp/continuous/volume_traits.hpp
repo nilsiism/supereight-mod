@@ -33,11 +33,11 @@ template<>
 struct voxel_traits<BFusion> {
   typedef struct ComputeType {
     float x;
-    time_t y;
+    double y;
   } ComputeType;
   typedef ComputeType StoredType;
-  static inline ComputeType empty(){ return {-101.f, 0}; }
-  static inline StoredType initValue(){ return {0.f, 0}; }
+  static inline ComputeType empty(){ return {0.f, 0.f}; }
+  static inline StoredType initValue(){ return {0.f, 0.f}; }
   static inline StoredType translate(const ComputeType value) {
      return value;
   }
@@ -45,7 +45,7 @@ struct voxel_traits<BFusion> {
 
 // Windowing parameters
 #define DELTA_T   1.f
-#define CAPITAL_T 50.f
+#define CAPITAL_T 1.3
 
 #define INTERP_THRESH 0.05f
 #define SURF_BOUNDARY 0.f
