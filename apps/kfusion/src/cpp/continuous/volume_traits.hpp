@@ -45,7 +45,7 @@ struct voxel_traits<BFusion> {
 
 // Windowing parameters
 #define DELTA_T   1.f
-#define CAPITAL_T 1.3
+#define CAPITAL_T 5.f
 
 #define INTERP_THRESH 0.05f
 #define SURF_BOUNDARY 0.f
