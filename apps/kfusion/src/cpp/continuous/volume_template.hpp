@@ -84,8 +84,9 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       using namespace std::placeholders;
       int num_vox_per_pix = _dim/((VoxelBlock<FieldType>::side)*(_dim/_size));
 
+      double current = frame * (1.f/30.f);
      auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
-         _dim/_size, inverse(pose), K,  mu, 100);
+         _dim/_size, inverse(pose), K,  mu, current);
 
       _allocationList[0].reserve(num_vox_per_pix * frameSize.x * frameSize.y);
       _allocationList[1].reserve(num_vox_per_pix * frameSize.x * frameSize.y);

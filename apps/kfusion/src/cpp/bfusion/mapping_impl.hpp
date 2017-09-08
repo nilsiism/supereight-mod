@@ -179,7 +179,7 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
 void integrate_bfusion(Node<BFusion> * node,
     const float * depth, uint2 depthSize, 
     const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
-    const float noiseFactor, const float ) { 
+    const float noiseFactor, const float timestamp) { 
 
   if(node->child(0)) return;
   const int3 voxel = make_int3(unpack_morton(node->code));
@@ -202,7 +202,8 @@ void integrate_bfusion(Node<BFusion> * node,
   const float sample = HNew(diff/(noiseFactor*sq(camera_voxel.z)), camera_voxel.z);
   if(sample == 0.5f) return;
   typename VoxelBlock<BFusion>::compute_type data = node->value_; // should do an offsetted access here
-  data.x = applyWindow(data.x, SURF_BOUNDARY, DELTA_T, CAPITAL_T);
+  const double delta_t = timestamp - data.y;
+  data.x = applyWindow(data.x, SURF_BOUNDARY, delta_t, CAPITAL_T);
   data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
   node ->value_ = data;
 }
