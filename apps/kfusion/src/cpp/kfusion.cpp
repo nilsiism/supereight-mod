@@ -11,6 +11,7 @@
 #include <vtk-io.h>
 #include <octree.hpp>
 #include "continuous/volume_instance.hpp"
+#include "algorithms/meshing.hpp"
 
 extern PerfStats Stats;
 
@@ -411,6 +412,12 @@ void Kfusion::renderTrack(uchar4 * out, uint2 outputSize) {
 
 void Kfusion::renderDepth(uchar4 * out, uint2 outputSize) {
 	renderDepthKernel(out, floatDepth, outputSize, nearPlane, farPlane);
+}
+
+void Kfusion::dump_mesh(const char* filename){
+  std::vector<Triangle> mesh;
+  algorithms::marching_cube(volume._map_index, mesh);
+  writeVtkMesh(filename, mesh);
 }
 
 void synchroniseDevices() {

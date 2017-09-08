@@ -163,6 +163,8 @@ public:
 		return (computationSize);
 	}
 
+  void dump_mesh(const char* filename);
+
 };
 
 void synchroniseDevices(); // Synchronise CPU and GPU

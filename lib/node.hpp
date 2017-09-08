@@ -57,6 +57,8 @@ public:
     value_ = init_val();
     for (unsigned int i = 0; i < 8; i++)
       child_ptr_[i] = NULL;
+    timestamp_ = 0;
+    code = 0;
     }
 
     virtual ~Node(){};

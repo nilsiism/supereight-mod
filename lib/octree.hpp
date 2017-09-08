@@ -18,10 +18,7 @@ specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
 SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
@@ -113,7 +110,7 @@ public:
   void init(int size, float dim);
 
   inline int size(){ return size_; }
-  inline float3 dim() const { return dim_; }
+  inline float dim() const { return dim_; }
 
   /*! \brief Retrieves voxel value at coordinates (x,y,z), if not present it 
    * allocates it. This method is not thread safe.
@@ -858,7 +855,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
           *n = block_memory_.acquire_block();
           static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
-          (*n)->code = myKey;
+          static_cast<VoxelBlock<T> *>(*n)->code = myKey;
         }
         else  {
           *n = nodes_buffer_.acquire_block();;
@@ -1109,27 +1106,11 @@ void Octree<T>::getActiveBlockList(Node<T> *n,
 }
 
 template <typename T>
-void Octree<T>::getAllocatedBlockList(Node<T> *n,
+void Octree<T>::getAllocatedBlockList(Node<T> *,
     std::vector<VoxelBlock<T>*>& blocklist){
-  using tNode = Node<T>;
-  if(!n) return;
-  std::queue<tNode *> q;
-  q.push(n);
-  while(!q.empty()){
-    tNode* node = q.front();
-    q.pop();
-
-    if(node->isLeaf()){
-      VoxelBlock<T>* block = static_cast<VoxelBlock<T> *>(n);
-       blocklist.push_back(block);
-      continue;
+  for(unsigned int i = 0; i < block_memory_.size(); ++i) {
+      blocklist.push_back(block_memory_[i]);
     }
-
-    for(int i = 0; i < 8; ++i){
-      if(node->child(i)) q.push(node->child(i));
-    }
-  }
-
 }
 
 /*****************************************************************************
