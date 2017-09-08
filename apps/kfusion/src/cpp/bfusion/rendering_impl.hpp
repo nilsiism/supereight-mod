@@ -39,8 +39,8 @@ float4 raycast(const Volume<BFusion>& volume, const uint2 pos, const Matrix4 vie
     // if we are not already in it
     if (f_t <= SURF_BOUNDARY) { 
       for (; t < tfar; t += stepsize) {
-        Volume<SDF>::compute_type data = volume[origin + direction * t];
-        if(data.x > -10){
+        Volume<BFusion>::compute_type data = volume[origin + direction * t];
+        if(data.x > -10 && data.y > 0){
           f_tt = volume.interp(origin + direction * t, select_occupancy);
         }
         if (f_tt > SURF_BOUNDARY) break;

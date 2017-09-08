@@ -111,7 +111,6 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
      _map_index.alloc_update(_allocationList[0].data(), written[0], max_depth[0], compute_sdf);
      _map_index.alloc_update(_allocationList[1].data(), written[1], max_depth[1], compute_sdf);
 
-
       std::vector<VoxelBlock<FieldType> *> active_list;
       const MemoryPool<VoxelBlock<FieldType> >& block_array = 
         _map_index.getBlockBuffer();
