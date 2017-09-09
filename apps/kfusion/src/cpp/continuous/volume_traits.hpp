@@ -49,7 +49,7 @@ struct voxel_traits<BFusion> {
 
 #define INTERP_THRESH 0.05f
 #define SURF_BOUNDARY 0.f
-#define TOP_CLAMP     100.f
+#define TOP_CLAMP     1000.f
 #define BOTTOM_CLAMP  (-TOP_CLAMP)
 
 #endif
