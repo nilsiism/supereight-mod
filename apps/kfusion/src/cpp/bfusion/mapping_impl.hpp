@@ -105,13 +105,14 @@ static inline float __device__ bspline_memoized(float t){
   return value;
 }
 
-static inline float HNew(const float val,const  float d_xr){
-  const float Q_1 = bspline_memoized(val)    * scale_factor + const_offset_integral(d_xr      );
-  const float Q_2 = bspline_memoized(val - 3)* scale_factor + const_offset_integral(d_xr - 3.f);
+static inline float HNew(const float val,const  float ){
+  const float Q_1 = bspline_memoized(val)    ; // * scale_factor + const_offset_integral(d_xr      );
+  const float Q_2 = bspline_memoized(val - 3); // * scale_factor + const_offset_integral(d_xr - 3.f);
   return Q_1 - Q_2 * 0.5f;
 }
 
 static inline float updateLogs(const float prior, const float sample){
+  // return (prior + clamp(log2(sample / (1.f - sample)), -100, 100));
   return (prior + log2(sample / (1.f - sample)));
 }
 
@@ -161,8 +162,10 @@ void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize
 
         const float diff = (camera_voxel.z - depthSample)
           * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
-        const float sample = HNew(diff/(noiseFactor*sq(camera_voxel.z)), camera_voxel.z);
+        float sample = HNew(diff/(noiseFactor *sq(camera_voxel.z)),
+            camera_voxel.z);
         if(sample == 0.5f) continue;
+        sample = clamp(sample, 0.03, 0.97);
         is_visible = true;
         typename VoxelBlock<BFusion>::compute_type data = block->data(pix); 
         const double delta_t = timestamp - data.y;
@@ -185,7 +188,7 @@ void integrate_bfusion(Node<BFusion> * node,
   const int3 voxel = make_int3(unpack_morton(node->code));
   float3 pos = invTrack * (make_float3(voxel) * voxelSize);
   float3 camera_voxel = K * pos;
-  if (pos.z < 0.0001f) // some near plane constraint
+  if (pos.z < 0.1f) // some near plane constraint
     return;
   // Interpolation version
   const float2 pixel = make_float2(camera_voxel.x / camera_voxel.z + 0.5f,
@@ -199,7 +202,9 @@ void integrate_bfusion(Node<BFusion> * node,
 
   const float diff = (camera_voxel.z - depthSample)
     * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
-  const float sample = HNew(diff/(noiseFactor*sq(camera_voxel.z)), camera_voxel.z);
+  float sigma = noiseFactor*sq(camera_voxel.z);
+  sigma = clamp(sigma, 3*voxelSize, 5*voxelSize);
+  const float sample = HNew(diff/sigma, camera_voxel.z);
   if(sample == 0.5f) return;
   typename VoxelBlock<BFusion>::compute_type data = node->value_; // should do an offsetted access here
   const double delta_t = timestamp - data.y;
