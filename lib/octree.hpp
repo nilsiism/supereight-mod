@@ -126,6 +126,7 @@ public:
    * \param z z coordinate in interval [0, size]
    */
   compute_type get(const int x, const int y, const int z) const;
+  compute_type get_fine(const int x, const int y, const int z) const;
 
   /*! \brief Fetch the voxel block at which contains voxel  (x,y,z)
    * \param x x coordinate in interval [0, size]
@@ -366,6 +367,27 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     if(!tmp){
       if(edge >= 32) return init_val();
       return n->value_;
+    }
+    n = tmp;
+  }
+
+  return static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z));
+}
+
+template <typename T>
+inline typename Octree<T>::compute_type Octree<T>::get_fine(const int x,
+    const int y, const int z) const {
+
+  Node<T> * n = root_;
+  if(!n) {
+    return init_val();
+  }
+
+  uint edge = size_ >> 1;
+  for(; edge >= blockSide; edge = edge >> 1){
+    Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
+    if(!tmp){
+      return init_val();
     }
     n = tmp;
   }
