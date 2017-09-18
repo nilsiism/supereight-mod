@@ -64,6 +64,19 @@ TUM_RGB_FR1_DESK.descr = 'fr1_desk'
 TUM_RGB_FR1_DESK.ate_associate_identity = False
 
 #
+# TUM RGB-D fr1/room Settings
+#
+TUM_RGB_FR1_ROOM = Dataset()
+TUM_RGB_FR1_ROOM.dataset_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_room/scene.raw')
+TUM_RGB_FR1_ROOM.ground_truth = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_room/groundtruth.txt')
+TUM_RGB_FR1_ROOM.camera = '591.1,590.1,331.0,234.0'
+TUM_RGB_FR1_ROOM.quat = '0.6529,-0.5483,0.3248,-0.4095'
+TUM_RGB_FR1_ROOM.init_pose = '0.5,0.5,0.5'
+TUM_RGB_FR1_ROOM.pre_assoc_file_path = os.path.join(DATASETS_PATH, 'rgbd_dataset_freiburg1_room/timings.assoc.txt')
+TUM_RGB_FR1_ROOM.descr = 'fr1_room'
+TUM_RGB_FR1_ROOM.ate_associate_identity = False
+
+#
 # TUM RGB-D fr1/plant Settings
 #
 TUM_RGB_FR1_PLANT = Dataset()
@@ -130,9 +143,9 @@ TUM_RGB_FR3_LARGE_CABINET.ate_associate_identity = False
 # ICL-NUIM Living Room 0
 #
 ICL_NUIM_LIV_0 = Dataset()
-ICL_NUIM_LIV_0.dataset_path = os.path.join(DATASETS_PATH, 'living_room_traj0_loop/scene.raw')
-ICL_NUIM_LIV_0.ground_truth = os.path.join(DATASETS_PATH, 'living_room_traj0_loop/livingRoom0.gt.freiburg.txt')
-ICL_NUIM_LIV_0.camera_file = os.path.join(DATASETS_PATH, 'living_room_traj2_loop/camera.txt')
+ICL_NUIM_LIV_0.dataset_path = os.path.join(DATASETS_PATH, 'living_room_traj0_frei_png/scene.raw')
+ICL_NUIM_LIV_0.ground_truth = os.path.join(DATASETS_PATH, 'living_room_traj0_frei_png/livingRoom0.gt.freiburg')
+ICL_NUIM_LIV_0.camera_file = os.path.join(DATASETS_PATH, 'living_room_traj0_frei_png/camera.txt')
 ICL_NUIM_LIV_0.camera = '481.2,-480,320,240'
 ICL_NUIM_LIV_0.init_pose = '0.34,0.5,0.24'
 ICL_NUIM_LIV_0.ate_associate_identity = True
@@ -143,9 +156,9 @@ ICL_NUIM_LIV_0.descr = 'liv_traj_0'
 # ICL-NUIM Living Room 1
 #
 ICL_NUIM_LIV_1 = Dataset()
-ICL_NUIM_LIV_1.dataset_path = os.path.join(DATASETS_PATH, 'living_room_traj1_loop/scene.raw')
-ICL_NUIM_LIV_1.ground_truth = os.path.join(DATASETS_PATH, 'living_room_traj1_loop/livingRoom1.gt.freiburg')
-ICL_NUIM_LIV_1.camera_file = os.path.join(DATASETS_PATH, 'living_room_traj1_loop/camera.txt')
+ICL_NUIM_LIV_1.dataset_path = os.path.join(DATASETS_PATH, 'living_room_traj1_frei_png/scene.raw')
+ICL_NUIM_LIV_1.ground_truth = os.path.join(DATASETS_PATH, 'living_room_traj1_frei_png/livingRoom1.gt.freiburg')
+ICL_NUIM_LIV_1.camera_file = os.path.join(DATASETS_PATH, 'living_room_traj1_frei_png/camera.txt')
 ICL_NUIM_LIV_1.camera = '481.2,-480,320,240'
 ICL_NUIM_LIV_1.init_pose = '0.485,0.5,0.55'
 ICL_NUIM_LIV_1.ate_associate_identity = True
@@ -156,9 +169,9 @@ ICL_NUIM_LIV_1.descr = 'liv_traj_1'
 # ICL-NUIM Living Room 2
 #
 ICL_NUIM_LIV_2 = Dataset()
-ICL_NUIM_LIV_2.dataset_path = os.path.join(DATASETS_PATH, 'living_room_traj2_loop/scene.raw')
-ICL_NUIM_LIV_2.ground_truth = os.path.join(DATASETS_PATH, 'living_room_traj2_loop/livingRoom2.gt.freiburg.txt')
-ICL_NUIM_LIV_2.camera_file = os.path.join(DATASETS_PATH, 'living_room_traj2_loop/camera.txt')
+ICL_NUIM_LIV_2.dataset_path = os.path.join(DATASETS_PATH, 'living_room_traj2_frei_png/scene.raw')
+ICL_NUIM_LIV_2.ground_truth = os.path.join(DATASETS_PATH, 'living_room_traj2_frei_png/livingRoom2.gt.freiburg')
+ICL_NUIM_LIV_2.camera_file = os.path.join(DATASETS_PATH, 'living_room_traj2_frei_png/camera.txt')
 ICL_NUIM_LIV_2.camera = '481.2,-480,320,240'
 ICL_NUIM_LIV_2.init_pose = '0.34,0.5,0.24'
 ICL_NUIM_LIV_2.ate_associate_identity = True
@@ -168,9 +181,9 @@ ICL_NUIM_LIV_2.descr = 'liv_traj_2'
 # ICL-NUIM Living Room 3
 #
 ICL_NUIM_LIV_3 = Dataset()
-ICL_NUIM_LIV_3.dataset_path = os.path.join(DATASETS_PATH, 'living_room_traj3_loop/scene.raw')
-ICL_NUIM_LIV_3.ground_truth = os.path.join(DATASETS_PATH, 'living_room_traj3_loop/livingRoom3.gt.freiburg')
-ICL_NUIM_LIV_3.camera_file = os.path.join(DATASETS_PATH, 'living_room_traj2_loop/camera.txt')
+ICL_NUIM_LIV_3.dataset_path = os.path.join(DATASETS_PATH, 'living_room_traj3_frei_png/scene.raw')
+ICL_NUIM_LIV_3.ground_truth = os.path.join(DATASETS_PATH, 'living_room_traj3_frei_png/livingRoom3.gt.freiburg')
+ICL_NUIM_LIV_3.camera_file = os.path.join(DATASETS_PATH, 'living_room_traj3_frei_png/camera.txt')
 ICL_NUIM_LIV_3.camera = '481.2,-480,320,240'
 ICL_NUIM_LIV_3.init_pose = '0.2685,0.5,0.4'
 ICL_NUIM_LIV_3.ate_associate_identity = True
