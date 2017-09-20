@@ -14,5 +14,28 @@ namespace algorithms {
       }
       return end;
     }
+
+  template <typename MortonType>
+    inline int unique_multiscale(MortonType* keys, int num_keys,
+        const MortonType key_mask, const MortonType level_mask){
+      int end = 1;
+      if(num_keys < 2) return end;
+      MortonType prev_key = keys[0] & key_mask;
+      MortonType prev_level = keys[0] & level_mask;
+      for (int i = 1; i < num_keys; ++i){
+        const MortonType key = keys[i] & key_mask;
+        const MortonType level = keys[i] & level_mask;
+        if(key != prev_key){
+          keys[end] = keys[i];
+          ++end;
+        } else if(level > prev_level) { 
+          /* end does not advance but previous entry is overwritten */
+          keys[end-1] = keys[i];
+        }
+        prev_key = key;
+        prev_level = level;
+      }
+      return end;
+    }
 }
 #endif
