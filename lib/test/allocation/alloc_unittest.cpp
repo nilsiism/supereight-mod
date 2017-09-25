@@ -17,7 +17,7 @@ TEST(AllocationTest, EmptySingleVoxel) {
   typedef Octree<float> OctreeF;
   OctreeF oct;
   oct.init(256, 5);
-  const uint3 vox = {25, 65, 127};
+  const int3 vox = {25, 65, 127};
   const uint code = oct.hash(vox.x, vox.y, vox.z); 
   uint allocList[1] = {code};
   const float val = oct.get(vox.x, vox.y, vox.z);
@@ -28,7 +28,7 @@ TEST(AllocationTest, SetSingleVoxel) {
   typedef Octree<float> OctreeF;
   OctreeF oct;
   oct.init(256, 5);
-  const uint3 vox = {25, 65, 127};
+  const int3 vox = {25, 65, 127};
   const uint code = oct.hash(vox.x, vox.y, vox.z); 
   uint allocList[1] = {code};
   oct.allocate(allocList, 1);
