@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <memory_pool.hpp>
 #include <algorithms/mapping.hpp>
 #include <algorithms/unique.hpp>
+#include <geometry/aabb_collision.hpp>
 #include <interp_gather.hpp>
 
 #define MAX_BITS 10
@@ -188,7 +189,14 @@ public:
     constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
     return compute_morton(make_uint3(x, y, z)) & MASK[morton_mask];   
   }
- 
+
+  /*! \brief performs a collision test against a specified axis 
+   *  aligned bounding box  
+   * \param bbox origin in integer coordinates of the bounding box to be tested
+   * \param side number of voxel per bounding box side
+   */
+  int collision_test(const int3 bbox, const int3 side);
+
 
   /*! \brief allocate a set of voxel blocks via their positional key  
    * \param keys collection of voxel block keys to be allocated (i.e. their 
@@ -988,7 +996,57 @@ void Octree<T>::getAllocatedBlockList(Node<T> *n,
       if(node->child(i)) q.push(node->child(i));
     }
   }
+}
 
+template <typename T>
+int Octree<T>::collision_test(const int3 bbox, const int3 side) {
+
+  typedef struct stack_entry { 
+    Node<T>* node_ptr;
+    int3 coordinates;
+    int side;
+  } stack_entry;
+
+  constexpr int3 offsets[8] = {{0, 0 ,0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0},
+    {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};
+
+  stack_entry stack[max_depth*8 + 1];
+  size_t stack_idx = 0;
+
+  Node<T>* n = root_;
+  if(!n) return 0;
+
+  stack_entry current;
+  current.node_ptr = n;
+  current.side = size_;
+  current.coordinates = {0, 0, 0};
+  stack[stack_idx++] = current;
+
+  while(stack_idx != 0){
+    Node<T>* node = current.node_ptr;
+
+    if(node->isLeaf()){
+      return 1;
+    }
+
+    for(int i = 0; i < 8; ++i){
+      Node<T>* child = node->child(i);
+      if(child != NULL) {
+        stack_entry child_descr;
+        child_descr.node_ptr = child;
+        child_descr.side = current.side / 2;
+        child_descr.coordinates = 
+          make_int3(current.coordinates.x + child_descr.side*offsets[i].x,
+                    current.coordinates.y + child_descr.side*offsets[i].y,
+                    current.coordinates.z + child_descr.side*offsets[i].z);
+        if(geometry::aabb_aabb_collision(bbox, side, child_descr.coordinates, 
+              make_int3(child_descr.side))) 
+          stack[stack_idx++] = child_descr;
+      }
+    }
+    current = stack[--stack_idx]; 
+  }
+  return 0;
 }
 
 /*****************************************************************************
