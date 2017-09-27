@@ -1025,7 +1025,7 @@ int Octree<T>::collision_test(const int3 bbox, const int3 side) {
   while(stack_idx != 0){
     Node<T>* node = current.node_ptr;
 
-    if(node->isLeaf()){
+    if(current.side == VoxelBlock<T>::side){
       return 1;
     }
 

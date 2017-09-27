@@ -34,9 +34,33 @@ class OctreeCollisionTest : public ::testing::Test {
   OctreeF oct_;
 };
 
-TEST_F(OctreeCollisionTest, CollisionMiss){
+TEST_F(OctreeCollisionTest, FarMiss){
   const int3 test_bbox = {100, 100, 100};
   const int3 width = {5, 5, 5};
+
+  const int collides = oct_.collision_test(test_bbox, width);
+  ASSERT_EQ(collides, 0);
+}
+
+TEST_F(OctreeCollisionTest, NearMissX){
+  const int3 test_bbox = {119, 136, 128};
+  const int3 width = {8, 8, 8};
+
+  const int collides = oct_.collision_test(test_bbox, width);
+  ASSERT_EQ(collides, 0);
+}
+
+TEST_F(OctreeCollisionTest, NearMissY){
+  const int3 test_bbox = {121, 123, 128};
+  const int3 width = {8, 3, 8};
+
+  const int collides = oct_.collision_test(test_bbox, width);
+  ASSERT_EQ(collides, 0);
+}
+
+TEST_F(OctreeCollisionTest, NearMissZ){
+  const int3 test_bbox = {121, 136, 160};
+  const int3 width = {8, 8, 8};
 
   const int collides = oct_.collision_test(test_bbox, width);
   ASSERT_EQ(collides, 0);
