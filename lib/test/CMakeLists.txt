@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.2)
 project(octree_lib_unit_testing)
 
 # GTest Root - Change to reflect your install dir
@@ -13,3 +13,4 @@ add_subdirectory(allocation)
 add_subdirectory(interp)
 add_subdirectory(multiscale)
 add_subdirectory(algorithms)
+add_subdirectory(geometry)
