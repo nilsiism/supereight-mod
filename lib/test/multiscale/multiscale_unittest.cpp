@@ -61,3 +61,24 @@ TEST_F(MultiscaleTest, ScaledAlloc) {
   n->value_ = 10.f;
   EXPECT_EQ(oct_.get(56, 12, 254), 10.f);
 }
+
+TEST_F(MultiscaleTest, Iterator) {
+  const int3 blocks[1] = {{56, 12, 254}};
+  unsigned int alloc_list[1];
+  alloc_list[0] = oct_.hash(blocks[0].x, blocks[0].y, blocks[0].z);
+
+  auto update = [](Node<testT> * n, const int , const int , const int ){
+    n->value_ = 10.f;
+  };
+  oct_.alloc_update(alloc_list, 1, 7, update);
+  leaf_iterator<testT> it(oct_);
+
+  typedef std::tuple<int3, int, typename Octree<testT>::compute_type> it_result;
+  it_result node = it.next();
+  for(int i = 256; std::get<1>(node) > 0; node = it.next(), i /= 2){
+    const int3 coords = std::get<0>(node);
+    const int side = std::get<1>(node);
+    const Octree<testT>::compute_type val = std::get<2>(node);
+    EXPECT_EQ(side, i);
+  }
+}

@@ -50,6 +50,7 @@ public:
 
   compute_type value_;
   unsigned int code;
+  unsigned int side;
   time_t timestamp_;
   char chid_mask_;
 

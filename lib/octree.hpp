@@ -85,6 +85,8 @@ inline float __int_as_float(int value){
 
 template <typename T>
 class ray_iterator;
+template <typename T>
+class leaf_iterator;
 
 template <typename T>
 class Octree
@@ -224,7 +226,7 @@ public:
   bool allocate(uint *keys, int num_elem);
 
   template <typename UpdateFunctor>
-  bool alloc_update(uint *keys, int num_elem, const int max_depth, UpdateFunctor f);
+  bool alloc_update(uint *keys, int num_elem, int max_depth, UpdateFunctor f);
 
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
@@ -256,6 +258,7 @@ private:
   MemoryPool<Node<T> > nodes_buffer_;
 
   friend class ray_iterator<T>;
+  friend class leaf_iterator<T>;
 
   // Compile-time constant expressions
   // # of voxels per side in a voxel block
@@ -800,7 +803,7 @@ std::sort(keys, keys+num_elem);
 
 template <typename T>
 template <typename UpdateFunctor>
-bool Octree<T>::alloc_update(uint *keys, int num_elem, const int max_level, 
+bool Octree<T>::alloc_update(uint *keys, int num_elem, int max_level, 
     UpdateFunctor f){
 
 #ifdef _OPENMP
@@ -812,6 +815,8 @@ std::sort(keys, keys+num_elem);
   num_elem = algorithms::unique(keys, num_elem);
   reserveBuffers(num_elem);
 
+  int leaves_level = max_level_ - log2(blockSide);
+  max_level = std::min(leaves_level, max_level);
   int last_elem = 0;
   bool success = false;
   for (int level = 1; level <= max_level; level++){
@@ -850,6 +855,7 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
         else {
           *n = nodes_buffer_.acquire_block();;
           (*n)->code = myKey;
+          (*n)->side = edge;
         }
       }
       edge /= 2;
@@ -889,6 +895,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
         else  {
           *n = nodes_buffer_.acquire_block();;
           (*n)->code = myKey;
+          (*n)->side = edge;
         }
       }
       edge /= 2;
@@ -1414,4 +1421,55 @@ class ray_iterator {
     STATE state_;
 };
 
+template <typename T>
+class leaf_iterator {
+
+  public:
+
+  leaf_iterator(const Octree<T>& m): map_(m){
+    state_ = BRANCH_NODES;
+    last = 0;
+  };
+
+  std::tuple<int3, int, typename Octree<T>::compute_type> next() {
+    switch(state_) {
+      case BRANCH_NODES:
+        if(last < map_.nodes_buffer_.size()) {
+          Node<T>* n = map_.nodes_buffer_[last++];
+          return std::make_tuple(make_int3(unpack_morton(n->code)), 
+                                 n->side, n->value_);
+        } else {
+          last = 0;
+          state_ = LEAF_NODES; 
+          return next();
+        }
+        break;
+      case LEAF_NODES:
+        if(last < map_.block_memory_.size()) {
+          VoxelBlock<T>* n = map_.block_memory_[last++];
+          return std::make_tuple(make_int3(unpack_morton(n->code)), 
+              int(VoxelBlock<T>::side), n->value_); 
+              /* the above int init required due to odr-use of static member */
+        } else {
+          last = 0;
+          state_ = FINISHED; 
+          return std::make_tuple(make_int3(-1), -1, Octree<T>::traits_type::empty());
+        }
+        break;
+      case FINISHED:
+          break;
+    }
+  }
+
+  private:
+  typedef enum ITER_STATE {
+    BRANCH_NODES,
+    LEAF_NODES,
+    FINISHED
+  } ITER_STATE;
+
+  const Octree<T>& map_;
+  ITER_STATE state_;
+  size_t last;
+};
 #endif // OCTREE_H

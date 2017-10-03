@@ -22,7 +22,7 @@ inline uint compact(uint value){
     return x;
 }
 
-inline uint3 unpack_morton(uint code){
+inline uint3 unpack_morton(const uint code){
   return make_uint3(compact(code >> 0), compact(code >> 1), 
                     compact(code >> 2));
 }
