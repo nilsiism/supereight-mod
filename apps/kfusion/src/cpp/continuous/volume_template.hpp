@@ -9,6 +9,7 @@
 #include <algorithms/filter.hpp>
 // #include <algorithms/mapping.hpp>
 #include <functional>
+#include <cstring>
 #include "../mapping.hpp"
 
 template <typename T>
@@ -88,8 +89,15 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
      auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
          _dim/_size, inverse(pose), K,  mu, current);
 
-      _allocationList[0].reserve(num_vox_per_pix * frameSize.x * frameSize.y);
-      _allocationList[1].reserve(num_vox_per_pix * frameSize.x * frameSize.y);
+      size_t total = num_vox_per_pix * frameSize.x * frameSize.y;
+      _allocationList[0].reserve(total);
+      _allocationList[1].reserve(total);
+      static bool initialised = false;
+      if(!initialised) {
+        std::memset(_allocationList[0].data(), 0, sizeof(unsigned int) * total);
+        std::memset(_allocationList[1].data(), 0, sizeof(unsigned int) * total);
+        initialised = true;
+      }
       const int allocated = 
         buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
           _map_index, pose, K, depthmap, frameSize, _size, 
