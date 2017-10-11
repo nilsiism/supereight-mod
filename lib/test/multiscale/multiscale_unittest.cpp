@@ -82,3 +82,28 @@ TEST_F(MultiscaleTest, Iterator) {
     EXPECT_EQ(side, i);
   }
 }
+
+TEST_F(MultiscaleTest, ChildrenMaskTest) {
+  const int3 blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
+    {136, 128, 128}, {128, 136, 128}, {136, 136, 128}, 
+    {128, 128, 136}, {136, 128, 136}, {128, 136, 136}, {136, 136, 136}};
+  unsigned int alloc_list[10];
+  for(int i = 0; i < 10; ++i) {
+    alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z, 5);
+  }
+
+  auto update = [](Node<testT> * n, const int , const int , const int ){
+    n->value_ = 10.f;
+  };
+  oct_.alloc_update(alloc_list, 10, 5, update);
+  const MemoryPool<Node<testT> >& nodes = oct_.getNodesBuffer();
+  const size_t num_nodes = nodes.size();
+  for(size_t i = 0; i < num_nodes; ++i) {
+    Node<testT>* n = nodes[i];
+    for(int c = 0; c < 8; ++c) {
+      if(n->child(c)) {
+        ASSERT_TRUE(n->children_mask_ & (1 << c));
+      }
+    }
+  } 
+}

@@ -856,6 +856,7 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
           *n = nodes_buffer_.acquire_block();;
           (*n)->code = myKey;
           (*n)->side = edge;
+          parent->children_mask_ = parent->children_mask_ | (1 << index);
         }
       }
       edge /= 2;
@@ -882,7 +883,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
 
       uint3 child = getChildFromCode(myKey, level);
       int index = child.x + child.y*2 + child.z*4;
-      // Node<T> * parent = *n;
+      Node<T> * parent = *n;
       n = &(*n)->child(index);
 
       if(!(*n)){
@@ -896,6 +897,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
           *n = nodes_buffer_.acquire_block();;
           (*n)->code = myKey;
           (*n)->side = edge;
+          parent->children_mask_ = parent->children_mask_ | (1 << index);
         }
       }
       edge /= 2;

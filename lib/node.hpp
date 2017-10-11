@@ -52,14 +52,15 @@ public:
   unsigned int code;
   unsigned int side;
   time_t timestamp_;
-  char chid_mask_;
+  unsigned char children_mask_;
 
   Node(){
     value_ = init_val();
-    for (unsigned int i = 0; i < 8; i++)
-      child_ptr_[i] = NULL;
     timestamp_ = 0;
     code = 0;
+    children_mask_ = 0;
+    for (unsigned int i = 0; i < 8; i++)
+      child_ptr_[i] = NULL;
     }
 
     virtual ~Node(){};
