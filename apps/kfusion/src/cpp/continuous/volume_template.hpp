@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <algorithms/alloc_list.hpp>
 #include <algorithms/filter.hpp>
-// #include <algorithms/mapping.hpp>
+#include <algorithms/mapping.hpp>
 #include <functional>
 #include <cstring>
 #include "../mapping.hpp"
@@ -140,7 +140,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       MemoryPool<Node<FieldType> >& nodes_array =
         _map_index.getNodesBuffer();
       const int size = nodes_array.size();
-      integratePass(nodes_array, size, compute_sdf);
+      algorithms::integratePass(nodes_array, size, compute_sdf);
     }
 
     unsigned int _size;

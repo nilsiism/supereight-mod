@@ -29,8 +29,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef MAPPING_HPP
-#define MAPPING_HPP
+#ifndef ALGO_MAPPING_HPP
+#define ALGO_MAPPING_HPP
 #include <node.hpp>
 
 inline float3 voxelToPos(const int3 p, const float voxelSize){
@@ -50,6 +50,19 @@ namespace algorithms {
         integrate(blockList[i], depth, depthSize, voxelSize,
             invTrack, K, mu, maxweight);
         blockList[i]->timestamp(current_frame);
+      }
+    }
+
+  /*
+   * MemoryBufferType is an instance of the memory allocator class
+   */
+  template <typename MemoryBufferType, typename UpdateFunctor>
+    void integratePass(MemoryBufferType&  nodes_list, unsigned int list_size, 
+        UpdateFunctor f) {
+
+#pragma omp parallel for
+      for(unsigned int i = 0; i < list_size; ++i){
+        f(nodes_list[i]);
       }
     }
 }
