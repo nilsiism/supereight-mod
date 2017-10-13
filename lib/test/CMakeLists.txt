@@ -7,7 +7,7 @@ find_package(GTest REQUIRED)
 
 enable_testing()
 add_compile_options(-std=c++1y )
-include_directories(../../lib ../../utils)
+include_directories(../../lib ../../utils ../../lib/geometry)
 
 add_subdirectory(allocation)
 add_subdirectory(interp)

@@ -100,6 +100,15 @@ public:
   compute_type empty() const { return traits_type::empty(); }
   compute_type init_val() const { return traits_type::initValue(); }
 
+  // Compile-time constant expressions
+  // # of voxels per side in a voxel block
+  static constexpr unsigned int blockSide = BLOCK_SIDE;
+  // maximum tree depth in bits
+  static constexpr unsigned int max_depth = ((sizeof(morton_type)*8)/3);
+  // Tree depth at which blocks are found
+  static constexpr unsigned int block_depth = max_depth - log2_const(BLOCK_SIDE);
+
+
   Octree(){
   };
 
@@ -112,8 +121,9 @@ public:
    */
   void init(int size, float dim);
 
-  inline int size(){ return size_; }
+  inline int size() const { return size_; }
   inline float dim() const { return dim_; }
+  inline Node<T>* root() const { return root_; }
 
   /*! \brief Retrieves voxel value at coordinates (x,y,z), if not present it 
    * allocates it. This method is not thread safe.
@@ -210,13 +220,6 @@ public:
     constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
     return compute_morton(make_uint3(x, y, z)) & MASK[morton_mask];   
   }
- 
-  /*! \brief performs a collision test against a specified axis 
-   *  aligned bounding box  
-   * \param bbox origin in integer coordinates of the bounding box to be tested
-   * \param side number of voxel per bounding box side
-   */
-  int collision_test(const int3 bbox, const int3 side);
 
   /*! \brief allocate a set of voxel blocks via their positional key  
    * \param keys collection of voxel block keys to be allocated (i.e. their 
@@ -259,14 +262,6 @@ private:
 
   friend class ray_iterator<T>;
   friend class leaf_iterator<T>;
-
-  // Compile-time constant expressions
-  // # of voxels per side in a voxel block
-  static constexpr unsigned int blockSide = BLOCK_SIDE;
-  // maximum tree depth in bits
-  static constexpr unsigned int max_depth = ((sizeof(morton_type)*8)/3);
-  // Tree depth at which blocks are found
-  static constexpr unsigned int block_depth = max_depth - log2_const(BLOCK_SIDE);
 
   // Allocation specific variables
   uint * allocationList_;
@@ -1151,56 +1146,6 @@ void Octree<T>::getAllocatedBlockList(Node<T> *,
     }
   }
 
-template <typename T>
-int Octree<T>::collision_test(const int3 bbox, const int3 side) {
-
-  typedef struct stack_entry { 
-    Node<T>* node_ptr;
-    int3 coordinates;
-    int side;
-  } stack_entry;
-
-  constexpr int3 offsets[8] = {{0, 0 ,0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0},
-    {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};
-
-  stack_entry stack[max_depth*8 + 1];
-  size_t stack_idx = 0;
-
-  Node<T>* n = root_;
-  if(!n) return 0;
-
-  stack_entry current;
-  current.node_ptr = n;
-  current.side = size_;
-  current.coordinates = {0, 0, 0};
-  stack[stack_idx++] = current;
-
-  while(stack_idx != 0){
-    Node<T>* node = current.node_ptr;
-
-    if(current.side == VoxelBlock<T>::side){
-      return 1;
-    }
-
-    for(int i = 0; i < 8; ++i){
-      Node<T>* child = node->child(i);
-      if(child != NULL) {
-        stack_entry child_descr;
-        child_descr.node_ptr = child;
-        child_descr.side = current.side / 2;
-        child_descr.coordinates = 
-          make_int3(current.coordinates.x + child_descr.side*offsets[i].x,
-                    current.coordinates.y + child_descr.side*offsets[i].y,
-                    current.coordinates.z + child_descr.side*offsets[i].z);
-        if(geometry::aabb_aabb_collision(bbox, side, child_descr.coordinates, 
-              make_int3(child_descr.side))) 
-          stack[stack_idx++] = child_descr;
-      }
-    }
-    current = stack[--stack_idx]; 
-  }
-  return 0;
-}
 
 /*****************************************************************************
  *

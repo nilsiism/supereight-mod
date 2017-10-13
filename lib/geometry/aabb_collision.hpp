@@ -3,6 +3,12 @@
 #include <cmath>
 #include <math_utils.h> 
 
+enum class collision_status {
+  occupied,
+  unseen,
+  empty
+};
+
 namespace geometry {
   inline int axis_collision(int a, const int a_edge, 
        int b, const int b_edge) {
@@ -28,5 +34,4 @@ namespace geometry {
            axis_collision(a.z, a_edge.z, b.z, b_edge.z);
   }
 }
-
 #endif
