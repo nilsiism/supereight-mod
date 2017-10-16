@@ -846,6 +846,7 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
           static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
           (*n)->code = myKey;
+          parent->children_mask_ = parent->children_mask_ | (1 << index);
         }
         else {
           *n = nodes_buffer_.acquire_block();;
@@ -887,6 +888,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
           static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
           static_cast<VoxelBlock<T> *>(*n)->code = myKey;
+          parent->children_mask_ = parent->children_mask_ | (1 << index);
         }
         else  {
           *n = nodes_buffer_.acquire_block();;
