@@ -9,6 +9,24 @@ enum class collision_status {
   empty
 };
 
+inline collision_status update_status(const collision_status previous, 
+    const collision_status status) {
+  switch(previous) {
+    case collision_status::unseen:
+      if(status == collision_status::empty || 
+         status == collision_status::unseen)
+        return previous;
+      else 
+        return status;
+      break;
+    case collision_status::occupied:
+      return previous;
+      break;
+    default:
+      return status;
+      break;
+  }
+}
 namespace geometry {
   inline int axis_collision(int a, const int a_edge, 
        int b, const int b_edge) {
