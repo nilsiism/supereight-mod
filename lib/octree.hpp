@@ -452,7 +452,7 @@ void Octree<T>::init(int size, float dim) {
   dim_ = dim;
   max_level_ = log2(size);
   root_ = new Node<T>();
-  // root_->edge(size_);
+  root_->side = size;
   reserved_ = 1024;
   keys_at_level_ = new unsigned int[reserved_];
   std::memset(keys_at_level_, 0, reserved_);
