@@ -22,6 +22,7 @@ collision_status collision_test(const Octree<FieldType>& map,
     Node<FieldType>* node_ptr;
     int3 coordinates;
     int side;
+    typename Node<FieldType>::compute_type parent_val;
   } stack_entry;
 
   constexpr int3 offsets[8] = {{0, 0 ,0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0},
@@ -47,7 +48,6 @@ collision_status collision_test(const Octree<FieldType>& map,
       return collision_status::occupied;
     } 
 
-    status = update_status(status, test(node->value_));
     if(node->children_mask_ == 0) {
        current = stack[--stack_idx]; 
        continue;
@@ -68,7 +68,10 @@ collision_status collision_test(const Octree<FieldType>& map,
 
       if(overlaps && child != NULL) {
         child_descr.node_ptr = child;
+        child_descr.parent_val = node->value_;
         stack[stack_idx++] = child_descr;
+      } else if(overlaps && child == NULL) {
+        status = update_status(status, test(node->value_));
       }
     }
     current = stack[--stack_idx]; 
