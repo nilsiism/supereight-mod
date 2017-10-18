@@ -15,6 +15,30 @@
  */
 
 template <typename FieldType, typename TestVoxelF>
+collision_status collides_with(const VoxelBlock<FieldType>* block, 
+    TestVoxelF test) {
+  collision_status status = collision_status::empty;
+  const int3 blockCoord = block->coordinates();
+  int x, y, z, blockSide; 
+  blockSide = (int) VoxelBlock<FieldType>::side;
+  int xlast = blockCoord.x + blockSide;
+  int ylast = blockCoord.y + blockSide;
+  int zlast = blockCoord.z + blockSide;
+  for(z = blockCoord.z; z < zlast; ++z){
+    for (y = blockCoord.y; y < ylast; ++y){
+      for (x = blockCoord.x; x < xlast; ++x){
+
+        typename VoxelBlock<FieldType>::compute_type value;
+        value = block->data(make_int3(x, y, z));
+        // std::cout << "Value: " << value << std::endl;
+        status = update_status(status, test(value));
+      }
+    }
+  }
+  return status;
+}
+
+template <typename FieldType, typename TestVoxelF>
 collision_status collision_test(const Octree<FieldType>& map, 
     const int3 bbox, const int3 side, TestVoxelF test) {
 
@@ -31,21 +55,21 @@ collision_status collision_test(const Octree<FieldType>& map,
   stack_entry stack[Octree<FieldType>::max_depth*8 + 1];
   size_t stack_idx = 0;
 
-  Node<FieldType>* n = map.root();
-  if(!n) return collision_status::unseen;
+  Node<FieldType>* node = map.root();
+  if(!node) return collision_status::unseen;
 
   stack_entry current;
-  current.node_ptr = n;
+  current.node_ptr = node;
   current.side = map.size();
   current.coordinates = {0, 0, 0};
   stack[stack_idx++] = current;
   collision_status status = collision_status::empty;
 
   while(stack_idx != 0){
-    Node<FieldType>* node = current.node_ptr;
+    node = current.node_ptr;
 
     if(node->isLeaf()){
-      return collision_status::occupied;
+      status = collides_with(static_cast<VoxelBlock<FieldType>*>(node), test);
     } 
 
     if(node->children_mask_ == 0) {
