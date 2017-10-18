@@ -68,7 +68,7 @@ TEST_F(OctreeCollisionTest, TotallyUnseen) {
   const int3 test_bbox = {23, 0, 100};
   const int3 width = {2, 2, 2};
 
-  const collision_status collides = collision_test(oct_, test_bbox, width, 
+  const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
   ASSERT_EQ(collides, collision_status::unseen);
 }
@@ -76,7 +76,7 @@ TEST_F(OctreeCollisionTest, TotallyUnseen) {
 TEST_F(OctreeCollisionTest, PartiallyUnseen) {
   const int3 test_bbox = {47, 0, 239};
   const int3 width = {6, 6, 6};
-  const collision_status collides = collision_test(oct_, test_bbox, width, 
+  const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
   ASSERT_EQ(collides, collision_status::unseen);
 }
@@ -84,7 +84,7 @@ TEST_F(OctreeCollisionTest, PartiallyUnseen) {
 TEST_F(OctreeCollisionTest, Empty) {
   const int3 test_bbox = {49, 1, 242};
   const int3 width = {1, 1, 1};
-  const collision_status collides = collision_test(oct_, test_bbox, width, 
+  const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
   ASSERT_EQ(collides, collision_status::empty);
 }
@@ -93,7 +93,7 @@ TEST_F(OctreeCollisionTest, CollisionPlausible){
   const int3 test_bbox = {54, 10, 249};
   const int3 width = {5, 5, 3};
 
-  const collision_status collides = collision_test(oct_, test_bbox, width, 
+  const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
   ASSERT_EQ(collides, collision_status::unseen);
 }
@@ -121,7 +121,7 @@ TEST_F(OctreeCollisionTest, Collision){
   algorithms::integratePass(oct_.getBlockBuffer(), oct_.getBlockBuffer().size(),
       update);
 
-  const collision_status collides = collision_test(oct_, test_bbox, width, 
+  const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
   ASSERT_EQ(collides, collision_status::occupied);
 }

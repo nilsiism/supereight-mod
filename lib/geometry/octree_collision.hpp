@@ -76,7 +76,7 @@ collision_status collides_with(const VoxelBlock<FieldType>* block,
  */
 
 template <typename FieldType, typename TestVoxelF>
-collision_status collision_test(const Octree<FieldType>& map, 
+collision_status collides_with(const Octree<FieldType>& map, 
     const int3 bbox, const int3 side, TestVoxelF test) {
 
   typedef struct stack_entry { 
