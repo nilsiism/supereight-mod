@@ -4,16 +4,43 @@
 #include "octree.hpp"
 #include "geometry/aabb_collision.hpp"
 
-/*! \brief Perform a collision test betweenb the input octree map and the 
- * input axis aligned bounding box bbox of extension side. The test function 
- * test takes as input a voxel value and returns a collision_status. This is
- * used to distinguish between seen-empty voxels and occupied voxels.
- * \param map octree map
- * \param bbox test bounding box lower bottom corner 
- * \param side extension in number of voxels of the bounding box
+enum class collision_status {
+  occupied,
+  unseen,
+  empty
+};
+
+/*! \brief Implements a simple state machine to update the collision status.
+ * The importance order is given as follows in ascending order: 
+ * Empty, Unseen, Occupied.
+ * \param previous_status
+ * \param new_status 
+ */
+inline collision_status update_status(const collision_status previous_status, 
+    const collision_status new_status) {
+  switch(previous_status) {
+    case collision_status::unseen:
+      if(new_status != collision_status::occupied)
+        return previous_status;
+      else 
+        return new_status;
+      break;
+    case collision_status::occupied:
+      return previous_status;
+      break;
+    default:
+      return new_status;
+      break;
+  }
+}
+
+/*! \brief Perform a collision test for each voxel value in the input voxel 
+ * block. The test function test takes as input a voxel value and returns a
+ * collision_status. This is used to distinguish between seen-empty voxels and
+ * occupied voxels.
+ * \param block voxel block of type FieldType
  * \param test function that takes a voxel and returns a collision_status value
  */
-
 template <typename FieldType, typename TestVoxelF>
 collision_status collides_with(const VoxelBlock<FieldType>* block, 
     TestVoxelF test) {
@@ -37,6 +64,16 @@ collision_status collides_with(const VoxelBlock<FieldType>* block,
   }
   return status;
 }
+
+/*! \brief Perform a collision test between the input octree map and the 
+ * input axis aligned bounding box bbox of extension side. The test function 
+ * test takes as input a voxel value and returns a collision_status. This is
+ * used to distinguish between seen-empty voxels and occupied voxels.
+ * \param map octree map
+ * \param bbox test bounding box lower bottom corner 
+ * \param side extension in number of voxels of the bounding box
+ * \param test function that takes a voxel and returns a collision_status value
+ */
 
 template <typename FieldType, typename TestVoxelF>
 collision_status collision_test(const Octree<FieldType>& map, 
