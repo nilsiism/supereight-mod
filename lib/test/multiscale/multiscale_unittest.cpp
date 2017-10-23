@@ -49,7 +49,7 @@ TEST_F(MultiscaleTest, ScaledAlloc) {
   const int3 blocks[2] = {{56, 12, 254}, {87, 32, 423}};
   unsigned int alloc_list[2];
   for(int i = 0; i < 2; ++i) {
-    alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z);
+    alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z, 5);
   }
 
   auto update = [](Node<testT> * n, const int , const int , const int ){
