@@ -44,6 +44,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MAX_BITS 10
 #define CAST_STACK_DEPTH 23
+#define SCALE_MASK 0x1FFu
 
 
 uint MASK[] = {
@@ -218,7 +219,7 @@ public:
 
   unsigned int hash(const int x, const int y, const int z, const int scale) {
     constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
-    return compute_morton(make_uint3(x, y, z)) & MASK[morton_mask];   
+    return (compute_morton(make_uint3(x, y, z)) & MASK[morton_mask]) | scale; 
   }
 
   /*! \brief allocate a set of voxel blocks via their positional key  
@@ -807,7 +808,7 @@ bool Octree<T>::alloc_update(uint *keys, int num_elem, int max_level,
 std::sort(keys, keys+num_elem);
 #endif
 
-  num_elem = algorithms::unique(keys, num_elem);
+  num_elem = algorithms::unique_multiscale(keys, num_elem, SCALE_MASK);
   reserveBuffers(num_elem);
 
   int leaves_level = max_level_ - log2(blockSide);

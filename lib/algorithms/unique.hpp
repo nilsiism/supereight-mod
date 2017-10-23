@@ -17,8 +17,9 @@ namespace algorithms {
 
   template <typename MortonType>
     inline int unique_multiscale(MortonType* keys, int num_keys,
-        const MortonType key_mask, const MortonType level_mask){
+        const MortonType level_mask){
       int end = 1;
+      const MortonType key_mask = ~level_mask; 
       if(num_keys < 2) return end;
       MortonType prev_key = keys[0] & key_mask;
       MortonType prev_level = keys[0] & level_mask;
