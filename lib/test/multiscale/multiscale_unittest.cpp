@@ -107,3 +107,26 @@ TEST_F(MultiscaleTest, ChildrenMaskTest) {
     }
   } 
 }
+
+TEST_F(MultiscaleTest, OctantAlloc) {
+  const int3 blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
+    {136, 128, 128}, {128, 136, 128}, {136, 136, 128}, 
+    {128, 128, 136}, {136, 128, 136}, {128, 136, 136}, {136, 136, 136}};
+  unsigned int alloc_list[10];
+  for(int i = 0; i < 10; ++i) {
+    alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z);
+  }
+
+  alloc_list[2] = alloc_list[2] | 3;
+  alloc_list[9] = alloc_list[2] | 5;
+  auto update = [](Node<testT> * n, const int , const int , const int ){
+    n->value_ = 10.f;
+  };
+  oct_.alloc_update(alloc_list, 10, 7, update);
+  Node<testT> * octant = oct_.fetch_octant(blocks[4].x, blocks[4].y,
+      blocks[4].z, 3);
+  ASSERT_TRUE(octant != NULL);
+  octant = oct_.fetch_octant(blocks[9].x, blocks[9].y,
+      blocks[9].z, 6);
+  ASSERT_TRUE(octant == NULL);
+}

@@ -285,7 +285,10 @@ private:
   unsigned int getMortonAtLevel(uint code, int level);
 
   void reserveBuffers(const int n);
-  bool getKeysAtLevel(const uint * inputKeys, uint *outpuKeys, unsigned int num_keys, int level);
+  bool getKeysAtLevel(const uint * inputKeys, uint *outpuKeys, 
+      unsigned int num_keys, int level);
+  bool getKeysAtLevel(const uint * inputKeys, uint *outpuKeys, 
+      unsigned int num_keys, const unsigned int scale_mask, int level);
   uint3 getChildFromCode(int code, int level);
 
   // General helpers
@@ -758,6 +761,18 @@ inline bool Octree<T>::getKeysAtLevel(const uint * inputKeys, uint * outputKeys,
   for (unsigned int i = 1; i < num_keys; i++){
     outputKeys[i] = inputKeys[i] & MASK[level + shift-1];
   }
+  return true;
+}
+
+template <typename T>
+inline bool Octree<T>::getKeysAtLevel(const uint * inputKeys, uint * outputKeys,  
+    unsigned int num_keys, const unsigned int scale_mask, int level){
+
+  const int shift = MAX_BITS - max_level_;
+  outputKeys[0] = inputKeys[0] & MASK[level + shift-1];
+  for (unsigned int i = 1; i < num_keys; i++){
+    outputKeys[i] = inputKeys[i] & (MASK[level + shift-1] | scale_mask);
+  }
 
   return true;
 }
@@ -816,8 +831,9 @@ std::sort(keys, keys+num_elem);
   int last_elem = 0;
   bool success = false;
   for (int level = 1; level <= max_level; level++){
-    getKeysAtLevel(keys, keys_at_level_, num_elem, level);
-    last_elem = algorithms::unique(keys_at_level_, num_elem);
+    getKeysAtLevel(keys, keys_at_level_, num_elem, SCALE_MASK, level);
+    last_elem = algorithms::unique_multiscale(keys_at_level_, num_elem, 
+        SCALE_MASK);
     success = updateLevel(keys_at_level_, last_elem, level, f);
   }
   return success;
