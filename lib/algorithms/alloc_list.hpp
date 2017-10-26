@@ -194,7 +194,7 @@ void buildOctantList(uint * allocationList[2], size_t reserved[2],
             (voxelScaled.y >= 0) && (voxelScaled.z >= 0)){
           voxel = make_int3(voxelScaled);
           if(!map_index.fetch_octant(voxel.x, voxel.y, voxel.z, tree_depth[step_phase])){
-            uint k = map_index.hash(voxel.x, voxel.y, voxel.z);
+            uint k = map_index.hash(voxel.x, voxel.y, voxel.z, tree_depth[step_phase]);
             unsigned int idx = ++(voxelCount[step_phase]);
             if(idx < reserved[step_phase]) {
               allocationList[step_phase][idx] = k;

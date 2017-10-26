@@ -102,7 +102,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
         buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
           _map_index, pose, K, depthmap, frameSize, _size, 
           _dim/_size, 2*mu);
-      _map_index.alloc_update(_allocationList[0].data(), allocated, 7, compute_sdf);
+      _map_index.alloc_update(_allocationList[0].data(), allocated, 7);
 
      const unsigned int max_depth[2] = {4, 6};
      float step[2]; 
@@ -117,8 +117,8 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
          _map_index, pose, K, depthmap, frameSize, max_depth, 
          _dim/_size, step, mu);
      // printf("To be allocated: %d, %d\n", (int) written[0], (int) written[1]);
-     _map_index.alloc_update(_allocationList[0].data(), written[0], max_depth[0], compute_sdf);
-     _map_index.alloc_update(_allocationList[1].data(), written[1], max_depth[1], compute_sdf);
+     _map_index.alloc_update(_allocationList[0].data(), written[0], max_depth[0]);
+     _map_index.alloc_update(_allocationList[1].data(), written[1], max_depth[1]);
 
       std::vector<VoxelBlock<FieldType> *> active_list;
       const MemoryPool<VoxelBlock<FieldType> >& block_array = 

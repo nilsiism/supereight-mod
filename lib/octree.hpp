@@ -18,7 +18,10 @@ specific prior written permission.
 
 THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
 ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
 SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
 CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
 OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
@@ -228,9 +231,7 @@ public:
    * \param number of keys in the keys array
    */
   bool allocate(uint *keys, int num_elem);
-
-  template <typename UpdateFunctor>
-  bool alloc_update(uint *keys, int num_elem, int max_depth, UpdateFunctor f);
+  bool alloc_update(uint *keys, int num_elem, int max_depth);
 
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
@@ -276,10 +277,8 @@ private:
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
   bool allocateLevel(uint * keys, int num_tasks, int target_level);
-
-  template <typename UpdateFunctor>
   bool updateLevel(uint * keys, int num_tasks, int target_level, 
-      UpdateFunctor f);
+      const unsigned int scale_mask = 0x0);
 
   // Masks code with the appropriate bitmask for the input three level.
   unsigned int getMortonAtLevel(uint code, int level);
@@ -813,9 +812,7 @@ std::sort(keys, keys+num_elem);
 }
 
 template <typename T>
-template <typename UpdateFunctor>
-bool Octree<T>::alloc_update(uint *keys, int num_elem, int max_level, 
-    UpdateFunctor f){
+bool Octree<T>::alloc_update(uint *keys, int num_elem, int max_level){
 
 #ifdef _OPENMP
   __gnu_parallel::sort(keys, keys+num_elem);
@@ -834,7 +831,7 @@ std::sort(keys, keys+num_elem);
     getKeysAtLevel(keys, keys_at_level_, num_elem, SCALE_MASK, level);
     last_elem = algorithms::unique_multiscale(keys_at_level_, num_elem, 
         SCALE_MASK);
-    success = updateLevel(keys_at_level_, last_elem, level, f);
+    success = updateLevel(keys_at_level_, last_elem, level, SCALE_MASK);
   }
   return success;
 }
@@ -879,9 +876,8 @@ bool Octree<T>::allocateLevel(uint * keys, int num_tasks, int target_level){
 }
 
 template <typename T>
-template <typename UpdateFunctor>
 bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
-    UpdateFunctor ){
+    const unsigned int scale_mask){
 
   int leaves_level = max_level_ - log2(blockSide);
   nodes_buffer_.reserve(num_tasks);
@@ -889,7 +885,7 @@ bool Octree<T>::updateLevel(uint * keys, int num_tasks, int target_level,
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
     Node<T> ** n = &root_;
-    int myKey = keys[i];
+    int myKey = keys[i] & (~scale_mask);
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
