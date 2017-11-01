@@ -145,6 +145,13 @@ TEST_F(OctreeCollisionTest, CollisionFreeLeaf){
         }
       }
     }
+    for(z = zlast; z < zlast + blockSide/2; ++z){
+      for (y = ylast; y < ylast + blockSide/2; ++y){
+        for (x = xlast; x < xlast + blockSide/2; ++x){
+          block->data(make_int3(x, y, z), 10.f);
+        }
+      }
+    }
   };
  
   algorithms::integratePass(oct_.getBlockBuffer(), oct_.getBlockBuffer().size(),
