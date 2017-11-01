@@ -184,7 +184,7 @@ void integrate_bfusion(Node<BFusion> * node,
     const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
     const float noiseFactor, const float timestamp) { 
 
-  if(node->child(0)) return;
+  // if(node->child(0)) return;
   const int3 voxel = make_int3(unpack_morton(node->code));
   float3 pos = invTrack * (make_float3(voxel) * voxelSize);
   float3 camera_voxel = K * pos;
@@ -210,6 +210,7 @@ void integrate_bfusion(Node<BFusion> * node,
   const double delta_t = timestamp - data.y;
   data.x = applyWindow(data.x, SURF_BOUNDARY, delta_t, CAPITAL_T);
   data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
+  data.y = timestamp;
   node ->value_ = data;
 }
 
