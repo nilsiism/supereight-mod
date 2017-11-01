@@ -286,7 +286,7 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
           const int3 bbox = make_int3(x, y, z);
           const int3 side = make_int3(1);
           auto test = [](const Octree<FieldType>::compute_type & val) {
-          if(val.y == 0.f) return collision_status::unseen;
+          if(val.x == 0.f) return collision_status::unseen;
           if(val.x < 5) return collision_status::empty;
           return collision_status::occupied;
           };
