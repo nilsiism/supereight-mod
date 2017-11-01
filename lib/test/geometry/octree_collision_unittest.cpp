@@ -126,4 +126,34 @@ TEST_F(OctreeCollisionTest, Collision){
   ASSERT_EQ(collides, collision_status::occupied);
 }
 
+TEST_F(OctreeCollisionTest, CollisionFreeLeaf){
+  // Allocated block: {56, 8, 248};
+  const int3 test_bbox = {61, 13, 253};
+  const int3 width = {2, 2, 2};
+  /* Update leaves as occupied node */
+  auto update = [](VoxelBlock<testT> * block){
+    const int3 blockCoord = block->coordinates();
+    int x, y, z, blockSide; 
+    blockSide = (int) VoxelBlock<testT>::side;
+    int xlast = blockCoord.x + blockSide/2;
+    int ylast = blockCoord.y + blockSide/2;
+    int zlast = blockCoord.z + blockSide/2;
+    for(z = blockCoord.z; z < zlast; ++z){
+      for (y = blockCoord.y; y < ylast; ++y){
+        for (x = blockCoord.x; x < xlast; ++x){
+          block->data(make_int3(x, y, z), 2.f);
+        }
+      }
+    }
+  };
+ 
+  algorithms::integratePass(oct_.getBlockBuffer(), oct_.getBlockBuffer().size(),
+      update);
+
+  const collision_status collides = collides_with(oct_, test_bbox, width, 
+      test_voxel);
+  ASSERT_EQ(collides, collision_status::empty);
+}
+
+
 

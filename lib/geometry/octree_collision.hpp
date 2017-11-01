@@ -43,7 +43,7 @@ inline collision_status update_status(const collision_status previous_status,
  */
 template <typename FieldType, typename TestVoxelF>
 collision_status collides_with(const VoxelBlock<FieldType>* block, 
-    TestVoxelF test) {
+    const int3 bbox, const int3 side, TestVoxelF test) {
   collision_status status = collision_status::empty;
   const int3 blockCoord = block->coordinates();
   int x, y, z, blockSide; 
@@ -56,6 +56,9 @@ collision_status collides_with(const VoxelBlock<FieldType>* block,
       for (x = blockCoord.x; x < xlast; ++x){
 
         typename VoxelBlock<FieldType>::compute_type value;
+        const int3 vox = make_int3(x, y, z);
+        if(!geometry::aabb_aabb_collision(bbox, side, 
+          vox, make_int3(1))) continue;
         value = block->data(make_int3(x, y, z));
         // std::cout << "Value: " << value << std::endl;
         status = update_status(status, test(value));
@@ -106,7 +109,8 @@ collision_status collides_with(const Octree<FieldType>& map,
     node = current.node_ptr;
 
     if(node->isLeaf()){
-      status = collides_with(static_cast<VoxelBlock<FieldType>*>(node), test);
+      status = collides_with(static_cast<VoxelBlock<FieldType>*>(node), 
+          bbox, side, test);
     } 
 
     if(node->children_mask_ == 0) {
