@@ -60,7 +60,6 @@ collision_status collides_with(const VoxelBlock<FieldType>* block,
         if(!geometry::aabb_aabb_collision(bbox, side, 
           vox, make_int3(1))) continue;
         value = block->data(make_int3(x, y, z));
-        std::cout << "Value: " << value << std::endl;
         status = update_status(status, test(value));
       }
     }
