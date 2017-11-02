@@ -58,6 +58,7 @@ public:
     value_ = init_val();
     timestamp_ = 0;
     code = 0;
+    side = 0;
     children_mask_ = 0;
     for (unsigned int i = 0; i < 8; i++)
       child_ptr_[i] = NULL;
