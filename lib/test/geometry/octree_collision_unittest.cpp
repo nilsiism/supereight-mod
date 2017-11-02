@@ -42,7 +42,7 @@ class OctreeCollisionTest : public ::testing::Test {
           n->value_ = 10.f;
         }
       };
-      oct_.alloc_update(alloc_list, 1, 6, update);
+      oct_.alloc_update(alloc_list, 1, 6);
       algorithms::integratePass(oct_.getNodesBuffer(), oct_.getNodesBuffer().size(),
           update);
     }

@@ -52,10 +52,7 @@ TEST_F(MultiscaleTest, ScaledAlloc) {
     alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z, 5);
   }
 
-  auto update = [](Node<testT> * n, const int , const int , const int ){
-    n->value_ = 10.f;
-  };
-  oct_.alloc_update(alloc_list, 2, 5, update);
+  oct_.alloc_update(alloc_list, 2, 5);
   Node<testT>* n = oct_.fetch_octant(56, 12, 254, 5);
   ASSERT_TRUE(n != NULL);
   n->value_ = 10.f;
@@ -67,10 +64,7 @@ TEST_F(MultiscaleTest, Iterator) {
   unsigned int alloc_list[1];
   alloc_list[0] = oct_.hash(blocks[0].x, blocks[0].y, blocks[0].z);
 
-  auto update = [](Node<testT> * n, const int , const int , const int ){
-    n->value_ = 10.f;
-  };
-  oct_.alloc_update(alloc_list, 1, 7, update);
+  oct_.alloc_update(alloc_list, 1, 7);
   leaf_iterator<testT> it(oct_);
 
   typedef std::tuple<int3, int, typename Octree<testT>::compute_type> it_result;
@@ -92,10 +86,7 @@ TEST_F(MultiscaleTest, ChildrenMaskTest) {
     alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z, 5);
   }
 
-  auto update = [](Node<testT> * n, const int , const int , const int ){
-    n->value_ = 10.f;
-  };
-  oct_.alloc_update(alloc_list, 10, 5, update);
+  oct_.alloc_update(alloc_list, 10, 5);
   const MemoryPool<Node<testT> >& nodes = oct_.getNodesBuffer();
   const size_t num_nodes = nodes.size();
   for(size_t i = 0; i < num_nodes; ++i) {
@@ -119,10 +110,7 @@ TEST_F(MultiscaleTest, OctantAlloc) {
 
   alloc_list[2] = alloc_list[2] | 3;
   alloc_list[9] = alloc_list[2] | 5;
-  auto update = [](Node<testT> * n, const int , const int , const int ){
-    n->value_ = 10.f;
-  };
-  oct_.alloc_update(alloc_list, 10, 7, update);
+  oct_.alloc_update(alloc_list, 10, 7);
   Node<testT> * octant = oct_.fetch_octant(blocks[4].x, blocks[4].y,
       blocks[4].z, 3);
   ASSERT_TRUE(octant != NULL);
