@@ -91,39 +91,34 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
 
       size_t total = num_vox_per_pix * frameSize.x * frameSize.y;
       _allocationList[0].reserve(total);
-      _allocationList[1].reserve(total);
       static bool initialised = false;
       if(!initialised) {
         std::memset(_allocationList[0].data(), 0, sizeof(unsigned int) * total);
-        std::memset(_allocationList[1].data(), 0, sizeof(unsigned int) * total);
         initialised = true;
       }
-      const int allocated = 
+      int allocated = 
         buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
           _map_index, pose, K, depthmap, frameSize, _size, 
-          _dim/_size, 2*mu);
+          _dim/_size, 3*mu);
       _map_index.alloc_update(_allocationList[0].data(), allocated, 7);
 
-     const unsigned int max_depth[2] = {4, 6};
+     const unsigned int max_depth[2] = {4, 5};
      float step[2]; 
      step[0] = _dim/std::pow(2, max_depth[0]);
      step[1] = _dim/std::pow(2, max_depth[1]);
 
-     uint * data_ptr[2] = {_allocationList[0].data(), _allocationList[1].data()};
-     size_t data_size[2] = {_allocationList[0].capacity(), _allocationList[1].capacity()};
-     size_t written[2] = {0, 0};
 
-     buildOctantList(data_ptr, data_size, written,
+     allocated = buildOctantList(_allocationList[0].data(), _allocationList[0].capacity(),
          _map_index, pose, K, depthmap, frameSize, max_depth, 
          _dim/_size, step, mu);
      // printf("To be allocated: %d, %d\n", (int) written[0], (int) written[1]);
-     _map_index.alloc_update(_allocationList[0].data(), written[0], max_depth[0]);
-     _map_index.alloc_update(_allocationList[1].data(), written[1], max_depth[1]);
+     _map_index.alloc_update(_allocationList[0].data(), allocated, max_depth[0]);
 
       std::vector<VoxelBlock<FieldType> *> active_list;
       const MemoryPool<VoxelBlock<FieldType> >& block_array = 
         _map_index.getBlockBuffer();
 
+      /* Predicates definition */
       auto in_frustum_predicate = 
         std::bind(algorithms::in_frustum<VoxelBlock<FieldType>>, _1, 
          _dim/_size, K*inverse(pose), make_int2(frameSize)); 
@@ -131,7 +126,8 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
         return b->active();
       };
       
-      algorithms::filter(active_list, block_array, is_active_predicate, in_frustum_predicate);
+      algorithms::filter(active_list, block_array, is_active_predicate, 
+          in_frustum_predicate);
       VoxelBlock<FieldType> ** list = active_list.data();
       unsigned int num_active = active_list.size();
       integratePass(list, num_active, depthmap, frameSize, _dim/_size,

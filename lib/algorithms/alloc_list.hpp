@@ -146,8 +146,8 @@ unsigned int buildIntersectionList(uint * allocationList, size_t reserved,
 }
 
 template <typename FieldType, template <typename> class IndexType>
-void buildOctantList(uint * allocationList[2], size_t reserved[2],
-    size_t written[2], IndexType<FieldType>& map_index, const Matrix4 &pose, 
+size_t buildOctantList(uint * allocationList, size_t reserved,
+    IndexType<FieldType>& map_index, const Matrix4 &pose, 
     const Matrix4& K, const float *depthmap, const uint2 &imageSize, 
     const unsigned int tree_depth[2],  const float voxelSize, 
     const float stepsize[2], const float band) {
@@ -158,15 +158,14 @@ void buildOctantList(uint * allocationList[2], size_t reserved[2],
   const int size = map_index.size();
 
 #ifdef _OPENMP
-  std::atomic<unsigned int> voxelCount[2];
+  std::atomic<unsigned int> voxelCount;
 #else
-  unsigned int voxelCount[2];
+  unsigned int voxelCount;
 #endif
 
   unsigned int x, y;
   const float3 camera = get_translation(pose);
-  voxelCount[0] = 0;
-  voxelCount[1] = 0;
+  voxelCount = 0;
 #pragma omp parallel for \
   private(y)
   for (y = 0; y < imageSize.y; y++) {
@@ -195,9 +194,9 @@ void buildOctantList(uint * allocationList[2], size_t reserved[2],
           voxel = make_int3(voxelScaled);
           if(!map_index.fetch_octant(voxel.x, voxel.y, voxel.z, tree_depth[step_phase])){
             uint k = map_index.hash(voxel.x, voxel.y, voxel.z, tree_depth[step_phase]);
-            unsigned int idx = ++(voxelCount[step_phase]);
-            if(idx < reserved[step_phase]) {
-              allocationList[step_phase][idx] = k;
+            unsigned int idx = ++(voxelCount);
+            if(idx < reserved) {
+              allocationList[idx] = k;
             }
           }
         }
@@ -210,7 +209,6 @@ void buildOctantList(uint * allocationList[2], size_t reserved[2],
       }
     }
   }
-  written[0] = voxelCount[0];
-  written[1] = voxelCount[1];
+  return (size_t) voxelCount >= reserved ? reserved : (size_t) voxelCount;
 }
 #endif
