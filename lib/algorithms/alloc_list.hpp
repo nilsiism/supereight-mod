@@ -54,7 +54,7 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
 
       float3 direction = normalize(worldVertex - camera);
       const float3 origin = worldVertex - band * direction;
-      const float3 step = (2*direction*band)/numSteps;
+      const float3 step = (direction*band)/numSteps;
 
       int3 voxel;
       float3 voxelPos = origin;
@@ -145,17 +145,20 @@ unsigned int buildIntersectionList(uint * allocationList, size_t reserved,
   return written >= reserved ? reserved : written;
 }
 
-template <typename FieldType, template <typename> class IndexType>
+template <typename FieldType, 
+          template <typename> class IndexType,
+          typename StepF, typename DepthF>
 size_t buildOctantList(uint * allocationList, size_t reserved,
     IndexType<FieldType>& map_index, const Matrix4 &pose, 
     const Matrix4& K, const float *depthmap, const uint2 &imageSize, 
-    const unsigned int tree_depth[2],  const float voxelSize, 
-    const float stepsize[2], const float band) {
+    const float voxelSize, StepF compute_stepsize, DepthF step_to_depth,
+    const float band) {
 
   const float inverseVoxelSize = 1.f/voxelSize;
   Matrix4 invK = inverse(K);
   const Matrix4 kPose = pose * invK;
   const int size = map_index.size();
+  const int max_depth = log2(size);
 
 #ifdef _OPENMP
   std::atomic<unsigned int> voxelCount;
@@ -172,39 +175,38 @@ size_t buildOctantList(uint * allocationList, size_t reserved,
     for (x = 0; x < imageSize.x; x++) {
       if(depthmap[x + y*imageSize.x] == 0)
         continue;
-      int step_phase = 0;
+      int tree_depth = max_depth; 
+      float stepsize = voxelSize;
       const float depth = depthmap[x + y*imageSize.x];
       float3 worldVertex = (kPose * make_float3((x + 0.5f) * depth, 
             (y + 0.5f) * depth, depth));
 
-      float3 direction = normalize(worldVertex - camera);
-      const float3 origin = camera;
-      const float3 end = worldVertex - band * direction;
+      float3 direction = normalize(camera - worldVertex);
+      const float3 end = camera;
+      const float3 origin = worldVertex - band * direction;
       const float dist = length(end - origin); 
-      float3 step = direction*stepsize[step_phase];
+      float3 step = direction*stepsize;
 
       int3 voxel;
       float3 voxelPos = origin;
-      float travelled = 0;
-      for(; travelled < dist; travelled += stepsize[step_phase]){
+      float travelled = band;
+      for(; travelled < dist; travelled += stepsize){
         float3 voxelScaled = floorf(voxelPos * inverseVoxelSize);
         if((voxelScaled.x < size) && (voxelScaled.y < size) &&
             (voxelScaled.z < size) && (voxelScaled.x >= 0) &&
             (voxelScaled.y >= 0) && (voxelScaled.z >= 0)){
           voxel = make_int3(voxelScaled);
-          if(!map_index.fetch_octant(voxel.x, voxel.y, voxel.z, tree_depth[step_phase])){
-            uint k = map_index.hash(voxel.x, voxel.y, voxel.z, tree_depth[step_phase]);
+          if(!map_index.fetch_octant(voxel.x, voxel.y, voxel.z, tree_depth)){
+            uint k = map_index.hash(voxel.x, voxel.y, voxel.z, tree_depth);
             unsigned int idx = ++(voxelCount);
             if(idx < reserved) {
               allocationList[idx] = k;
             }
           }
         }
-        if(step_phase == 0 && 
-            dist - travelled < (3 * stepsize[0])) {
-          step_phase = 1;
-          step = direction*stepsize[step_phase];
-        }
+        stepsize = compute_stepsize(travelled, band, voxelSize);  
+        tree_depth = step_to_depth(stepsize, max_depth, voxelSize);
+        step = direction*stepsize;
         voxelPos +=step;
       }
     }

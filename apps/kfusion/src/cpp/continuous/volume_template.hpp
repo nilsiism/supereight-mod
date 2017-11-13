@@ -11,6 +11,7 @@
 #include <functional>
 #include <cstring>
 #include "../mapping.hpp"
+#include "../bfusion/allocation.hpp"
 
 template <typename T>
 class Void {};
@@ -85,7 +86,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       using namespace std::placeholders;
       int num_vox_per_pix = _dim/((VoxelBlock<FieldType>::side)*(_dim/_size));
 
-      double current = frame * (1.f/30.f);
+     double current = frame * (1.f/30.f);
      auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
          _dim/_size, inverse(pose), K,  mu, current);
 
@@ -96,23 +97,18 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
         std::memset(_allocationList[0].data(), 0, sizeof(unsigned int) * total);
         initialised = true;
       }
+      const float hf_band = 6*mu;
       int allocated = 
         buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
           _map_index, pose, K, depthmap, frameSize, _size, 
-          _dim/_size, 3*mu);
+          _dim/_size, hf_band);
       _map_index.alloc_update(_allocationList[0].data(), allocated, 7);
 
-     const unsigned int max_depth[2] = {4, 5};
-     float step[2]; 
-     step[0] = _dim/std::pow(2, max_depth[0]);
-     step[1] = _dim/std::pow(2, max_depth[1]);
-
-
      allocated = buildOctantList(_allocationList[0].data(), _allocationList[0].capacity(),
-         _map_index, pose, K, depthmap, frameSize, max_depth, 
-         _dim/_size, step, mu);
-     // printf("To be allocated: %d, %d\n", (int) written[0], (int) written[1]);
-     _map_index.alloc_update(_allocationList[0].data(), allocated, max_depth[0]);
+         _map_index, pose, K, depthmap, frameSize, _dim/_size, 
+         compute_stepsize, step_to_depth,  mu);
+      // printf("To be allocated: %d\n", allocated);
+     _map_index.alloc_update(_allocationList[0].data(), allocated, 5);
 
       std::vector<VoxelBlock<FieldType> *> active_list;
       const MemoryPool<VoxelBlock<FieldType> >& block_array = 
@@ -133,10 +129,10 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       integratePass(list, num_active, depthmap, frameSize, _dim/_size,
           inverse(pose), K,  mu, 100, frame);
 
-      MemoryPool<Node<FieldType> >& nodes_array =
-        _map_index.getNodesBuffer();
-      const int size = nodes_array.size();
-      algorithms::integratePass(nodes_array, size, compute_sdf);
+     MemoryPool<Node<FieldType> >& nodes_array =
+       _map_index.getNodesBuffer();
+     const int size = nodes_array.size();
+     algorithms::integratePass(nodes_array, size, compute_sdf);
     }
 
     unsigned int _size;
