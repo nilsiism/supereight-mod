@@ -52,14 +52,15 @@ class UniqueMultiscaleTest : public ::testing::Test {
         {136, 128, 136}, 
         {128, 240, 136}, {128, 241, 136}};
       for(int i = 0; i < 10; ++i) { 
-        keys[i] = oct.hash(blocks[i].x, blocks[i].y, blocks[i].z);
+        keys[i] = oct.hash(blocks[i].x, blocks[i].y, blocks[i].z, 9);
       }
 
-      keys[2] = keys[2] | 3;
-      keys[3] = keys[3] | 5;
-      keys[4] = keys[4] | 6;
+      keys[2] = (keys[2] & ~0x1FFu) | 3;
+      keys[3] = (keys[3] & ~0x1FFu) | 5;
+      keys[4] = (keys[4] & ~0x1FFu) | 6;
+      std::sort(keys, keys + 10); 
     }
-    
+   
     MortonType keys[10];
     typedef Octree<testT> OctreeF;
     OctreeF oct;
@@ -83,8 +84,8 @@ TEST_F(UniqueMultiscaleTest, FilterDuplicates) {
   const int last = algorithms::unique_multiscale(keys, 10, 0x1FFu);
   ASSERT_EQ(last, 7);
   for(int i = 1; i < last; ++i) { 
-    std::cout << "(Key: " << (keys[i-1] & (~0x1FFu)) << ", Scale: " 
-              << (keys[i-1] & 0x1FFu) << "), "; 
+    // std::cout << "(Key: " << (keys[i-1] & (~0x1FFu)) << ", Scale: " 
+    //           << (keys[i-1] & 0x1FFu) << "), "; 
     ASSERT_TRUE(keys[i] != keys[i-1]);
   }
   std::cout << std::endl;
@@ -96,11 +97,11 @@ TEST_F(UniqueMultiscaleTest, FilterDuplicatesTillLevel) {
    * 0x1FFu extracts the last 9 bits of a morton number,
    * corresponding to the edge of a voxel block: 3*log2(VoxelBlock<T>::side)
    */
-  const int last = algorithms::unique_multiscale(keys, 10, 0x1FFu, 2);
-  ASSERT_EQ(last, 5);
+  const int last = algorithms::unique_multiscale(keys, 10, 0x1FFu, 6);
+  ASSERT_EQ(last, 6);
   for(int i = 1; i <= last; ++i) { 
-    std::cout << "(Key: " << (keys[i-1] & (~0x1FFu)) << ", Scale: " 
-              << (keys[i-1] & 0x1FFu) << "), "; 
+    // std::cout << "(Key: " << (keys[i-1] & (~0x1FFu)) << ", Scale: " 
+    //           << (keys[i-1] & 0x1FFu) << "), "; 
     ASSERT_TRUE(keys[i] != keys[i-1]);
   }
   std::cout << std::endl;
