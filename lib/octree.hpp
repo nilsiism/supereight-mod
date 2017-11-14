@@ -830,7 +830,7 @@ std::sort(keys, keys+num_elem);
   for (int level = 1; level <= max_level; level++){
     getKeysAtLevel(keys, keys_at_level_, num_elem, SCALE_MASK, level);
     last_elem = algorithms::unique_multiscale(keys_at_level_, num_elem, 
-        SCALE_MASK);
+        SCALE_MASK, level);
     success = updateLevel(keys_at_level_, last_elem, level, SCALE_MASK);
   }
   return success;

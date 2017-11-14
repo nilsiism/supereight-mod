@@ -98,17 +98,17 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
         initialised = true;
       }
       const float hf_band = 6*mu;
-      int allocated = 
-        buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
-          _map_index, pose, K, depthmap, frameSize, _size, 
-          _dim/_size, hf_band);
-      _map_index.alloc_update(_allocationList[0].data(), allocated, 7);
+      // int allocated = 
+      //   buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
+      //     _map_index, pose, K, depthmap, frameSize, _size, 
+      //     _dim/_size, hf_band);
+      // _map_index.alloc_update(_allocationList[0].data(), allocated, 6);
 
-     allocated = buildOctantList(_allocationList[0].data(), _allocationList[0].capacity(),
+     int allocated = buildOctantList(_allocationList[0].data(), _allocationList[0].capacity(),
          _map_index, pose, K, depthmap, frameSize, _dim/_size, 
-         compute_stepsize, step_to_depth,  mu);
+         compute_stepsize, step_to_depth,  hf_band);
       // printf("To be allocated: %d\n", allocated);
-     _map_index.alloc_update(_allocationList[0].data(), allocated, 5);
+     _map_index.alloc_update(_allocationList[0].data(), allocated, 6);
 
       std::vector<VoxelBlock<FieldType> *> active_list;
       const MemoryPool<VoxelBlock<FieldType> >& block_array = 
