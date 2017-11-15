@@ -55,6 +55,13 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       return _map_index.get(scaled_pos.x, scaled_pos.y, scaled_pos.z);
     }
 
+    compute_type get(const float3 & p) const {
+      const float inverseVoxelSize = _size/_dim;
+      const int3 scaled_pos = make_int3(make_float3((p.x * inverseVoxelSize),
+          (p.y * inverseVoxelSize), (p.z * inverseVoxelSize)));
+      return _map_index.get_fine(scaled_pos.x, scaled_pos.y, scaled_pos.z);
+    }
+
     compute_type operator[](const uint3 p) const {
       return _map_index.get(p.x, p.y, p.z);
     }
@@ -86,9 +93,6 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       using namespace std::placeholders;
       int num_vox_per_pix = _dim/((VoxelBlock<FieldType>::side)*(_dim/_size));
 
-     double current = frame * (1.f/30.f);
-     auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
-         _dim/_size, inverse(pose), K,  mu, current);
 
       size_t total = num_vox_per_pix * frameSize.x * frameSize.y;
       _allocationList[0].reserve(total);
@@ -102,7 +106,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       //   buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
       //     _map_index, pose, K, depthmap, frameSize, _size, 
       //     _dim/_size, hf_band);
-      // _map_index.alloc_update(_allocationList[0].data(), allocated, 6);
+      // _map_index.allocate(_allocationList[0].data(), allocated);
 
      int allocated = buildOctantList(_allocationList[0].data(), _allocationList[0].capacity(),
          _map_index, pose, K, depthmap, frameSize, _dim/_size, 
@@ -124,11 +128,14 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       
       algorithms::filter(active_list, block_array, is_active_predicate, 
           in_frustum_predicate);
+      double current = frame * (1.f/30.f);
       VoxelBlock<FieldType> ** list = active_list.data();
       unsigned int num_active = active_list.size();
       integratePass(list, num_active, depthmap, frameSize, _dim/_size,
-          inverse(pose), K,  mu, 100, frame);
+          inverse(pose), K,  mu, 100, current);
 
+     auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
+         _dim/_size, inverse(pose), K,  mu, current);
      MemoryPool<Node<FieldType> >& nodes_array =
        _map_index.getNodesBuffer();
      const int size = nodes_array.size();
