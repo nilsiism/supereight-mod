@@ -191,14 +191,14 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const int3 base,
         vox[6] = base + interp_offsets[6];
         vox[7] = base + interp_offsets[7];
 
-        points[0] = select(fetcher.get(vox[0].x, vox[0].y, vox[0].z));
-        points[1] = select(fetcher.get(vox[1].x, vox[1].y, vox[1].z));
-        points[2] = select(fetcher.get(vox[2].x, vox[2].y, vox[2].z));
-        points[3] = select(fetcher.get(vox[3].x, vox[3].y, vox[3].z));
-        points[4] = select(fetcher.get(vox[4].x, vox[4].y, vox[4].z));
-        points[5] = select(fetcher.get(vox[5].x, vox[5].y, vox[5].z));
-        points[6] = select(fetcher.get(vox[6].x, vox[6].y, vox[6].z));
-        points[7] = select(fetcher.get(vox[7].x, vox[7].y, vox[7].z));
+        points[0] = select(fetcher.get_fine(vox[0].x, vox[0].y, vox[0].z));
+        points[1] = select(fetcher.get_fine(vox[1].x, vox[1].y, vox[1].z));
+        points[2] = select(fetcher.get_fine(vox[2].x, vox[2].y, vox[2].z));
+        points[3] = select(fetcher.get_fine(vox[3].x, vox[3].y, vox[3].z));
+        points[4] = select(fetcher.get_fine(vox[4].x, vox[4].y, vox[4].z));
+        points[5] = select(fetcher.get_fine(vox[5].x, vox[5].y, vox[5].z));
+        points[6] = select(fetcher.get_fine(vox[6].x, vox[6].y, vox[6].z));
+        points[7] = select(fetcher.get_fine(vox[7].x, vox[7].y, vox[7].z));
       }
       break;
   }
