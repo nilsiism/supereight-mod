@@ -202,10 +202,10 @@ void integrate_bfusion(Node<BFusion> * node,
 
   const float diff = (camera_voxel.z - depthSample)
     * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
-  float sigma = noiseFactor*sq(camera_voxel.z);
-  sigma = clamp(sigma, 3*voxelSize, 5*voxelSize);
-  const float sample = HNew(diff/sigma, camera_voxel.z);
+  float sample = HNew(diff/(noiseFactor *sq(camera_voxel.z)),
+      camera_voxel.z);
   if(sample == 0.5f) return;
+  sample = clamp(sample, 0.03f, 0.97f);
   typename VoxelBlock<BFusion>::compute_type data = node->value_; // should do an offsetted access here
   const double delta_t = timestamp - data.y;
   data.x = applyWindow(data.x, SURF_BOUNDARY, delta_t, CAPITAL_T);
