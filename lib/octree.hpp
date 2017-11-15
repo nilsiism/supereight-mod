@@ -231,7 +231,7 @@ public:
    * \param number of keys in the keys array
    */
   bool allocate(uint *keys, int num_elem);
-  bool alloc_update(uint *keys, int num_elem, int max_depth);
+  bool alloc_update(uint *keys, int num_elem);
 
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
@@ -812,7 +812,7 @@ std::sort(keys, keys+num_elem);
 }
 
 template <typename T>
-bool Octree<T>::alloc_update(uint *keys, int num_elem, int max_level){
+bool Octree<T>::alloc_update(uint *keys, int num_elem){
 
 #ifdef _OPENMP
   __gnu_parallel::sort(keys, keys+num_elem);
@@ -824,10 +824,9 @@ std::sort(keys, keys+num_elem);
   reserveBuffers(num_elem);
 
   int leaves_level = max_level_ - log2(blockSide);
-  max_level = std::min(leaves_level, max_level);
   int last_elem = 0;
   bool success = false;
-  for (int level = 1; level <= max_level; level++){
+  for (int level = 1; level <= leaves_level; level++){
     getKeysAtLevel(keys, keys_at_level_, num_elem, SCALE_MASK, level);
     last_elem = algorithms::unique_multiscale(keys_at_level_, num_elem, 
         SCALE_MASK, level);

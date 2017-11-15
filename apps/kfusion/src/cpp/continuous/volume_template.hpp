@@ -108,7 +108,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
          _map_index, pose, K, depthmap, frameSize, _dim/_size, 
          compute_stepsize, step_to_depth,  hf_band);
       // printf("To be allocated: %d\n", allocated);
-     _map_index.alloc_update(_allocationList[0].data(), allocated, 6);
+     _map_index.alloc_update(_allocationList[0].data(), allocated);
 
       std::vector<VoxelBlock<FieldType> *> active_list;
       const MemoryPool<VoxelBlock<FieldType> >& block_array = 
