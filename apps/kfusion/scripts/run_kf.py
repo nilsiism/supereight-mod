@@ -25,23 +25,23 @@ if __name__ == "__main__":
     algorithm.voxel_block = '8'
     algorithm.rendering_rate = '1'
     algorithm.bilateralFilter = False
-    algorithm.init_pose = '0.50,0.50,0.20'
     min_ate = 100.0
     run_results = {}
     # for mu in [0.1, 0.05]:
     run_counter = 0
-    #for sequence in ICL + TUM_RGB_FR1 + TUM_RGB_FR2 + TUM_RGB_FR3:
-    for sequence in [ICL_NUIM_LIV_2]:
+    for sequence in ICL + TUM_RGB_FR1 + TUM_RGB_FR2 + TUM_RGB_FR3:
+    # for sequence in [ICL_NUIM_LIV_0]:
         for resol in [512]:
             for version in ['openmp']:
                 kernel_data = []
-                mu = 0.012
+                mu = 0.015
                 algorithm.impl = version
                 algorithm.volume_resolution = str(resol)
                 algorithm.volume_size = '5'
                 algorithm.compute_size_ratio = 2
                 algorithm.integration_rate = 1
                 algorithm.mu = mu
+                algorithm.init_pose = sequence.init_pose
                 res = algorithm.run(sequence)
                 res['sequence'] = sequence.descr
                 res['noise_factor'] = mu
