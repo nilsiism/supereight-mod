@@ -8,6 +8,7 @@
 #include <algorithms/alloc_list.hpp>
 #include <algorithms/filter.hpp>
 #include <algorithms/mapping.hpp>
+#include <functors/projective_functor.hpp>
 #include <functional>
 #include <cstring>
 #include "../mapping.hpp"
@@ -92,7 +93,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
 
       using namespace std::placeholders;
       int num_vox_per_pix = _dim/((VoxelBlock<FieldType>::side)*(_dim/_size));
-
+      
 
       size_t total = num_vox_per_pix * frameSize.x * frameSize.y;
       _allocationList.reserve(total);
