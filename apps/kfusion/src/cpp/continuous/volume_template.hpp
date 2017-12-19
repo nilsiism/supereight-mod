@@ -133,15 +133,23 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       double current = frame * (1.f/30.f);
       VoxelBlock<FieldType> ** list = active_list.data();
       unsigned int num_active = active_list.size();
+
+      // std::cout << "Num blocks: " << block_array.size() 
+      //     << " Num active (volume_template.cpp): " << num_active << std::endl;
+      // struct bfusion_update funct(depthmap, frameSize, mu, current);
+      // iterators::projective_functor<FieldType, Indexer, struct bfusion_update> 
+      //   it(_map_index, funct, inverse(pose), K, make_int2(frameSize));
+      // it.apply();
+
       integratePass(list, num_active, depthmap, frameSize, _dim/_size,
           inverse(pose), K,  mu, 100, current);
 
-     auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
-         _dim/_size, inverse(pose), K,  mu, current);
-     MemoryPool<Node<FieldType> >& nodes_array =
-       _map_index.getNodesBuffer();
-     const int size = nodes_array.size();
-     algorithms::integratePass(nodes_array, size, compute_sdf);
+      auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
+          _dim/_size, inverse(pose), K,  mu, current);
+      MemoryPool<Node<FieldType> >& nodes_array =
+        _map_index.getNodesBuffer();
+      const int size = nodes_array.size();
+      algorithms::integratePass(nodes_array, size, compute_sdf);
     }
 
     unsigned int _size;

@@ -14,7 +14,7 @@ namespace iterators {
   class projective_functor {
 
     public:
-      projective_functor(MapT<FieldType> map, UpdateF f, const Matrix4& Twc, 
+      projective_functor(MapT<FieldType>& map, UpdateF f, const Matrix4& Twc, 
           const Matrix4& K, const int2 framesize) : 
         _map(map), _function(f), _Twc(Twc), _K(K), _frame_size(framesize) {
       } 
@@ -36,9 +36,12 @@ namespace iterators {
 
         algorithms::filter(_active_list, block_array, is_active_predicate, 
             in_frustum_predicate);
+      std::cout << "Num blocks: " << block_array.size() 
+                << " Num active (functor.cpp): " << _active_list.size() << std::endl;
       }
 
       void update_block(VoxelBlock<FieldType> * block, const float voxel_size) {
+
         const int3 blockCoord = block->coordinates();
         const float3 delta = rotate(_Twc, make_float3(voxel_size, 0, 0));
         const float3 cameraDelta = rotate(_K, delta);
@@ -66,23 +69,28 @@ namespace iterators {
               const float2 pixel = make_float2(
                   camera_voxel.x * inverse_depth + 0.5f,
                   camera_voxel.y * inverse_depth + 0.5f);
+              if (pixel.x < 0.5f || pixel.x > _frame_size.x - 1.5f || 
+                  pixel.y < 0.5f || pixel.y > _frame_size.y - 1.5f) continue;
+              is_visible = true;
 
               VoxelBlockHandler<FieldType> handler = {block, pix};
-              _function(handler, pix, camera_voxel, pixel);
+              _function(handler, pix, pos, pixel);
             }
           }
+        block->active(is_visible);
       }
 
       void apply() {
 
         build_active_list();
-        
-        const float voxel_size = _map.dim() / _map.size();
-        const size_t list_size = _active_list.size();
-#pragma omp parallel for
-        for(unsigned int i = 0; i < list_size; ++i){
-          update_block(_active_list[i], voxel_size);
-        }
+//         const float voxel_size = _map.dim() / _map.size();
+//         const size_t list_size = _active_list.size();
+// #pragma omp parallel for
+//         for(unsigned int i = 0; i < list_size; ++i){
+//           update_block(_active_list[i], voxel_size);
+//         }
+
+        _active_list.clear();
       }
 
     private:
@@ -91,7 +99,7 @@ namespace iterators {
       Matrix4 _Twc;
       Matrix4 _K;
       int2 _frame_size;
-      std::vector<VoxelBlock<FieldType> > * _active_list;
+      std::vector<VoxelBlock<FieldType>*> _active_list;
   };
 }
 #endif

@@ -29,8 +29,8 @@ if __name__ == "__main__":
     run_results = {}
     # for mu in [0.1, 0.05]:
     run_counter = 0
-    for sequence in ICL + TUM_RGB_FR1 + TUM_RGB_FR2 + TUM_RGB_FR3:
-    # for sequence in [ICL_NUIM_LIV_0]:
+    #for sequence in ICL + TUM_RGB_FR1 + TUM_RGB_FR2 + TUM_RGB_FR3:
+    for sequence in [TUM_RGB_FR2_DESK]:
         for resol in [512]:
             for version in ['openmp']:
                 kernel_data = []

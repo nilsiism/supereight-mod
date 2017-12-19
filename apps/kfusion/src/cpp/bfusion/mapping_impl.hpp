@@ -5,6 +5,7 @@
 #include <constant_parameters.h>
 #include "bspline_lookup.cc"
 #include "../continuous/volume_traits.hpp"
+#include "functors/projective_functor.hpp"
 
 float interpDepth(const float * depth, const uint2 depthSize, 
     const float2 proj) {
@@ -214,4 +215,35 @@ void integrate_bfusion(Node<BFusion> * node,
   node ->value_ = data;
 }
 
+struct bfusion_update {
+
+  template <typename DataHandlerT>
+  void operator()(DataHandlerT& handler, const int3&, const float3& pos, 
+     const float2& pixel) {
+
+    const uint2 px = make_uint2(pixel.x, pixel.y);
+    const float depthSample = depth[px.x + depthSize.x*px.y];
+    if (depthSample <=  0) return;
+
+    const float diff = (pos.z - depthSample)
+      * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
+    float sample = HNew(diff/(noiseFactor *sq(pos.z)), pos.z);
+    if(sample == 0.5f) return;
+    sample = clamp(sample, 0.03f, 0.97f);
+    auto data = handler.get();
+    const double delta_t = timestamp - data.y;
+    data.x = applyWindow(data.x, SURF_BOUNDARY, delta_t, CAPITAL_T);
+    data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
+    data.y = timestamp;
+    handler.set(data);
+  } 
+
+  bfusion_update(const float * d, const uint2 framesize, float n, float t) : 
+    depth(d), depthSize(framesize), noiseFactor(n), timestamp(t){};
+
+  const float * depth;
+  uint2 depthSize;
+  float noiseFactor;
+  float timestamp;
+};
 #endif
