@@ -78,17 +78,40 @@ namespace iterators {
         block->active(is_visible);
       }
 
+      void update_node(Node<FieldType> * node, const float voxel_size) { 
+        const int3 voxel = make_int3(unpack_morton(node->code));
+        float3 pos = _Twc * (make_float3(voxel) * voxel_size);
+        float3 camera_voxel = _K * pos;
+        if (pos.z < 0.0001f) return;
+
+        const float inverse_depth = 1.f / camera_voxel.z;
+        const float2 pixel = make_float2(
+            camera_voxel.x * inverse_depth + 0.5f,
+            camera_voxel.y * inverse_depth + 0.5f);
+        if (pixel.x < 0.5f || pixel.x > _frame_size.x - 1.5f || 
+            pixel.y < 0.5f || pixel.y > _frame_size.y - 1.5f) return;
+
+        NodeHandler<FieldType> handler = node;
+        _function(handler, voxel, pos, pixel);
+      }
+
       void apply() {
 
         build_active_list();
         const float voxel_size = _map.dim() / _map.size();
-        const size_t list_size = _active_list.size();
+        size_t list_size = _active_list.size();
 #pragma omp parallel for
         for(unsigned int i = 0; i < list_size; ++i){
           update_block(_active_list[i], voxel_size);
         }
-
         _active_list.clear();
+
+        auto& nodes_list = _map.getNodesBuffer();
+        list_size = nodes_list.size();
+#pragma omp parallel for
+          for(unsigned int i = 0; i < list_size; ++i){
+            update_node(nodes_list[i], voxel_size);
+          }
       }
 
     private:

@@ -121,13 +121,6 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       iterators::projective_functor<FieldType, Indexer, struct bfusion_update> 
         it(_map_index, funct, inverse(pose), K, make_int2(frameSize));
       it.apply();
-
-      auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
-          _dim/_size, inverse(pose), K,  mu, current);
-      MemoryPool<Node<FieldType> >& nodes_array =
-        _map_index.getNodesBuffer();
-      const int size = nodes_array.size();
-      algorithms::integratePass(nodes_array, size, compute_sdf);
     }
 
     unsigned int _size;

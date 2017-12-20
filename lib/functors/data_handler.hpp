@@ -34,4 +34,22 @@ public:
     int3 _voxel;
 };
 
+template<typename FieldType>
+class NodeHandler: DataHandlerBase<NodeHandler<FieldType>, Node<FieldType> > {
+  public:
+    NodeHandler(Node<FieldType>* ptr) : _node(ptr) {}
+
+    typename Node<FieldType>::compute_type get() {
+      return _node->value_;
+    }
+
+    void set(const typename Node<FieldType>::compute_type& val) {
+      _node->value_ = val;
+    }
+
+  private:
+    Node<FieldType> * _node; 
+};
+
+
 #endif
