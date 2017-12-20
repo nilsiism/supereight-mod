@@ -115,34 +115,12 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
           compute_stepsize, step_to_depth,  hf_band);
        // printf("To be allocated: %d\n", allocated);
       _map_index.alloc_update(_allocationList.data(), allocated);
-
-      std::vector<VoxelBlock<FieldType> *> active_list;
-      const MemoryPool<VoxelBlock<FieldType> >& block_array = 
-        _map_index.getBlockBuffer();
-
-      /* Predicates definition */
-      auto in_frustum_predicate = 
-        std::bind(algorithms::in_frustum<VoxelBlock<FieldType>>, _1, 
-         _dim/_size, K*inverse(pose), make_int2(frameSize)); 
-      auto is_active_predicate = [](const VoxelBlock<FieldType>* b) {
-        return b->active();
-      };
       
-      algorithms::filter(active_list, block_array, is_active_predicate, 
-          in_frustum_predicate);
       double current = frame * (1.f/30.f);
-      VoxelBlock<FieldType> ** list = active_list.data();
-      unsigned int num_active = active_list.size();
-
-      // std::cout << "Num blocks: " << block_array.size() 
-      //     << " Num active (volume_template.cpp): " << num_active << std::endl;
-      // struct bfusion_update funct(depthmap, frameSize, mu, current);
-      // iterators::projective_functor<FieldType, Indexer, struct bfusion_update> 
-      //   it(_map_index, funct, inverse(pose), K, make_int2(frameSize));
-      // it.apply();
-
-      integratePass(list, num_active, depthmap, frameSize, _dim/_size,
-          inverse(pose), K,  mu, 100, current);
+      struct bfusion_update funct(depthmap, frameSize, mu, current);
+      iterators::projective_functor<FieldType, Indexer, struct bfusion_update> 
+        it(_map_index, funct, inverse(pose), K, make_int2(frameSize));
+      it.apply();
 
       auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
           _dim/_size, inverse(pose), K,  mu, current);

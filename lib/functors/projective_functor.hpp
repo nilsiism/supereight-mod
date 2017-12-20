@@ -29,15 +29,13 @@ namespace iterators {
         const float voxel_size = _map.dim()/_map.size();
         auto in_frustum_predicate = 
           std::bind(algorithms::in_frustum<VoxelBlock<FieldType>>, _1, 
-              voxel_size, _K*inverse(_Twc), _frame_size); 
+              voxel_size, _K*_Twc, _frame_size); 
         auto is_active_predicate = [](const VoxelBlock<FieldType>* b) {
           return b->active();
         };
 
-        algorithms::filter(_active_list, block_array, is_active_predicate, 
+        algorithms::filter(_active_list, block_array, is_active_predicate,
             in_frustum_predicate);
-      std::cout << "Num blocks: " << block_array.size() 
-                << " Num active (functor.cpp): " << _active_list.size() << std::endl;
       }
 
       void update_block(VoxelBlock<FieldType> * block, const float voxel_size) {
@@ -83,12 +81,12 @@ namespace iterators {
       void apply() {
 
         build_active_list();
-//         const float voxel_size = _map.dim() / _map.size();
-//         const size_t list_size = _active_list.size();
-// #pragma omp parallel for
-//         for(unsigned int i = 0; i < list_size; ++i){
-//           update_block(_active_list[i], voxel_size);
-//         }
+        const float voxel_size = _map.dim() / _map.size();
+        const size_t list_size = _active_list.size();
+#pragma omp parallel for
+        for(unsigned int i = 0; i < list_size; ++i){
+          update_block(_active_list[i], voxel_size);
+        }
 
         _active_list.clear();
       }
