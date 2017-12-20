@@ -89,7 +89,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
     void updateVolume(const Matrix4 &pose, const Matrix4& K,
                             const float *depthmap,
                             const uint2 frameSize, const float mu,
-                            const int frame) {
+                            const int ) {
 
       using namespace std::placeholders;
       int num_vox_per_pix = _dim/((VoxelBlock<FieldType>::side)*(_dim/_size));
@@ -102,23 +102,22 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
         std::memset(_allocationList.data(), 0, sizeof(unsigned int) * total);
         initialised = true;
       }
-      const float hf_band = 6*mu;
 
-      // int allocated = 
-      //   buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
-      //     _map_index, pose, K, depthmap, frameSize, _size, 
-      //     _dim/_size, hf_band);
-      // _map_index.allocate(_allocationList[0].data(), allocated);
+      const float hf_band = 2*mu;
 
-      int allocated = buildOctantList(_allocationList.data(), _allocationList.capacity(),
-          _map_index, pose, K, depthmap, frameSize, _dim/_size, 
-          compute_stepsize, step_to_depth,  hf_band);
-       // printf("To be allocated: %d\n", allocated);
+      int allocated = buildOctantList(_allocationList.data(),
+          _allocationList.capacity(), _map_index, pose, K, depthmap, frameSize,
+          _dim/_size, compute_stepsize, step_to_depth,  hf_band);
       _map_index.alloc_update(_allocationList.data(), allocated);
       
-      double current = frame * (1.f/30.f);
-      struct bfusion_update funct(depthmap, frameSize, mu, current);
-      iterators::projective_functor<FieldType, Indexer, struct bfusion_update> 
+      // double current = frame * (1.f/30.f);
+      // struct bfusion_update funct(depthmap, frameSize, mu, current);
+      // iterators::projective_functor<FieldType, Indexer, struct bfusion_update> 
+      //   it(_map_index, funct, inverse(pose), K, make_int2(frameSize));
+      // it.apply();
+
+      struct sdf_update funct(depthmap, frameSize, mu, 100);
+      iterators::projective_functor<FieldType, Indexer, struct sdf_update> 
         it(_map_index, funct, inverse(pose), K, make_int2(frameSize));
       it.apply();
     }

@@ -106,12 +106,12 @@ namespace iterators {
         }
         _active_list.clear();
 
-        auto& nodes_list = _map.getNodesBuffer();
-        list_size = nodes_list.size();
-#pragma omp parallel for
-          for(unsigned int i = 0; i < list_size; ++i){
-            update_node(nodes_list[i], voxel_size);
-          }
+//         auto& nodes_list = _map.getNodesBuffer();
+//         list_size = nodes_list.size();
+// #pragma omp parallel for
+//           for(unsigned int i = 0; i < list_size; ++i){
+//             update_node(nodes_list[i], voxel_size);
+//          }
       }
 
     private:
