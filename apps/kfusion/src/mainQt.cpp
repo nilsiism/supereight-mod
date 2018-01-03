@@ -149,7 +149,7 @@ int main(int argc, char ** argv) {
 	// ==========     DUMP VOLUME      =========
 
 	if (config.dump_volume_file != "") {
-		kfusion->dumpVolume(config.dump_volume_file);
+		kfusion->dump_mesh(config.dump_volume_file.c_str());
 	}
 
 	//if (config.log_file != "") {

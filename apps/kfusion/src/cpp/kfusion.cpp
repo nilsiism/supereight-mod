@@ -434,7 +434,10 @@ void Kfusion::renderDepth(uchar4 * out, uint2 outputSize) {
 
 void Kfusion::dump_mesh(const char* filename){
   std::vector<Triangle> mesh;
-  algorithms::marching_cube(volume._map_index, mesh);
+  auto select = [](const Volume<FieldType>::compute_type& val) {
+    return val.x;
+  };
+  algorithms::marching_cube(volume._map_index, select, mesh);
   writeVtkMesh(filename, mesh);
 }
 
