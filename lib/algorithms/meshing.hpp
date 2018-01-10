@@ -127,18 +127,14 @@ namespace meshing {
 
     uint8_t index = 0;
 
-    // if(points[0].y == 0.f) return 0;
-    // if(points[1].y == 0.f) return 0;
-    // if(points[2].y == 0.f) return 0;
-    // if(points[3].y == 0.f) return 0;
-    // if(points[4].y == 0.f) return 0;
-    // if(points[5].y == 0.f) return 0;
-    // if(points[6].y == 0.f) return 0;
-    // if(points[7].y == 0.f) return 0;
-
-    std::cerr << points[0].x << " " << points[1].x << " " << points[2].x << " " 
-              << points[3].x << " " << points[4].x << " " << points[5].x << " " 
-              <<  points[6].x << " " << points[7].x << std::endl;
+    if(points[0].y == 0.f) return 0;
+    if(points[1].y == 0.f) return 0;
+    if(points[2].y == 0.f) return 0;
+    if(points[3].y == 0.f) return 0;
+    if(points[4].y == 0.f) return 0;
+    if(points[5].y == 0.f) return 0;
+    if(points[6].y == 0.f) return 0;
+    if(points[7].y == 0.f) return 0;
 
     if(inside(points[0])) index |= 1;
     if(inside(points[1])) index |= 2;
@@ -148,7 +144,7 @@ namespace meshing {
     if(inside(points[5])) index |= 32;
     if(inside(points[6])) index |= 64;
     if(inside(points[7])) index |= 128;
-    std::cerr << std::endl << std::endl;
+    // std::cerr << std::endl << std::endl;
 
     return index;
   }
@@ -159,9 +155,10 @@ namespace meshing {
 
 }
 namespace algorithms {
-  template <typename FieldType, typename FieldSelector, typename TriangleType>
-    void marching_cube(Octree<FieldType>& volume, FieldSelector select,
-        std::vector<TriangleType>& triangles)
+  template <typename FieldType, typename FieldSelector, 
+            typename InsidePredicate, typename TriangleType>
+    void marching_cube(Octree<FieldType>& volume, FieldSelector select, 
+        InsidePredicate inside, std::vector<TriangleType>& triangles)
     {
 
       using namespace meshing;
@@ -186,7 +183,7 @@ namespace algorithms {
           for(y = leaf->coordinates().y; y < ybound; y++){
             for(z = leaf->coordinates().z; z < zbound; z++){
 
-              uint8_t index = meshing::compute_index(volume, leaf, select, x, y, z);
+              uint8_t index = meshing::compute_index(volume, leaf, inside, x, y, z);
 
                 int * edges = triTable[index]; 
               for(unsigned int e = 0; edges[e] != -1 && e < 16; e += 3){

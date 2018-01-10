@@ -440,11 +440,15 @@ void Kfusion::dump_mesh(const char* filename){
     // else 
     //   code = val.x < 0.f ? meshing::status::INSIDE : meshing::status::OUTSIDE;
     // return code;
-    std::cerr << val.x << " ";
+    // std::cerr << val.x << " ";
     return val.x < 0.f;
   };
 
-  algorithms::marching_cube(volume._map_index, inside, mesh);
+  auto select = [](const Volume<FieldType>::compute_type& val) {
+    return val.x;
+  };
+
+  algorithms::marching_cube(volume._map_index, select, inside, mesh);
   writeVtkMesh(filename, mesh);
 }
 
