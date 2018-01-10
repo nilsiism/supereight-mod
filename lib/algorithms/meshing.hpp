@@ -35,6 +35,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "edge_tables.h"
 
 namespace meshing {
+  enum status : uint8_t {
+    OUTSIDE = 0x0,
+    UNKNOWN = 0xFE, // 254
+    INSIDE = 0xFF, // 255
+  };
+
   template <typename Map, typename FieldSelector>
     inline float3 compute_intersection(const Map& volume, FieldSelector select,
         const uint3& source, const uint3& dest){
@@ -92,9 +98,8 @@ namespace meshing {
       points[7] = cached->data(make_int3(x, y+1, z+1));
     }
 
-  template <typename FieldType, template <typename FieldType> class MapT,
-           typename PointT>
-             inline void gather_points(const MapT<FieldType>& volume, PointT points[8], 
+  template <typename FieldType, template <typename FieldT> class MapT, typename PointT>
+  inline void gather_points(const MapT<FieldType>& volume, PointT points[8], 
                  const int x, const int y, const int z) {
                points[0] = volume.get_fine(x, y, z); 
                points[1] = volume.get_fine(x+1, y, z);
@@ -106,41 +111,47 @@ namespace meshing {
                points[7] = volume.get_fine(x, y+1, z+1);
              }
 
-  template <typename FieldType, template <typename FieldType> class MapT,
-           typename FieldSelector>
-             uint8_t compute_index(const MapT<FieldType>& volume, 
-                 const VoxelBlock<FieldType>* cached, FieldSelector select,
-                 const uint x, const uint y, const uint z){
+  template <typename FieldType, template <typename FieldT> class MapT,
+  typename InsidePredicate>
+  uint8_t compute_index(const MapT<FieldType>& volume, 
+  const VoxelBlock<FieldType>* cached, InsidePredicate inside,
+  const uint x, const uint y, const uint z){
+    unsigned int blockSize =  VoxelBlock<FieldType>::side;
+    unsigned int local = ((x % blockSize == blockSize - 1) << 2) | 
+      ((y % blockSize == blockSize - 1) << 1) |
+      ((z % blockSize) == blockSize - 1);
 
-               unsigned int blockSize =  VoxelBlock<FieldType>::side;
-               unsigned int local = ((x % blockSize == blockSize - 1) << 2) | 
-                 ((y % blockSize == blockSize - 1) << 1) |
-                 ((z % blockSize) == blockSize - 1);
+    typename MapT<FieldType>::compute_type points[8];
+    if(!local) gather_points(cached, points, x, y, z);
+    else gather_points(volume, points, x, y, z);
 
-               typename MapT<FieldType>::compute_type points[8];
-               if(!local) gather_points(cached, points, x, y, z);
-               else gather_points(volume, points, x, y, z);
+    uint8_t index = 0;
 
-               uint8_t index = 0;
-               if(points[0].y == 0.f) return 0;
-               if(points[1].y == 0.f) return 0;
-               if(points[2].y == 0.f) return 0;
-               if(points[3].y == 0.f) return 0;
-               if(points[4].y == 0.f) return 0;
-               if(points[5].y == 0.f) return 0;
-               if(points[6].y == 0.f) return 0;
-               if(points[7].y == 0.f) return 0;
+    // if(points[0].y == 0.f) return 0;
+    // if(points[1].y == 0.f) return 0;
+    // if(points[2].y == 0.f) return 0;
+    // if(points[3].y == 0.f) return 0;
+    // if(points[4].y == 0.f) return 0;
+    // if(points[5].y == 0.f) return 0;
+    // if(points[6].y == 0.f) return 0;
+    // if(points[7].y == 0.f) return 0;
 
-               if(select(points[0]) < 0.f) index |= 1;
-               if(select(points[1]) < 0.f) index |= 2;
-               if(select(points[2]) < 0.f) index |= 4;
-               if(select(points[3]) < 0.f) index |= 8;
-               if(select(points[4]) < 0.f) index |= 16;
-               if(select(points[5]) < 0.f) index |= 32;
-               if(select(points[6]) < 0.f) index |= 64;
-               if(select(points[7]) < 0.f) index |= 128;
-               return index;
-             }
+    std::cerr << points[0].x << " " << points[1].x << " " << points[2].x << " " 
+              << points[3].x << " " << points[4].x << " " << points[5].x << " " 
+              <<  points[6].x << " " << points[7].x << std::endl;
+
+    if(inside(points[0])) index |= 1;
+    if(inside(points[1])) index |= 2;
+    if(inside(points[2])) index |= 4;
+    if(inside(points[3])) index |= 8;
+    if(inside(points[4])) index |= 16;
+    if(inside(points[5])) index |= 32;
+    if(inside(points[6])) index |= 64;
+    if(inside(points[7])) index |= 128;
+    std::cerr << std::endl << std::endl;
+
+    return index;
+  }
 
   inline bool checkVertex(const float3 v, const int dim){
     return (v.x <= 0 || v.y <=0 || v.z <= 0 || v.x > dim || v.y > dim || v.z > dim);

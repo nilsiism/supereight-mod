@@ -336,8 +336,6 @@ void raycastOrthogonal(Volume<FieldType> & volume, std::vector<float4> & points,
     for (; t < farPlane; t += stepsize) {
       f_tt = volume.interp(origin + direction * t, select_depth);
       if ( (std::signbit(f_tt) != std::signbit(f_t))) {     // got it, jump out of inner loop
-        typename Volume<FieldType>::compute_type data_t = volume[origin + direction * (t-stepsize)];
-        typename Volume<FieldType>::compute_type data_tt = volume[origin + direction * t];
         if(f_t == 1.0 || f_tt == 1.0){
           f_t = f_tt;
           continue;
@@ -433,11 +431,20 @@ void Kfusion::renderDepth(uchar4 * out, uint2 outputSize) {
 }
 
 void Kfusion::dump_mesh(const char* filename){
+
   std::vector<Triangle> mesh;
-  auto select = [](const Volume<FieldType>::compute_type& val) {
-    return val.x;
+  auto inside = [](const Volume<FieldType>::compute_type& val) {
+    // meshing::status code;
+    // if(val.y == 0.f) 
+    //   code = meshing::status::UNKNOWN;
+    // else 
+    //   code = val.x < 0.f ? meshing::status::INSIDE : meshing::status::OUTSIDE;
+    // return code;
+    std::cerr << val.x << " ";
+    return val.x < 0.f;
   };
-  algorithms::marching_cube(volume._map_index, select, mesh);
+
+  algorithms::marching_cube(volume._map_index, inside, mesh);
   writeVtkMesh(filename, mesh);
 }
 

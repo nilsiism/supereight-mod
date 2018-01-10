@@ -47,7 +47,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       return make_float3(p.x * voxelSize, p.y * voxelSize, p.z * voxelSize);
     }
 
-    void set(const uint3 & pos, const compute_type& d) {}
+    void set(const uint3 & , const compute_type& ) {}
 
     compute_type operator[](const float3 & p) const {
       const float inverseVoxelSize = _size/_dim;

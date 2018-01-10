@@ -211,7 +211,7 @@ int processAll(DepthReader *reader, bool processFrame, bool renderImages,
 	}
 	Matrix4 pose;
 	timings[0] = tock();
-	if (processFrame && (reader->readNextDepthFrame(inputRGB, inputDepth))) {
+	if (processFrame && (reader->readNextDepthFrame(inputRGB, inputDepth)) && reader->getFrameNumber() < 10) {
 		frame = reader->getFrameNumber() - frameOffset;
 		if (powerMonitor != NULL && !firstFrame)
 			powerMonitor->start();

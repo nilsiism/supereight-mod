@@ -9,7 +9,7 @@
 #include "functors/data_handler.hpp"
 
 namespace iterators {
-  template <typename FieldType, template <typename FieldType> class MapT, 
+  template <typename FieldType, template <typename FieldT> class MapT, 
             typename UpdateF>
   class projective_functor {
 
