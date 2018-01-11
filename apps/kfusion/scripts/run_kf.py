@@ -42,6 +42,7 @@ if __name__ == "__main__":
                 algorithm.integration_rate = 1
                 algorithm.mu = mu
                 algorithm.init_pose = sequence.init_pose
+                algorithm.dump_volume = ".vtk"
                 res = algorithm.run(sequence)
                 res['sequence'] = sequence.descr
                 res['noise_factor'] = mu
