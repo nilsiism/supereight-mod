@@ -12,7 +12,6 @@
 #include <octree.hpp>
 #include "continuous/volume_instance.hpp"
 #include "algorithms/meshing.hpp"
-#include "algorithms/alloc_list.hpp"
 #include "geometry/octree_collision.hpp"
 
 extern PerfStats Stats;
@@ -58,7 +57,10 @@ bool print_kernel_timing = false;
 #include "preprocessing.cpp"
 #include "tracking.cpp"
 #include "rendering.cpp"
-#include "mapping.hpp"
+#include "bfusion/mapping_impl.hpp"
+#include "kfusion/mapping_impl.hpp"
+#include "bfusion/alloc_impl.hpp"
+#include "kfusion/alloc_impl.hpp"
 
 // input once
 float * gaussian;
@@ -302,7 +304,6 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
     volume._map_index.alloc_update(allocationList, allocated);
 
     if(std::is_same<FieldType, SDF>::value) {
-      std::cout << "Integrating.." << std::endl;
       struct sdf_update funct(floatDepth, computationSize, mu, 100);
       iterators::projective_functor<FieldType, INDEX_STRUCTURE, struct sdf_update> 
         it(volume._map_index, funct, inverse(pose), getCameraMatrix(k), 
