@@ -12,6 +12,7 @@
 #include <octree.hpp>
 #include "continuous/volume_instance.hpp"
 #include "algorithms/meshing.hpp"
+#include "algorithms/alloc_list.hpp"
 #include "geometry/octree_collision.hpp"
 
 extern PerfStats Stats;
@@ -67,6 +68,9 @@ Volume<FieldType> volume;
 float3 * vertex;
 float3 * normal;
 
+unsigned int * allocationList;
+size_t reserved;
+
 float3 bbox_min;
 float3 bbox_max;
 
@@ -119,6 +123,8 @@ void Kfusion::languageSpecificConstructor() {
 	trackingResult = (TrackData*) calloc(
 			sizeof(TrackData) * computationSize.x * computationSize.y, 1);
 
+  allocationList = NULL;
+  reserved = 0;
 	// ********* BEGIN : Generate the gaussian *************
 	size_t gaussianS = radius * 2 + 1;
 	gaussian = (float*) calloc(gaussianS * sizeof(float), 1);
@@ -155,6 +161,8 @@ Kfusion::~Kfusion() {
 	free(vertex);
 	free(normal);
 	free(gaussian);
+  
+  if(allocationList) delete(allocationList);
 
 	volume.release();
 }
@@ -272,7 +280,37 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
 
   if ((doIntegrate && ((frame % integration_rate) == 0)) || (frame <= 3)) {
 
-    volume.updateVolume(pose, getCameraMatrix(k), floatDepth, computationSize, mu, frame);
+    float voxelsize =  volume._dim/volume._size;
+    int num_vox_per_pix = volume._dim/((VoxelBlock<FieldType>::side)*voxelsize);
+    size_t total = num_vox_per_pix * computationSize.x * computationSize.y;
+    if(!reserved) {
+      allocationList = new unsigned int[total];
+      reserved = total;
+      std::memset(allocationList, 0, sizeof(unsigned int) * total);
+    }
+    unsigned int allocated = 0;
+    if(std::is_same<FieldType, SDF>::value) {
+     allocated  = buildAllocationList(allocationList, reserved, 
+        volume._map_index, pose, getCameraMatrix(k), floatDepth, computationSize, volume._size,
+      voxelsize, 2*mu);  
+    } else if(std::is_same<FieldType, BFusion>::value) {
+     allocated  = buildAllocationList(allocationList, reserved, 
+        volume._map_index, pose, getCameraMatrix(k), floatDepth, computationSize, volume._size,
+      voxelsize, 6*mu);  
+    }
+
+    volume._map_index.alloc_update(allocationList, allocated);
+
+    if(std::is_same<FieldType, SDF>::value) {
+      std::cout << "Integrating.." << std::endl;
+      struct sdf_update funct(floatDepth, computationSize, mu, 100);
+      iterators::projective_functor<FieldType, INDEX_STRUCTURE, struct sdf_update> 
+        it(volume._map_index, funct, inverse(pose), getCameraMatrix(k), 
+            make_int2(computationSize));
+      it.apply();
+    } else if(std::is_same<FieldType, BFusion>::value) {
+    }
+
     // std::stringstream f;
     // f << "./slices/integration_" << frame << ".vtk";
     // save3DSlice(volume._map_index, make_int3(0, volume._size/2, 0),

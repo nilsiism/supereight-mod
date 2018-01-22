@@ -68,7 +68,8 @@ unsigned int buildAllocationList(uint * allocationList, size_t reserved,
           voxel = make_int3(voxelScaled);
           VoxelBlock<FieldType> * n = map_index.fetch(voxel.x, voxel.y, voxel.z);
           if(!n){
-            uint k = map_index.hash(voxel.x, voxel.y, voxel.z);
+            uint k = map_index.hash(voxel.x, voxel.y, voxel.z, 
+                VoxelBlock<FieldType>::side);
             unsigned int idx = ++voxelCount;
             if(idx < reserved) {
               allocationList[idx] = k;
@@ -126,7 +127,7 @@ size_t buildOctantList(uint * allocationList, size_t reserved,
 
       float3 direction = normalize(camera - worldVertex);
       const float3 origin = worldVertex - (band * 0.5f) * direction;
-      const float dist = length(camera - origin); 
+      const float dist = band; // length(camera - origin); 
       float3 step = direction*stepsize;
 
       float3 voxelPos = origin;

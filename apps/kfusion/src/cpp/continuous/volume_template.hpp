@@ -5,14 +5,7 @@
 #include <memory_pool.hpp>
 #include <data.hpp>
 #include <type_traits>
-#include <algorithms/alloc_list.hpp>
-#include <algorithms/filter.hpp>
-#include <algorithms/mapping.hpp>
-#include <functors/projective_functor.hpp>
-#include <functional>
 #include <cstring>
-#include "../mapping.hpp"
-#include "../bfusion/allocation.hpp"
 
 template <typename T>
 class Void {};
@@ -84,42 +77,6 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
           (pos.y * inverseVoxelSize),
           (pos.z * inverseVoxelSize));
       return _map_index.grad(scaled_pos, select);
-    }
-
-    void updateVolume(const Matrix4 &pose, const Matrix4& K,
-                            const float *depthmap,
-                            const uint2 frameSize, const float mu,
-                            const int ) {
-
-      using namespace std::placeholders;
-      int num_vox_per_pix = _dim/((VoxelBlock<FieldType>::side)*(_dim/_size));
-      
-
-      size_t total = num_vox_per_pix * frameSize.x * frameSize.y;
-      _allocationList.reserve(total);
-      static bool initialised = false;
-      if(!initialised) {
-        std::memset(_allocationList.data(), 0, sizeof(unsigned int) * total);
-        initialised = true;
-      }
-
-      const float hf_band = 2*mu;
-
-      int allocated = buildOctantList(_allocationList.data(),
-          _allocationList.capacity(), _map_index, pose, K, depthmap, frameSize,
-          _dim/_size, compute_stepsize, step_to_depth,  hf_band);
-      _map_index.alloc_update(_allocationList.data(), allocated);
-      
-      // double current = frame * (1.f/30.f);
-      // struct bfusion_update funct(depthmap, frameSize, mu, current);
-      // iterators::projective_functor<FieldType, Indexer, struct bfusion_update> 
-      //   it(_map_index, funct, inverse(pose), K, make_int2(frameSize));
-      // it.apply();
-
-      struct sdf_update funct(depthmap, frameSize, mu, 100);
-      iterators::projective_functor<FieldType, Indexer, struct sdf_update> 
-        it(_map_index, funct, inverse(pose), K, make_int2(frameSize));
-      it.apply();
     }
 
     unsigned int _size;
