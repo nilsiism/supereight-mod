@@ -1,4 +1,6 @@
 #include <math_utils.h>
+#include <functional>
+#include "continuous/volume_instance.hpp"
 
 void bilateralFilterKernel(float* out, const float* in, uint2 size,
 		const float * gaussian, float e_d, int r) {
@@ -62,7 +64,7 @@ void depth2vertexKernel(float3* vertex, const float * depth, uint2 imageSize,
 	TOCK("depth2vertexKernel", imageSize.x * imageSize.y);
 }
 
-template <bool NegY>
+template <typename FieldType, bool NegY>
 void vertex2normalKernel(float3 * out, const float3 * in, uint2 imageSize) {
 	TICK();
 	unsigned int x, y;
@@ -95,8 +97,12 @@ void vertex2normalKernel(float3 * out, const float3 * in, uint2 imageSize) {
 			}
 			const float3 dxv = right - left;
 			const float3 dyv = up - down;
-      out[x + y * imageSize.x] =  normalize(cross(dyv, dxv)); // switched dx and dy to get factor -1
-      // out[x + y * imageSize.x] =  normalize(cross(dxv, dyv)); // switched dx and dy to get factor -1
+      if(std::is_same<FieldType, SDF>::value) {
+        out[x + y * imageSize.x] =  normalize(cross(dyv, dxv)); // switched dx and dy to get factor -1
+      }
+      else if(std::is_same<FieldType, BFusion>::value) {
+        out[x + y * imageSize.x] =  normalize(cross(dxv, dyv)); // switched dx and dy to get factor -1
+      }
 		}
 	}
 	TOCK("vertex2normalKernel", imageSize.x * imageSize.y);

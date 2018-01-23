@@ -228,9 +228,9 @@ bool Kfusion::tracking(float4 k, float icp_threshold, uint tracking_rate,
 		depth2vertexKernel(inputVertex[i], ScaledDepth[i], localimagesize,
 				invK);
     if(k.y < 0)
-      vertex2normalKernel<true>(inputNormal[i], inputVertex[i], localimagesize);
+      vertex2normalKernel<FieldType, true>(inputNormal[i], inputVertex[i], localimagesize);
     else
-      vertex2normalKernel<false>(inputNormal[i], inputVertex[i], localimagesize);
+      vertex2normalKernel<FieldType, false>(inputNormal[i], inputVertex[i], localimagesize);
 		localimagesize = make_uint2(localimagesize.x / 2, localimagesize.y / 2);
 	}
 
@@ -310,6 +310,11 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
             make_int2(computationSize));
       it.apply();
     } else if(std::is_same<FieldType, BFusion>::value) {
+      float timestamp = (1.f/30.f)*frame; 
+      struct bfusion_update funct(floatDepth, computationSize, mu, timestamp);
+      iterators::projective_functor<FieldType, INDEX_STRUCTURE, struct bfusion_update> 
+        it(volume._map_index, funct, inverse(pose), getCameraMatrix(k), make_int2(computationSize));
+      it.apply();
     }
 
     // std::stringstream f;
