@@ -5,6 +5,7 @@
 #include <constant_parameters.h>
 #include "bspline_lookup.cc"
 #include "../continuous/volume_traits.hpp"
+#include "functors/projective_functor.hpp"
 
 float interpDepth(const float * depth, const uint2 depthSize, 
     const float2 proj) {
@@ -123,95 +124,35 @@ static inline float applyWindow(const float occupancy, const float ,
   return occupancy * fraction;
 }
 
-void integrate(VoxelBlock<BFusion> * block, const float * depth, uint2 depthSize, 
-    const float voxelSize, const Matrix4 world2cam, const Matrix4 K, 
-    const float noiseFactor, const double timestamp) {
+struct bfusion_update {
 
-  const float3 delta = rotate(world2cam, make_float3(voxelSize, 0, 0));
-  const float3 cameraDelta = rotate(K, delta);
-  const int3 blockCoord = block->coordinates();
-  bool is_visible = false;
-  block->active(is_visible);
+  template <typename DataHandlerT>
+  void operator()(DataHandlerT& handler, const int3&, const float3& pos, 
+     const float2& pixel) {
 
-  unsigned int y, z, blockSide; 
-  blockSide = VoxelBlock<BFusion>::side;
-  unsigned int ylast = blockCoord.y + blockSide;
-  unsigned int zlast = blockCoord.z + blockSide;
-  for(z = blockCoord.z; z < zlast; ++z)
-    for (y = blockCoord.y; y < ylast; ++y){
-      int3 pix = make_int3(blockCoord.x, y, z);
-      float3 start = world2cam * make_float3((pix.x) * voxelSize, 
-          (pix.y) * voxelSize, (pix.z) * voxelSize);
-      float3 camerastart = K * start;
-#pragma omp simd
-      for (unsigned int x = 0; x < blockSide; ++x){
-        pix.x = x + blockCoord.x; 
-        const float3 camera_voxel = camerastart + (x*cameraDelta);
-        const float3 pos = start + (x*delta);
-        if (pos.z < 0.0001f) continue;
+    const uint2 px = make_uint2(pixel.x, pixel.y);
+    const float depthSample = depth[px.x + depthSize.x*px.y];
+    if (depthSample <=  0) return;
 
-        // Interpolation version
-        const float2 pixel = make_float2( camera_voxel.x / camera_voxel.z + 0.5f,
-            camera_voxel.y / camera_voxel.z + 0.5f);
-        if (pixel.x < 0.5f || pixel.x > depthSize.x - 1.5f || 
-            pixel.y < 0.5f || pixel.y > depthSize.y - 1.5f) continue;
-        // const float depthSample = interpDepth(depth, depthSize, pixel);
-        const uint2 px = make_uint2(pixel.x, pixel.y);
-        const float depthSample = depth[px.x + depthSize.x*px.y];
-        if (depthSample <=  0) continue;
+    const float diff = (pos.z - depthSample)
+      * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
+    float sample = HNew(diff/(noiseFactor *sq(pos.z)), pos.z);
+    if(sample == 0.5f) return;
+    sample = clamp(sample, 0.03f, 0.97f);
+    auto data = handler.get();
+    const double delta_t = timestamp - data.y;
+    data.x = applyWindow(data.x, SURF_BOUNDARY, delta_t, CAPITAL_T);
+    data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
+    data.y = timestamp;
+    handler.set(data);
+  } 
 
-        const float diff = (camera_voxel.z - depthSample)
-          * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
-        float sample = HNew(diff/(noiseFactor *sq(camera_voxel.z)),
-            camera_voxel.z);
-        if(sample == 0.5f) continue;
-        sample = clamp(sample, 0.03, 0.97);
-        is_visible = true;
-        typename VoxelBlock<BFusion>::compute_type data = block->data(pix); 
-        const double delta_t = timestamp - data.y;
-        // std::cout << "Delta_T : " << delta_t << std::endl;
-        data.x = applyWindow(data.x, SURF_BOUNDARY, delta_t, CAPITAL_T);
-        data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
-        data.y = timestamp;
-        block->data(pix, data);
-      }
-    }
-  block->active(is_visible);
-}
+  bfusion_update(const float * d, const uint2 framesize, float n, float t) : 
+    depth(d), depthSize(framesize), noiseFactor(n), timestamp(t){};
 
-void integrate_bfusion(Node<BFusion> * node,
-    const float * depth, uint2 depthSize, 
-    const float voxelSize, const Matrix4 invTrack, const Matrix4 K, 
-    const float noiseFactor, const float timestamp) { 
-
-  // if(node->child(0)) return;
-  const int3 voxel = make_int3(unpack_morton(node->code));
-  float3 pos = invTrack * (make_float3(voxel) * voxelSize);
-  float3 camera_voxel = K * pos;
-  if (pos.z < 0.1f) // some near plane constraint
-    return;
-  // Interpolation version
-  const float2 pixel = make_float2(camera_voxel.x / camera_voxel.z + 0.5f,
-      camera_voxel.y / camera_voxel.z + 0.5f);
-  if (pixel.x < 0.5f || pixel.x > depthSize.x - 1.5f || 
-      pixel.y < 0.5f || pixel.y > depthSize.y - 1.5f) return;
-  // const float depthSample = interpDepth(depth, depthSize, pixel);
-  const uint2 px = make_uint2(pixel.x, pixel.y);
-  const float depthSample = depth[px.x + depthSize.x*px.y];
-  if (depthSample <=  0) return;
-
-  const float diff = (camera_voxel.z - depthSample)
-    * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
-  float sample = HNew(diff/(noiseFactor *sq(camera_voxel.z)),
-      camera_voxel.z);
-  if(sample == 0.5f) return;
-  sample = clamp(sample, 0.03f, 0.97f);
-  typename VoxelBlock<BFusion>::compute_type data = node->value_; // should do an offsetted access here
-  const double delta_t = timestamp - data.y;
-  data.x = applyWindow(data.x, SURF_BOUNDARY, delta_t, CAPITAL_T);
-  data.x = clamp(updateLogs(data.x, sample), BOTTOM_CLAMP, TOP_CLAMP);
-  data.y = timestamp;
-  node ->value_ = data;
-}
-
+  const float * depth;
+  uint2 depthSize;
+  float noiseFactor;
+  float timestamp;
+};
 #endif

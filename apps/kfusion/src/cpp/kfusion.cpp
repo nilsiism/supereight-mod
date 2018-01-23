@@ -57,7 +57,10 @@ bool print_kernel_timing = false;
 #include "preprocessing.cpp"
 #include "tracking.cpp"
 #include "rendering.cpp"
-#include "mapping.hpp"
+#include "bfusion/mapping_impl.hpp"
+#include "kfusion/mapping_impl.hpp"
+#include "bfusion/alloc_impl.hpp"
+#include "kfusion/alloc_impl.hpp"
 
 // input once
 float * gaussian;
@@ -66,6 +69,9 @@ float * gaussian;
 Volume<FieldType> volume;
 float3 * vertex;
 float3 * normal;
+
+unsigned int * allocationList;
+size_t reserved;
 
 float3 bbox_min;
 float3 bbox_max;
@@ -119,6 +125,8 @@ void Kfusion::languageSpecificConstructor() {
 	trackingResult = (TrackData*) calloc(
 			sizeof(TrackData) * computationSize.x * computationSize.y, 1);
 
+  allocationList = NULL;
+  reserved = 0;
 	// ********* BEGIN : Generate the gaussian *************
 	size_t gaussianS = radius * 2 + 1;
 	gaussian = (float*) calloc(gaussianS * sizeof(float), 1);
@@ -155,6 +163,8 @@ Kfusion::~Kfusion() {
 	free(vertex);
 	free(normal);
 	free(gaussian);
+  
+  if(allocationList) delete(allocationList);
 
 	volume.release();
 }
@@ -218,9 +228,9 @@ bool Kfusion::tracking(float4 k, float icp_threshold, uint tracking_rate,
 		depth2vertexKernel(inputVertex[i], ScaledDepth[i], localimagesize,
 				invK);
     if(k.y < 0)
-      vertex2normalKernel<true>(inputNormal[i], inputVertex[i], localimagesize);
+      vertex2normalKernel<FieldType, true>(inputNormal[i], inputVertex[i], localimagesize);
     else
-      vertex2normalKernel<false>(inputNormal[i], inputVertex[i], localimagesize);
+      vertex2normalKernel<FieldType, false>(inputNormal[i], inputVertex[i], localimagesize);
 		localimagesize = make_uint2(localimagesize.x / 2, localimagesize.y / 2);
 	}
 
@@ -272,7 +282,41 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
 
   if ((doIntegrate && ((frame % integration_rate) == 0)) || (frame <= 3)) {
 
-    volume.updateVolume(pose, getCameraMatrix(k), floatDepth, computationSize, mu, frame);
+    float voxelsize =  volume._dim/volume._size;
+    int num_vox_per_pix = volume._dim/((VoxelBlock<FieldType>::side)*voxelsize);
+    size_t total = num_vox_per_pix * computationSize.x * computationSize.y;
+    if(!reserved) {
+      allocationList = new unsigned int[total];
+      reserved = total;
+      std::memset(allocationList, 0, sizeof(unsigned int) * total);
+    }
+    unsigned int allocated = 0;
+    if(std::is_same<FieldType, SDF>::value) {
+     allocated  = buildAllocationList(allocationList, reserved, 
+        volume._map_index, pose, getCameraMatrix(k), floatDepth, computationSize, volume._size,
+      voxelsize, 2*mu);  
+    } else if(std::is_same<FieldType, BFusion>::value) {
+     allocated  = buildAllocationList(allocationList, reserved, 
+        volume._map_index, pose, getCameraMatrix(k), floatDepth, computationSize, volume._size,
+      voxelsize, 6*mu);  
+    }
+
+    volume._map_index.alloc_update(allocationList, allocated);
+
+    if(std::is_same<FieldType, SDF>::value) {
+      struct sdf_update funct(floatDepth, computationSize, mu, 100);
+      iterators::projective_functor<FieldType, INDEX_STRUCTURE, struct sdf_update> 
+        it(volume._map_index, funct, inverse(pose), getCameraMatrix(k), 
+            make_int2(computationSize));
+      it.apply();
+    } else if(std::is_same<FieldType, BFusion>::value) {
+      float timestamp = (1.f/30.f)*frame; 
+      struct bfusion_update funct(floatDepth, computationSize, mu, timestamp);
+      iterators::projective_functor<FieldType, INDEX_STRUCTURE, struct bfusion_update> 
+        it(volume._map_index, funct, inverse(pose), getCameraMatrix(k), make_int2(computationSize));
+      it.apply();
+    }
+
     // std::stringstream f;
     // f << "./slices/integration_" << frame << ".vtk";
     // save3DSlice(volume._map_index, make_int3(0, volume._size/2, 0),
@@ -336,8 +380,6 @@ void raycastOrthogonal(Volume<FieldType> & volume, std::vector<float4> & points,
     for (; t < farPlane; t += stepsize) {
       f_tt = volume.interp(origin + direction * t, select_depth);
       if ( (std::signbit(f_tt) != std::signbit(f_t))) {     // got it, jump out of inner loop
-        typename Volume<FieldType>::compute_type data_t = volume[origin + direction * (t-stepsize)];
-        typename Volume<FieldType>::compute_type data_tt = volume[origin + direction * t];
         if(f_t == 1.0 || f_tt == 1.0){
           f_t = f_tt;
           continue;
@@ -433,8 +475,24 @@ void Kfusion::renderDepth(uchar4 * out, uint2 outputSize) {
 }
 
 void Kfusion::dump_mesh(const char* filename){
+
   std::vector<Triangle> mesh;
-  algorithms::marching_cube(volume._map_index, mesh);
+  auto inside = [](const Volume<FieldType>::compute_type& val) {
+    // meshing::status code;
+    // if(val.y == 0.f) 
+    //   code = meshing::status::UNKNOWN;
+    // else 
+    //   code = val.x < 0.f ? meshing::status::INSIDE : meshing::status::OUTSIDE;
+    // return code;
+    // std::cerr << val.x << " ";
+    return val.x < 0.f;
+  };
+
+  auto select = [](const Volume<FieldType>::compute_type& val) {
+    return val.x;
+  };
+
+  algorithms::marching_cube(volume._map_index, select, inside, mesh);
   writeVtkMesh(filename, mesh);
 }
 

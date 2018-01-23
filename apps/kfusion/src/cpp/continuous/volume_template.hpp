@@ -5,13 +5,7 @@
 #include <memory_pool.hpp>
 #include <data.hpp>
 #include <type_traits>
-#include <algorithms/alloc_list.hpp>
-#include <algorithms/filter.hpp>
-#include <algorithms/mapping.hpp>
-#include <functional>
 #include <cstring>
-#include "../mapping.hpp"
-#include "../bfusion/allocation.hpp"
 
 template <typename T>
 class Void {};
@@ -46,7 +40,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
       return make_float3(p.x * voxelSize, p.y * voxelSize, p.z * voxelSize);
     }
 
-    void set(const uint3 & pos, const compute_type& d) {}
+    void set(const uint3 & , const compute_type& ) {}
 
     compute_type operator[](const float3 & p) const {
       const float inverseVoxelSize = _size/_dim;
@@ -83,64 +77,6 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
           (pos.y * inverseVoxelSize),
           (pos.z * inverseVoxelSize));
       return _map_index.grad(scaled_pos, select);
-    }
-
-    void updateVolume(const Matrix4 &pose, const Matrix4& K,
-                            const float *depthmap,
-                            const uint2 frameSize, const float mu,
-                            const int frame) {
-
-      using namespace std::placeholders;
-      int num_vox_per_pix = _dim/((VoxelBlock<FieldType>::side)*(_dim/_size));
-
-
-      size_t total = num_vox_per_pix * frameSize.x * frameSize.y;
-      _allocationList.reserve(total);
-      static bool initialised = false;
-      if(!initialised) {
-        std::memset(_allocationList.data(), 0, sizeof(unsigned int) * total);
-        initialised = true;
-      }
-      const float hf_band = 6*mu;
-
-      // int allocated = 
-      //   buildAllocationList(_allocationList[0].data(), _allocationList[0].capacity(),  
-      //     _map_index, pose, K, depthmap, frameSize, _size, 
-      //     _dim/_size, hf_band);
-      // _map_index.allocate(_allocationList[0].data(), allocated);
-
-      int allocated = buildOctantList(_allocationList.data(), _allocationList.capacity(),
-          _map_index, pose, K, depthmap, frameSize, _dim/_size, 
-          compute_stepsize, step_to_depth,  hf_band);
-       // printf("To be allocated: %d\n", allocated);
-      _map_index.alloc_update(_allocationList.data(), allocated);
-
-      std::vector<VoxelBlock<FieldType> *> active_list;
-      const MemoryPool<VoxelBlock<FieldType> >& block_array = 
-        _map_index.getBlockBuffer();
-
-      /* Predicates definition */
-      auto in_frustum_predicate = 
-        std::bind(algorithms::in_frustum<VoxelBlock<FieldType>>, _1, 
-         _dim/_size, K*inverse(pose), make_int2(frameSize)); 
-      auto is_active_predicate = [](const VoxelBlock<FieldType>* b) {
-        return b->active();
-      };
-      
-      algorithms::filter(active_list, block_array, is_active_predicate, 
-          in_frustum_predicate);
-      double current = frame * (1.f/30.f);
-      VoxelBlock<FieldType> ** list = active_list.data();
-      unsigned int num_active = active_list.size();
-      integratePass(list, num_active, depthmap, frameSize, _dim/_size,
-          inverse(pose), K,  mu, 100, current);
-
-     auto compute_sdf = std::bind(integrate_bfusion, _1,  depthmap, frameSize,
-         _dim/_size, inverse(pose), K,  mu, current);
-     MemoryPool<Node<FieldType> >& nodes_array =
-       _map_index.getNodesBuffer();
-     const int size = nodes_array.size();
-     algorithms::integratePass(nodes_array, size, compute_sdf);
     }
 
     unsigned int _size;

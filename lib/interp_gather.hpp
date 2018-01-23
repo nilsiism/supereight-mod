@@ -71,7 +71,7 @@ inline void gather_2(const VoxelBlock<FieldType>* block, const int3 base,
   return;
 }
 
-template <typename FieldType, template<typename FieldType> class MapIndex,
+template <typename FieldType, template<typename FieldT> class MapIndex,
          class FieldSelector>
 inline void gather_points(const MapIndex<FieldType>& fetcher, const int3 base, 
     FieldSelector select, float points[8]) {

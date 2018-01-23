@@ -149,7 +149,10 @@ int main(int argc, char ** argv) {
 	// ==========     DUMP VOLUME      =========
 
 	if (config.dump_volume_file != "") {
-		kfusion->dumpVolume(config.dump_volume_file);
+    double start = tock();
+		kfusion->dump_mesh(config.dump_volume_file.c_str());
+    double end = tock();
+	  Stats.sample("meshing", end - start, PerfStats::TIME);
 	}
 
 	//if (config.log_file != "") {

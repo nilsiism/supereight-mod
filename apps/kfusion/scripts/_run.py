@@ -306,6 +306,9 @@ class KinectFusion(SLAMAlgorithm):
         args.extend(['--volume-resolution', str(self.volume_resolution)])
         args.extend(['--pyramid-levels', str(self.pyramid_levels)])
         args.extend(['--rendering-rate', str(self.rendering_rate)])
+        if self.dump_volume != "":
+            args.extend(['--dump-volume', str(results_path) +
+                str(self.dump_volume)])
         args.extend(['-k', str(self.camera)])
 
         if self.quat:
