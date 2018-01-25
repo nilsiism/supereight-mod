@@ -86,7 +86,6 @@ void drawthem(A* scene1, B* scene2, C* scene3, D* scene4, E*,
 
 		glutCreateWindow("Kfusion Display");
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, size_s2.x);
 		glMatrixMode(GL_PROJECTION);
 
 		gluOrtho2D(0.0, (GLfloat) 640, 0.0, (GLfloat) 480);
