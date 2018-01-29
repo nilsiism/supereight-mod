@@ -1,4 +1,5 @@
 #include <math_utils.h>
+#include "timings.h"
 
 void new_reduce(int blockIndex, float * out, TrackData* J, const uint2 Jsize,
 		const uint2 size) {

@@ -1,4 +1,5 @@
 #include <math_utils.h>
+#include "timings.h"
 #include "continuous/volume_instance.hpp"
 #include <tuple>
 

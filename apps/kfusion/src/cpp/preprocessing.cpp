@@ -1,3 +1,4 @@
+#include "timings.h"
 #include <math_utils.h>
 #include <functional>
 #include "continuous/volume_instance.hpp"
