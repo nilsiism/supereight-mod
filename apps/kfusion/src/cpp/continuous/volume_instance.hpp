@@ -2,6 +2,7 @@
 #define VOLUME_INSTANCE_HPP
 #include "volume_template.hpp"
 #include "volume_traits.hpp"
+#include "octree.hpp"
 
 /******************************************************************************
  *
