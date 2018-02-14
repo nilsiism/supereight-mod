@@ -20,10 +20,10 @@ static inline int step_to_depth(const float step, const int max_depth,
 }
 
 template <typename FieldType, 
-          template <typename> class IndexType,
+          template <typename> class OctreeT,
           typename StepF, typename DepthF>
 size_t buildOctantList(uint * allocationList, size_t reserved,
-    IndexType<FieldType>& map_index, const Matrix4 &pose, 
+    OctreeT<FieldType>& map_index, const Matrix4 &pose, 
     const Matrix4& K, const float *depthmap, const uint2 &imageSize, 
     const float voxelSize, StepF compute_stepsize, DepthF step_to_depth,
     const float band) {
@@ -33,6 +33,7 @@ size_t buildOctantList(uint * allocationList, size_t reserved,
   const Matrix4 kPose = pose * invK;
   const int size = map_index.size();
   const int max_depth = log2(size);
+  const int leaves_depth = OctreeT<FieldType>::block_depth;
 
 #ifdef _OPENMP
   std::atomic<unsigned int> voxelCount;
@@ -70,12 +71,16 @@ size_t buildOctantList(uint * allocationList, size_t reserved,
            (voxelScaled.z < size) && (voxelScaled.x >= 0) &&
            (voxelScaled.y >= 0) && (voxelScaled.z >= 0)){
           const int3 voxel = make_int3(voxelScaled);
-          if(!map_index.fetch_octant(voxel.x, voxel.y, voxel.z, tree_depth)){
+          auto node_ptr = map_index.fetch_octant(voxel.x, voxel.y, voxel.z, 
+              tree_depth);
+          if(!node_ptr){
             uint k = map_index.hash(voxel.x, voxel.y, voxel.z, tree_depth);
             unsigned int idx = ++(voxelCount);
             if(idx < reserved) {
               allocationList[idx] = k;
             }
+          } else if(tree_depth >= leaves_depth) { 
+            static_cast<VoxelBlock<FieldType>*>(node_ptr)->active(true);
           }
         }
         stepsize = compute_stepsize(travelled, band, voxelSize);  
