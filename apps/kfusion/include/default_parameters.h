@@ -19,7 +19,6 @@
 #include <constant_parameters.h>
 #include <config.h>
 
-#include <eigen3/Eigen/Geometry>
 ////////////////////////// RUNTIME PARAMETERS //////////////////////
 
 #define DEFAULT_ITERATION_COUNT 3
