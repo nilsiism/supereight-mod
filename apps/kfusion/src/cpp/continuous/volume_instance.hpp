@@ -19,7 +19,7 @@
 #define INDEX_STRUCTURE Octree
 #endif
 
-typedef SDF FieldType;
+typedef BFusion FieldType;
 
 template <typename T>
 using Volume = VolumeTemplate<T, STORAGE_LAYOUT, INDEX_STRUCTURE>;

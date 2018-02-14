@@ -259,9 +259,9 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
         volume._map_index, pose, getCameraMatrix(k), floatDepth, computationSize, volume._size,
       voxelsize, 2*mu);  
     } else if(std::is_same<FieldType, BFusion>::value) {
-     allocated  = buildAllocationList(allocationList, reserved, 
-        volume._map_index, pose, getCameraMatrix(k), floatDepth, computationSize, volume._size,
-      voxelsize, 6*mu);  
+     allocated = buildOctantList(allocationList, reserved, volume._map_index,
+         pose, getCameraMatrix(k), floatDepth, computationSize, voxelsize,
+         compute_stepsize, step_to_depth, 6*mu);  
     }
 
     volume._map_index.alloc_update(allocationList, allocated);
