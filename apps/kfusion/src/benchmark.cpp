@@ -114,12 +114,6 @@ int main(int argc, char ** argv) {
 
     while (reader->readNextDepthFrame(inputDepth)) {
 
-		Matrix4 pose = kfusion.getPose();
-
-		float xt = pose.data[0].w - init_pose.x;
-		float yt = pose.data[1].w - init_pose.y;
-		float zt = pose.data[2].w - init_pose.z;
-
 		timings[1] = tock();
 
 		kfusion.preprocessing(inputDepth, inputSize, config.bilateralFilter);
@@ -129,7 +123,15 @@ int main(int argc, char ** argv) {
 		bool tracked = kfusion.tracking(camera, config.icp_threshold,
 				config.tracking_rate, frame);
 
+
 		timings[3] = tock();
+
+		Matrix4 pose = kfusion.getPose();
+
+		float xt = pose.data[0].w - init_pose.x;
+		float yt = pose.data[1].w - init_pose.y;
+		float zt = pose.data[2].w - init_pose.z;
+
 
 		bool integrated = kfusion.integration(camera, config.integration_rate,
 				config.mu, frame);

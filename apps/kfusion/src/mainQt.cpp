@@ -99,14 +99,17 @@ int main(int argc, char ** argv) {
 	//  =========  BASIC BUFFERS  (input / output )  =========
 
 	// Construction Scene reader and input buffer
-	int width = 640;
-	int height = 480;
 	//we could allocate a more appropriate amount of memory (less) but this makes life hard if we switch up resolution later;
-	inputDepth = (uint16_t*) malloc(sizeof(uint16_t) * width * height);
-	inputRGB = (uchar3*) malloc(sizeof(uchar3) * inputSize.x * inputSize.y);
-	depthRender = (uchar4*) malloc(sizeof(uchar4) * width * height);
-	trackRender = (uchar4*) malloc(sizeof(uchar4) * width * height);
-	volumeRender = (uchar4*) malloc(sizeof(uchar4) * width * height);
+	inputDepth = 
+        (uint16_t*) malloc(sizeof(uint16_t) * inputSize.x*inputSize.y);
+	inputRGB = 
+        (uchar3*) malloc(sizeof(uchar3) * inputSize.x*inputSize.y);
+	depthRender = 
+        (uchar4*) malloc(sizeof(uchar4) * computationSize.x*computationSize.y);
+	trackRender = 
+        (uchar4*) malloc(sizeof(uchar4) * computationSize.x*computationSize.y);
+	volumeRender = 
+        (uchar4*) malloc(sizeof(uchar4) * computationSize.x*computationSize.y);
 
 	init_pose = config.initial_pos_factor * config.volume_size;
 	kfusion = new Kfusion(computationSize, config.volume_resolution,
@@ -134,7 +137,8 @@ int main(int argc, char ** argv) {
 		}
 		while (processAll(reader, true, true, &config, false) == 0) {
 			drawthem(inputRGB, depthRender, trackRender, volumeRender,
-					trackRender, kfusion->getComputationResolution());
+					trackRender, inputSize, computationSize, 
+                    computationSize, computationSize);
 		}
 #endif
 	} else {
@@ -149,7 +153,10 @@ int main(int argc, char ** argv) {
 	// ==========     DUMP VOLUME      =========
 
 	if (config.dump_volume_file != "") {
-		kfusion->dumpVolume(config.dump_volume_file);
+    double start = tock();
+		kfusion->dump_mesh(config.dump_volume_file.c_str());
+    double end = tock();
+	  Stats.sample("meshing", end - start, PerfStats::TIME);
 	}
 
 	//if (config.log_file != "") {
@@ -214,7 +221,6 @@ int processAll(DepthReader *reader, bool processFrame, bool renderImages,
 			powerMonitor->start();
 
 		timings[1] = tock();
-
 		kfusion->preprocessing(inputDepth, inputSize, config->bilateralFilter);
 
 		timings[2] = tock();

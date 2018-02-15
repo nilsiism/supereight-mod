@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 project(octree_lib_unit_testing)
 
 # GTest Root - Change to reflect your install dir
@@ -7,7 +7,10 @@ find_package(GTest REQUIRED)
 
 enable_testing()
 add_compile_options(-std=c++1y )
-include_directories(../../lib ../../utils)
+include_directories(../../lib ../../utils ../../lib/geometry)
 
 add_subdirectory(allocation)
 add_subdirectory(interp)
+add_subdirectory(multiscale)
+add_subdirectory(algorithms)
+add_subdirectory(geometry)

@@ -1,6 +1,5 @@
-#ifndef ALLOC_LIST_HPP
-#define ALLOC_LIST_HPP
-
+#ifndef SDF_ALLOC_H
+#define SDF_ALLOC_H
 #include <math_utils.h> 
 #include <node.hpp>
 #include <utils/morton_utils.hpp>
@@ -40,7 +39,7 @@ unsigned int buildAllocationList(HashType * allocationList, size_t reserved,
 
   unsigned int x, y;
   const float3 camera = get_translation(pose);
-  const int numSteps = ceil(2*band*inverseVoxelSize);
+  const int numSteps = ceil(band*inverseVoxelSize);
   voxelCount = 0;
 #pragma omp parallel for \
   private(y)
@@ -52,9 +51,9 @@ unsigned int buildAllocationList(HashType * allocationList, size_t reserved,
       float3 worldVertex = (kPose * make_float3((x + 0.5f) * depth, 
             (y + 0.5f) * depth, depth));
 
-      float3 direction = normalize(worldVertex - camera);
-      const float3 origin = worldVertex - band * direction;
-      const float3 step = (2*direction*band)/numSteps;
+      float3 direction = normalize(camera - worldVertex);
+      const float3 origin = worldVertex - (band * 0.5f) * direction;
+      const float3 step = (direction*band)/numSteps;
 
       int3 voxel;
       float3 voxelPos = origin;
@@ -66,7 +65,8 @@ unsigned int buildAllocationList(HashType * allocationList, size_t reserved,
           voxel = make_int3(voxelScaled);
           VoxelBlock<FieldType> * n = map_index.fetch(voxel.x, voxel.y, voxel.z);
           if(!n){
-            HashType k = map_index.hash(voxel.x, voxel.y, voxel.z);
+            HashType k = map_index.hash(voxel.x, voxel.y, voxel.z, 
+                VoxelBlock<FieldType>::side);
             unsigned int idx = ++voxelCount;
             if(idx < reserved) {
               allocationList[idx] = k;
@@ -84,4 +84,5 @@ unsigned int buildAllocationList(HashType * allocationList, size_t reserved,
   const uint written = voxelCount;
   return written >= reserved ? reserved : written;
 }
+
 #endif

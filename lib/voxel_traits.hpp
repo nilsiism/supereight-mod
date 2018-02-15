@@ -33,8 +33,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _VOXEL_TRAITS_
 #include <math_utils.h>
 
-class SDF;
-
 template <class VoxelTraits>
 struct voxel_traits{ };
 

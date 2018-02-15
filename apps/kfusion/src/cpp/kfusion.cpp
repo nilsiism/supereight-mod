@@ -7,63 +7,34 @@
 
  */
 #include <kernels.h>
+#include "timings.h"
 #include <perfstats.h>
 #include <vtk-io.h>
 #include <octree.hpp>
-#include "continuous/sdf_volume.hpp"
-#include <algorithms/raycasting.cpp>
-
-extern PerfStats Stats;
-
-#ifdef __APPLE__
-#include <mach/clock.h>
-#include <mach/mach.h>
-
-	
-	#define TICK()    {if (print_kernel_timing) {\
-		host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);\
-		clock_get_time(cclock, &tick_clockData);\
-		mach_port_deallocate(mach_task_self(), cclock);\
-		}}
-
-	#define TOCK(str,size)  {if (print_kernel_timing) {\
-		host_get_clock_service(mach_host_self(), SYSTEM_CLOCK, &cclock);\
-		clock_get_time(cclock, &tock_clockData);\
-		mach_port_deallocate(mach_task_self(), cclock);\
-		std::cerr<< str << " ";\
-		if((tock_clockData.tv_sec > tick_clockData.tv_sec) && (tock_clockData.tv_nsec >= tick_clockData.tv_nsec))   std::cerr<< tock_clockData.tv_sec - tick_clockData.tv_sec << std::setfill('0') << std::setw(9);\
-		std::cerr  << (( tock_clockData.tv_nsec - tick_clockData.tv_nsec) + ((tock_clockData.tv_nsec<tick_clockData.tv_nsec)?1000000000:0)) << " " <<  size << std::endl;}}
-#else
-	
-	#define TICK()    {if (print_kernel_timing) {clock_gettime(CLOCK_MONOTONIC, &tick_clockData);}}
-
-	#define TOCK(str,size)  {if (print_kernel_timing) {clock_gettime(CLOCK_MONOTONIC, &tock_clockData); /*std::cerr<< str << " "*/;\
-		/*if((tock_clockData.tv_sec > tick_clockData.tv_sec) && (tock_clockData.tv_nsec >= tick_clockData.tv_nsec))*/ { Stats.sample(str, (( tock_clockData.tv_nsec - tick_clockData.tv_nsec) + ((tock_clockData.tv_nsec<tick_clockData.tv_nsec)?1000000000:0)), PerfStats::TIME);  /* std::cerr<< tock_clockData.tv_sec - tick_clockData.tv_sec << std::setfill('0') << std::setw(9);*/}\
-		/*std::cerr  << (( tock_clockData.tv_nsec - tick_clockData.tv_nsec) + ((tock_clockData.tv_nsec<tick_clockData.tv_nsec)?1000000000:0)) << " " <<  size << std::endl;*/}}
-
-#endif
-
-bool print_kernel_timing = false;
-#ifdef __APPLE__
-	clock_serv_t cclock;
-	mach_timespec_t tick_clockData;
-	mach_timespec_t tock_clockData;
-#else
-	struct timespec tick_clockData;
-	struct timespec tock_clockData;
-#endif
-
+#include "continuous/volume_instance.hpp"
+#include "algorithms/meshing.hpp"
+#include "geometry/octree_collision.hpp"
 #include "preprocessing.cpp"
 #include "tracking.cpp"
 #include "rendering.cpp"
+#include "bfusion/mapping_impl.hpp"
+#include "kfusion/mapping_impl.hpp"
+#include "bfusion/alloc_impl.hpp"
+#include "kfusion/alloc_impl.hpp"
+
+
+extern PerfStats Stats;
 
 // input once
 float * gaussian;
 
 // inter-frame
-Volume volume;
+Volume<FieldType> volume;
 float3 * vertex;
 float3 * normal;
+
+morton_type* allocationList;
+size_t reserved;
 
 float3 bbox_min;
 float3 bbox_max;
@@ -117,6 +88,8 @@ void Kfusion::languageSpecificConstructor() {
 	trackingResult = (TrackData*) calloc(
 			sizeof(TrackData) * computationSize.x * computationSize.y, 1);
 
+  allocationList = NULL;
+  reserved = 0;
 	// ********* BEGIN : Generate the gaussian *************
 	size_t gaussianS = radius * 2 + 1;
 	gaussian = (float*) calloc(gaussianS * sizeof(float), 1);
@@ -153,6 +126,8 @@ Kfusion::~Kfusion() {
 	free(vertex);
 	free(normal);
 	free(gaussian);
+  
+  if(allocationList) free(allocationList);
 
 	volume.release();
 }
@@ -216,9 +191,9 @@ bool Kfusion::tracking(float4 k, float icp_threshold, uint tracking_rate,
 		depth2vertexKernel(inputVertex[i], ScaledDepth[i], localimagesize,
 				invK);
     if(k.y < 0)
-      vertex2normalKernel<true>(inputNormal[i], inputVertex[i], localimagesize);
+      vertex2normalKernel<FieldType, true>(inputNormal[i], inputVertex[i], localimagesize);
     else
-      vertex2normalKernel<false>(inputNormal[i], inputVertex[i], localimagesize);
+      vertex2normalKernel<FieldType, false>(inputNormal[i], inputVertex[i], localimagesize);
 		localimagesize = make_uint2(localimagesize.x / 2, localimagesize.y / 2);
 	}
 
@@ -270,11 +245,61 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
 
   if ((doIntegrate && ((frame % integration_rate) == 0)) || (frame <= 3)) {
 
-    volume.updateVolume(pose, getCameraMatrix(k), floatDepth, computationSize, mu, frame);
+    float voxelsize =  volume._dim/volume._size;
+    int num_vox_per_pix = volume._dim/((VoxelBlock<FieldType>::side)*voxelsize);
+    size_t total = num_vox_per_pix * computationSize.x * computationSize.y;
+    if(!reserved) {
+      allocationList = (morton_type* ) calloc(sizeof(morton_type) * total, 1);
+      reserved = total;
+    }
+    unsigned int allocated = 0;
+    if(std::is_same<FieldType, SDF>::value) {
+     allocated  = buildAllocationList(allocationList, reserved, 
+        volume._map_index, pose, getCameraMatrix(k), floatDepth, computationSize, volume._size,
+      voxelsize, 2*mu);  
+    } else if(std::is_same<FieldType, BFusion>::value) {
+     allocated = buildOctantList(allocationList, reserved, volume._map_index,
+         pose, getCameraMatrix(k), floatDepth, computationSize, voxelsize,
+         compute_stepsize, step_to_depth, 6*mu);  
+    }
+
+    volume._map_index.alloc_update(allocationList, allocated);
+
+    if(std::is_same<FieldType, SDF>::value) {
+      struct sdf_update funct(floatDepth, computationSize, mu, 100);
+      iterators::projective_functor<FieldType, INDEX_STRUCTURE, struct sdf_update> 
+        it(volume._map_index, funct, inverse(pose), getCameraMatrix(k), 
+            make_int2(computationSize));
+      it.apply();
+    } else if(std::is_same<FieldType, BFusion>::value) {
+      float timestamp = (1.f/30.f)*frame; 
+      struct bfusion_update funct(floatDepth, computationSize, mu, timestamp);
+      iterators::projective_functor<FieldType, INDEX_STRUCTURE, struct bfusion_update> 
+        it(volume._map_index, funct, inverse(pose), getCameraMatrix(k), make_int2(computationSize));
+      it.apply();
+    }
+
     // std::stringstream f;
-    // f << "./slices/integration_" << (bayesian ? "bayesian_" : "tsdf_" )<< frame << ".vtk";
-    // save3DSlice(volume._data.raw_data(), make_uint3(0, volume._size/2, 0),
-    //   make_uint3(volume._size, volume._size/2 + 1, volume._size), make_uint3(volume._size), f.str().c_str());
+    // f << "./slices/integration_" << frame << ".vtk";
+    // save3DSlice(volume._map_index, make_int3(0, volume._size/2, 0),
+    //   make_int3(volume._size, volume._size/2 + 1, volume._size), make_int3(volume._size), f.str().c_str());
+
+    // f.str("");
+    // f.clear();
+    // f << "./slices/collision_" << frame << ".vtk";
+    // save3DSlice(volume._map_index, [](const Octree<FieldType>& map,
+    //       const int x, const int y, const int z) {
+    //       const int3 bbox = make_int3(x, y, z);
+    //       const int3 side = make_int3(1);
+    //       auto test = [](const Octree<FieldType>::compute_type & val) {
+    //       if(val.x == 0.f) return collision_status::unseen;
+    //       if(val.x < 5) return collision_status::empty;
+    //       return collision_status::occupied;
+    //       };
+    //       return (float) collides_with(map, bbox, side, test);
+    //     }, // end lambda
+    //     make_int3(0, volume._size/2, 0),
+    //     make_int3(volume._size, volume._size/2 + 1, volume._size), make_int3(volume._size), f.str().c_str());
     doIntegrate = true;
   } else {
     doIntegrate = false;
@@ -284,48 +309,8 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
 
 }
 
-void Kfusion::dumpVolume(std::string filename) {
+void Kfusion::dumpVolume(std::string ) {
 
-	std::ofstream fDumpFile;
-
-	if (filename == "") {
-		return;
-	}
-
-	std::cout << "Dumping the volumetric representation on file: " << filename
-			<< std::endl;
-	fDumpFile.open((filename + ".config").c_str(), std::ios::out);
-	if (fDumpFile.fail()) {
-		std::cout << "Error opening file: " << filename << std::endl;
-		exit(1);
-	}
-
-    fDumpFile << "/*** CONFIG ***/" << std::endl;
-    fDumpFile << "resolution:" << volume._size << std::endl;
-    fDumpFile << "dimension:" << volume._dim << std::endl;
-    fDumpFile << "offset:" << _initPose.x << "," << _initPose.y << "," << _initPose.z << std::endl;
-
-    fDumpFile.close();
-
-	fDumpFile.open((filename + ".data").c_str(), std::ios::binary);
-	if (fDumpFile.fail()) {
-		std::cout << "Error opening file: " << filename << std::endl;
-		exit(1);
-	}
-    
-  
-    for(unsigned int z = 0; z < volume._size; z++){
-        for(unsigned int y = 0; y < volume._size; y++){
-            for(unsigned int x = 0; x < volume._size; x++){
-                uint3 pos = make_uint3(x,y,z);
-                float2 data = volume[pos];
-		        fDumpFile.write(reinterpret_cast<char *>(&data.x), sizeof(float));
-                fDumpFile.write(reinterpret_cast<char *>(&data.y), sizeof(float));
-            }
-        }
-    }
-
-    fDumpFile.close();
 }
 
 void Kfusion::printStats(){
@@ -342,7 +327,8 @@ void Kfusion::printStats(){
     std::cout << "The number of non-empty voxel is: " <<  occupiedVoxels << std::endl;
 }
 
-void raycastOrthogonal(Volume & volume, std::vector<float4> & points, const float3 origin, const float3 direction,
+template <typename FieldType>
+void raycastOrthogonal(Volume<FieldType> & volume, std::vector<float4> & points, const float3 origin, const float3 direction,
         const float farPlane, const float step) {
 
     // first walk with largesteps until we found a hit
@@ -356,16 +342,10 @@ void raycastOrthogonal(Volume & volume, std::vector<float4> & points, const floa
     for (; t < farPlane; t += stepsize) {
       f_tt = volume.interp(origin + direction * t, select_depth);
       if ( (std::signbit(f_tt) != std::signbit(f_t))) {     // got it, jump out of inner loop
-        float2 data_t = volume[origin + direction * (t-stepsize)];
-        float2 data_tt = volume[origin + direction * t];
-        if(f_t == 1.0 || f_tt == 1.0 || data_t.y < 6|| data_tt.y < 6 ){
+        if(f_t == 1.0 || f_tt == 1.0){
           f_t = f_tt;
           continue;
         }
-
-        // Else, we have found a good intersection, calculate it.
-        //            std::cout << "Interpolating on ray: " << origin.x << ", " << origin.y << ", " << origin.z << 
-        //               " at distance " << t <<  "  between f_t: " << f_t << " and f_tt: " << f_tt << " Weights: " << data_t.y << ", " << data_tt.y << std::endl;
         t = t + stepsize * f_tt / (f_t - f_tt);
         points.push_back(make_float4(origin + direction*t, 1));
       }
@@ -441,7 +421,7 @@ void Kfusion::getPointCloudFromVolume(){
 void Kfusion::renderVolume(uchar4 * out, uint2 outputSize, int frame,
 		int raycast_rendering_rate, float4 k, float largestep) {
 	if (frame % raycast_rendering_rate == 0)
-		renderVolumeKernel(volume, out, outputSize, vertex, normal,
+		renderVolumeKernel(volume, out, outputSize,
         *(this->viewPose) * getInverseCameraMatrix(k), nearPlane, 
         farPlane * 2.0f, _mu, step, largestep, 
         get_translation(*(this->viewPose)), ambient, 
@@ -456,6 +436,29 @@ void Kfusion::renderDepth(uchar4 * out, uint2 outputSize) {
 	renderDepthKernel(out, floatDepth, outputSize, nearPlane, farPlane);
 }
 
+void Kfusion::dump_mesh(const char* filename){
+
+  std::vector<Triangle> mesh;
+  auto inside = [](const Volume<FieldType>::compute_type& val) {
+    // meshing::status code;
+    // if(val.y == 0.f) 
+    //   code = meshing::status::UNKNOWN;
+    // else 
+    //   code = val.x < 0.f ? meshing::status::INSIDE : meshing::status::OUTSIDE;
+    // return code;
+    // std::cerr << val.x << " ";
+    return val.x < 0.f;
+  };
+
+  auto select = [](const Volume<FieldType>::compute_type& val) {
+    return val.x;
+  };
+
+  algorithms::marching_cube(volume._map_index, select, inside, mesh);
+  writeVtkMesh(filename, mesh);
+}
+
 void synchroniseDevices() {
 	// Nothing to do in the C++ implementation
 }
+

@@ -23,16 +23,6 @@ inline uint64_t compact(uint64_t value) {
   return x;
 }
 
-// inline uint compact(unsigned int value){
-//     unsigned int x;
-//     x = value & 0x49249249;
-//     x = (x ^ (x >>  2)) & 0xC30C30C3;
-//     x = (x ^ (x >>  4)) & 0x0F00F00F;
-//     x = (x ^ (x >>  8)) & 0xFF0000FF;
-//     x = (x ^ (x >> 16)) & 0x03FF;
-//     return x;
-// }
-
 inline uint3 unpack_morton(uint64_t code){
   return make_uint3(compact(code >> 0), compact(code >> 1), 
                     compact(code >> 2));

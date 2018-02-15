@@ -65,6 +65,12 @@ inline float rsqrtf(float x) {
 // constructors
 ////////////////////////////////////////////////////////////////////////////////
 
+inline __host__     __device__ float1 make_float1(float s) {
+  float1 val;
+  val.x = s;
+	return val;
+}
+
 inline __host__     __device__ float2 make_float2(float s) {
 	return make_float2(s, s);
 }

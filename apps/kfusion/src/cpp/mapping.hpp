@@ -29,41 +29,39 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef ALGO_MAPPING_HPP
-#define ALGO_MAPPING_HPP
+#ifndef MAPPING_HPP
+#define MAPPING_HPP
 #include <node.hpp>
+#include <ctime>
 
-inline float3 voxelToPos(const int3 p, const float voxelSize){
-  return make_float3(p.x * voxelSize, p.y * voxelSize, p.z * voxelSize);
-}
+#include "bfusion/mapping_impl.hpp"
+#include "kfusion/mapping_impl.hpp"
 
-namespace algorithms {
-
-  template <typename T>
-    void integratePass(VoxelBlock<T> ** blockList, unsigned int list_size, 
-        const float * depth, uint2 depthSize, const float voxelSize, 
-        const Matrix4 invTrack, const Matrix4 K, const float mu, 
-        const float maxweight, const int current_frame) {
+template <typename T>
+void integratePass(VoxelBlock<T> ** blockList, unsigned int list_size, 
+    const float * depth, uint2 depthSize, const float voxelSize, 
+    const Matrix4 invTrack, const Matrix4 K, const float mu, 
+    const float , const double timestamp) {
 
 #pragma omp parallel for
-      for(unsigned int i = 0; i < list_size; ++i){
-        integrate(blockList[i], depth, depthSize, voxelSize,
-            invTrack, K, mu, maxweight);
-        blockList[i]->timestamp(current_frame);
-      }
-    }
+  for(unsigned int i = 0; i < list_size; ++i){
+      integrate(blockList[i], depth, depthSize, voxelSize,
+          invTrack, K, mu, timestamp);
+      // blockList[i]->timestamp(current_frame);
+  }
+}
 
-  /*
-   * MemoryBufferType is an instance of the memory allocator class
-   */
-  template <typename MemoryBufferType, typename UpdateFunctor>
-    void integratePass(MemoryBufferType&  nodes_list, unsigned int list_size, 
-        UpdateFunctor f) {
+/*
+ * MemoryBufferType is an instance of the memory allocator class
+ */
+template <typename MemoryBufferType, typename UpdateFunctor>
+void integratePass(MemoryBufferType&  nodes_list, unsigned int list_size, 
+    UpdateFunctor f) {
 
 #pragma omp parallel for
-      for(unsigned int i = 0; i < list_size; ++i){
-        f(nodes_list[i]);
-      }
-    }
+  for(unsigned int i = 0; i < list_size; ++i){
+    f(nodes_list[i]);
+  }
 }
+
 #endif

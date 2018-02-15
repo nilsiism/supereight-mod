@@ -42,7 +42,24 @@ template <typename T>
 class Node {
 
 public:
+  typedef voxel_traits<T> traits_type;
+  typedef typename traits_type::ComputeType compute_type;
+  typedef typename traits_type::StoredType stored_type;
+  compute_type empty() const { return traits_type::empty(); }
+  compute_type init_val() const { return traits_type::initValue(); }
+
+  compute_type value_;
+  unsigned int code;
+  unsigned int side;
+  time_t timestamp_;
+  unsigned char children_mask_;
+
   Node(){
+    value_ = init_val();
+    timestamp_ = 0;
+    code = 0;
+    side = 0;
+    children_mask_ = 0;
     for (unsigned int i = 0; i < 8; i++)
       child_ptr_[i] = NULL;
     }
@@ -101,7 +118,7 @@ class VoxelBlock: public Node<T> {
     void coordinates(const int3 c){ coordinates_ = c; }
 
     compute_type data(const int3 pos) const;
-    void data(const int3 pos, compute_type& value);
+    void data(const int3 pos, const compute_type& value);
 
     void timestamp(const time_t frame){ 
       timestamp_ = frame;
@@ -135,7 +152,7 @@ inline typename VoxelBlock<T>::compute_type VoxelBlock<T>::data(const int3 pos) 
 
 template <typename T>
 inline void VoxelBlock<T>::data(const int3 pos, 
-                               compute_type &value){
+                                const compute_type &value){
   int3 offset = pos - coordinates_;
   voxel_block_[offset.x + offset.y*side + offset.z*sideSq] = translate(value);
 }

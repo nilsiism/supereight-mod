@@ -1,5 +1,6 @@
 #include "octree.hpp"
 #include "math_utils.h"
+#include "utils/morton_utils.hpp"
 #include "gtest/gtest.h"
 
 template <>
@@ -41,20 +42,17 @@ TEST(AllocationTest, SetSingleVoxel) {
   EXPECT_EQ(written_val, read_val);
 }
 
-TEST(AllocationTest4096, SetSingleVoxel) {
+TEST(AllocationTest, FetchOctant) {
   typedef Octree<float> OctreeF;
   OctreeF oct;
-  oct.init(4096, 5);
-  const int3 vox = {25, 2022, 1980};
-  const morton_type code = oct.hash(vox.x, vox.y, vox.z); 
+  oct.init(256, 5);
+  const int3 vox = {25, 65, 127};
+  const uint code = oct.hash(vox.x, vox.y, vox.z); 
   morton_type allocList[1] = {code};
   oct.allocate(allocList, 1);
 
-  VoxelBlock<float> * block = oct.fetch(vox.x, vox.y, vox.z);
-  ASSERT_TRUE(block);
-  float written_val = 2.f;
-  block->data(vox, written_val);
+  const int depth = 3; /* 32 voxels per side */
+  Node<float> * node = oct.fetch_octant(vox.x, vox.y, vox.z, 3);
 
-  const float read_val = oct.get(vox.x, vox.y, vox.z);
-  EXPECT_EQ(written_val, read_val);
+  EXPECT_NE(node, nullptr);
 }
