@@ -20,16 +20,18 @@
  * \param voxelSize spacing between two consegutive voxels, in metric space
  * \param band maximum extent of the allocating region, per ray
  */
-template <typename FieldType, template <typename> class IndexType, typename HashType>
+template <typename FieldType, template <typename> class OctreeT, typename HashType>
 unsigned int buildAllocationList(HashType * allocationList, size_t reserved,
-    IndexType<FieldType>& map_index, const Matrix4 &pose, const Matrix4& K, 
+    OctreeT<FieldType>& map_index, const Matrix4 &pose, const Matrix4& K, 
     const float *depthmap, const uint2 &imageSize, const unsigned int size,  
     const float voxelSize, const float band) {
 
   const float inverseVoxelSize = 1/voxelSize;
+  const unsigned block_scale = log2(size) - log2_const(VoxelBlock<FieldType>::side);
 
   Matrix4 invK = inverse(K);
   const Matrix4 kPose = pose * invK;
+  
 
 #ifdef _OPENMP
   std::atomic<unsigned int> voxelCount;
@@ -66,7 +68,7 @@ unsigned int buildAllocationList(HashType * allocationList, size_t reserved,
           VoxelBlock<FieldType> * n = map_index.fetch(voxel.x, voxel.y, voxel.z);
           if(!n){
             HashType k = map_index.hash(voxel.x, voxel.y, voxel.z, 
-                VoxelBlock<FieldType>::side);
+                block_scale);
             unsigned int idx = ++voxelCount;
             if(idx < reserved) {
               allocationList[idx] = k;
