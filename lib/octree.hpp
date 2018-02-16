@@ -895,7 +895,7 @@ bool Octree<T>::updateLevel(morton_type* keys, int num_tasks, int target_level,
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
     Node<T> ** n = &root_;
-    int myKey = keys[i] & (~scale_mask);
+    morton_type myKey = keys[i] & (~scale_mask);
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
