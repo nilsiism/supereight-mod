@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MAX_BITS 21
 #define CAST_STACK_DEPTH 23
-#define SCALE_MASK 0x1FFu
+#define SCALE_MASK ((morton_type)0x1FFu)
 
 uint64_t MASK[] = {
   0xf000000000000000,
@@ -276,7 +276,7 @@ private:
   friend class leaf_iterator<T>;
 
   // Allocation specific variables
-  morton_type * keys_at_level_;
+  morton_type* keys_at_level_;
   int reserved_;
 
   // Private implementation of cached methods

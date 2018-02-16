@@ -15,17 +15,17 @@ namespace algorithms {
       return end;
     }
 
-  template <typename MortonType>
-    inline int unique_multiscale(MortonType* keys, int num_keys,
-      const unsigned level_mask){
+  template <typename KeyT>
+    inline int unique_multiscale(KeyT* keys, int num_keys,
+      const KeyT level_mask){
       int end = 1;
-      const MortonType key_mask = ~level_mask; 
+      const KeyT key_mask = ~level_mask; 
       if(num_keys < 2) return end;
-      MortonType prev_key = keys[0] & key_mask;
-      MortonType prev_level = keys[0] & level_mask;
+      KeyT prev_key = keys[0] & key_mask;
+      KeyT prev_level = keys[0] & level_mask;
       for (int i = 1; i < num_keys; ++i){
-        const MortonType key = keys[i] & key_mask;
-        const MortonType level = keys[i] & level_mask;
+        const KeyT key = keys[i] & key_mask;
+        const KeyT level = keys[i] & level_mask;
         if(key != prev_key){
           keys[end] = keys[i];
           ++end;
@@ -39,17 +39,17 @@ namespace algorithms {
       return end;
     }
 
-  template <typename MortonType>
-    inline int unique_multiscale(MortonType* keys, int num_keys,
-        const unsigned level_mask, const unsigned current_level){
+  template <typename KeyT>
+    inline int unique_multiscale(KeyT* keys, int num_keys,
+        const KeyT level_mask, const unsigned current_level){
       int end = 1;
-      const MortonType key_mask = ~level_mask; 
+      const KeyT key_mask = ~level_mask; 
       if(num_keys < 2) return end;
-      MortonType prev_key = keys[0] & key_mask;
-      MortonType prev_level = keys[0] & level_mask;
+      KeyT prev_key = keys[0] & key_mask;
+      KeyT prev_level = keys[0] & level_mask;
       for (int i = 1; i < num_keys; ++i){
-        const MortonType key = keys[i] & key_mask;
-        const MortonType level = keys[i] & level_mask;
+        const KeyT key = keys[i] & key_mask;
+        const KeyT level = keys[i] & level_mask;
         // std::cout << "Key = " << key << " level = " << level << " prev_key = "
         //   << prev_key << " prev_level = " << prev_level << std::endl;
         if(level >= current_level) {
