@@ -49,7 +49,7 @@ public:
   compute_type init_val() const { return traits_type::initValue(); }
 
   compute_type value_;
-  unsigned int code;
+  morton_type code;
   unsigned int side;
   time_t timestamp_;
   unsigned char children_mask_;

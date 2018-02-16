@@ -28,7 +28,7 @@ inline uint3 unpack_morton(uint64_t code){
                     compact(code >> 2));
 }
 
-inline unsigned long long compute_morton(uint64_t x, 
+inline uint64_t compute_morton(uint64_t x, 
     uint64_t y, uint64_t z){
   uint64_t code = 0;
 

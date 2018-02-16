@@ -230,7 +230,7 @@ public:
     return compute_morton(x, y, z) & MASK[morton_mask];   
   }
 
-  unsigned int hash(const int x, const int y, const int z, const int scale) {
+  morton_type hash(const int x, const int y, const int z, morton_type scale) {
     constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
     return (compute_morton(x, y, z) & MASK[morton_mask]) | scale; 
   }
