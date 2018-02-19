@@ -925,204 +925,11 @@ inline uint3 Octree<T>::getChildFromCode(morton_type code,
 
   int shift = max_level_ - level;
   code = code >> shift*3;
-
   uint3 coordinates = make_uint3(code & 0x01, (code >> 1) & 0x01, (code >> 2) & 0x01);
-
   return coordinates;
 
 }
 
-/**
- * A modified version of the ray-caster introduced in the paper:
- * https://research.nvidia.com/publication/efficient-sparse-voxel-octrees
- *
- * Original code available at:
- * https://code.google.com/p/efficient-sparse-voxel-octrees/
- *
-**/
-
-template <typename T>
-float4 Octree<T>::raycast(const uint2 position, const Matrix4 view,
-    const float , const float farPlane, const float mu,
-    const float , const float largeStep) const {
-
-  const float3 origin = get_translation(view);
-  float3 direction = normalize(rotate(view, make_float3(position.x, position.y, 1.f)));
-  struct stack_entry stack[CAST_STACK_DEPTH];
-  static const float epsilon = exp2f(-log2(size_));
-  // const float voxelSize = dim_/size_
-
-  if(fabsf(direction.x) < epsilon) direction.x = copysignf(epsilon, direction.x);
-  if(fabsf(direction.y) < epsilon) direction.y = copysignf(epsilon, direction.y);
-  if(fabsf(direction.z) < epsilon) direction.z = copysignf(epsilon, direction.z);
-
-  float voxelSize = dim_ / size_;
-  // Scaling the origin to resides between coordinates [1,2]
-  const float3 scaled_origin = origin/dim_ + 1.f;
-  const float ratio = 1 / dim_;
-  // Scaling the origin in voxel space
-  const float3 discrete_origin = origin/voxelSize;
-
-  // Precomputing the coefficients of tx(x), ty(y) and tz(z)
-  // The octree is assumed to reside at coordinates [1,2]
-
-  float3 t_coef = -1.f/fabs(direction);
-  float3 t_bias = t_coef * scaled_origin;
-
-  // Build the octanct mask to mirror the coordinate system
-  // so that each ray direction component is negative.
-
-  int octant_mask = 7;
-  if(direction.x > 0.0f) octant_mask ^=1, t_bias.x = 3.0f * t_coef.x - t_bias.x;
-  if(direction.y > 0.0f) octant_mask ^=2, t_bias.y = 3.0f * t_coef.y - t_bias.y;
-  if(direction.z > 0.0f) octant_mask ^=4, t_bias.z = 3.0f * t_coef.z - t_bias.z;
-
-  // Find the active t-span
-
-  float t_min = fmaxf(fmaxf(2.0f * t_coef.x - t_bias.x, 2.0f * t_coef.y - t_bias.y), 2.0f * t_coef.z - t_bias.z);
-  float t_max = fminf(fminf(t_coef.x - t_bias.x, t_coef.y - t_bias.y), t_coef.z - t_bias.z);
-  float h = t_max;
-  t_min = fmaxf(t_min, 0.4f/dim_);
-  t_max = fminf(t_max, farPlane/dim_);
-
-  Node<T> * parent = root_;
-  Node<T> * child;
-  int idx = 0;
-  float3 pos = make_float3(1.0f, 1.0f, 1.0f);
-  int scale = CAST_STACK_DEPTH-1;
-  float scale_exp2 = 0.5f;
-  int min_scale = CAST_STACK_DEPTH - log2(size_/blockSide);
-  float last_sample = 1.0f;
-  float stepsize = largeStep / voxelSize;// largeStep = 0.75*mu
-  float mu_vox = mu/voxelSize;
-
-  if (1.5f * t_coef.x - t_bias.x > t_min) idx ^= 1, pos.x = 1.5f;
-  if (1.5f * t_coef.y - t_bias.y > t_min) idx ^= 2, pos.y = 1.5f;
-  if (1.5f * t_coef.z - t_bias.z > t_min) idx ^= 4, pos.z = 1.5f;
-
-  while (scale < CAST_STACK_DEPTH) {
-    float3 t_corner = pos * t_coef - t_bias;
-    float tc_max = fminf(fminf(t_corner.x, t_corner.y), t_corner.z);
-
-    int child_idx = idx ^ octant_mask ^ 7;
-    child = parent->child(child_idx);
-
-    if (scale == min_scale && child != NULL){
-
-        /* check against near and far plane */
-        float tnear = t_min  / (voxelSize * ratio);
-        float tfar =  tc_max / (voxelSize * ratio);
-        // const float tfar = fminf(fminf(t_corner.x, t_corner.y), t_corner.z);
-        if (tnear < tfar) {
-          // first walk with largesteps until we found a hit
-          float t = tnear; // in voxel coord
-          float f_t = last_sample;
-          float f_tt = last_sample;
-          if (f_t > 0.f) {
-            float3 vox = discrete_origin + direction * t;
-            /* While inside the voxel block */
-            for (; t < tfar; t += stepsize, vox += direction*stepsize) {
-              typename VoxelBlock<T>::compute_type data = 
-                // get(pos, static_cast<VoxelBlock<T>*>(child));
-                get(vox.x, vox.y, vox.z, static_cast<VoxelBlock<T>*>(child));
-              f_tt = data.x;
-              if(f_tt <= 0.1){
-                auto field_select = [](const auto& val) { return val.x; };
-                f_tt = interp(vox, field_select);
-              }
-              if (f_tt < 0.f)                  // got it, jump out of inner loop
-                break;
-              stepsize = fmaxf(f_tt * mu_vox, 1.f); // all in voxel space
-              f_t = f_tt;
-            }
-            if (f_tt < 0.f) {           // got it, calculate accurate intersection
-              t = t + stepsize * f_tt / (f_t - f_tt);
-              float4 hit =  make_float4(discrete_origin + t * direction, t);
-              return hit * voxelSize;
-            }
-            last_sample = f_tt;
-          }
-        }
-    } else if (child != NULL && t_min <= t_max){  // If the child is valid, descend the tree hierarchy.
-
-      float tv_max = fminf(t_max, tc_max);
-      float half = scale_exp2 * 0.5f;
-      float3 t_center = half * t_coef + t_corner;
-
-      // Descend to the first child if the resulting t-span is non-empty.
-
-      if (tc_max < h) {
-        stack[scale] = {scale, parent, t_max};
-      }
-
-      h = tc_max;
-      parent = child;
-
-      idx = 0;
-      scale--;
-      scale_exp2 = half;
-      if (t_center.x > t_min) idx ^= 1, pos.x += scale_exp2;
-      if (t_center.y > t_min) idx ^= 2, pos.y += scale_exp2;
-      if (t_center.z > t_min) idx ^= 4, pos.z += scale_exp2;
-
-      t_max = tv_max;
-      child = NULL;
-      continue;
-    }
-
-    // ADVANCE
-    // Step along the ray.
-
-    int step_mask = 0;
-
-    if (t_corner.x <= tc_max) step_mask ^= 1, pos.x -= scale_exp2;
-    if (t_corner.y <= tc_max) step_mask ^= 2, pos.y -= scale_exp2;
-    if (t_corner.z <= tc_max) step_mask ^= 4, pos.z -= scale_exp2;
-
-    t_min = tc_max;
-    idx ^= step_mask;
-
-    // POP if bits flips disagree with ray direction
-
-    if ((idx & step_mask) != 0) {
-
-      // Get the different bits for each component.
-      // This is done by xoring the bit patterns of the new and old pos
-      // (float_as_int reinterprets a floating point number as int,
-      // it is a sort of reinterpret_cast). This work because the volume has
-      // been scaled between [1, 2]. Still digging why this is the case. 
-
-      unsigned int differing_bits = 0;
-      if ((step_mask & 1) != 0) differing_bits |= __float_as_int(pos.x) ^ __float_as_int(pos.x + scale_exp2);
-      if ((step_mask & 2) != 0) differing_bits |= __float_as_int(pos.y) ^ __float_as_int(pos.y + scale_exp2);
-      if ((step_mask & 4) != 0) differing_bits |= __float_as_int(pos.z) ^ __float_as_int(pos.z + scale_exp2);
-
-      // Get the scale at which the two differs. Here's there are different subtlelties related to how fp are stored.
-      // MIND BLOWN: differing bit (i.e. the MSB) extracted using the 
-      // exponent part of the fp representation. 
-      scale = (__float_as_int((float)differing_bits) >> 23) - 127; // position of the highest bit
-      scale_exp2 = __int_as_float((scale - CAST_STACK_DEPTH + 127) << 23); // exp2f(scale - s_max)
-      struct stack_entry&  e = stack[scale];
-      parent = e.parent;
-      t_max = e.t_max;
-
-      // Round cube position and extract child slot index.
-
-      int shx = __float_as_int(pos.x) >> scale;
-      int shy = __float_as_int(pos.y) >> scale;
-      int shz = __float_as_int(pos.z) >> scale;
-      pos.x = __int_as_float(shx << scale);
-      pos.y = __int_as_float(shy << scale);
-      pos.z = __int_as_float(shz << scale);
-      idx  = (shx & 1) | ((shy & 1) << 1) | ((shz & 1) << 2);
-
-      h = 0.0f;
-      child = NULL;
-
-    }
-  }
-  return make_float4(0);
-}
 
 template <typename T>
 void Octree<T>::getBlockList(std::vector<VoxelBlock<T>*>& blocklist, bool active){
@@ -1168,6 +975,12 @@ void Octree<T>::getAllocatedBlockList(Node<T> *,
  *
  *
  * Ray iterator definition
+ *
+ * A modified version of the ray-caster introduced in the paper:
+ * https://research.nvidia.com/publication/efficient-sparse-voxel-octrees
+ *
+ * Original code available at:
+ * https://code.google.com/p/efficient-sparse-voxel-octrees/
  *
  * 
 *****************************************************************************/
