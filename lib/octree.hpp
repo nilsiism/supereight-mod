@@ -289,9 +289,6 @@ private:
   bool updateLevel(morton_type * keys, int num_tasks, int target_level, 
       const morton_type scale_mask = 0x0);
 
-  // Masks code with the appropriate bitmask for the input three level.
-  unsigned int getMortonAtLevel(uint code, int level);
-
   void reserveBuffers(const int n);
   bool getKeysAtLevel(const morton_type* inputKeys, morton_type* outpuKeys, 
       unsigned int num_keys, int level);
@@ -752,12 +749,6 @@ int Octree<T>::nodeCountRecursive(Node<T> * node){
     n += (n ? nodeCountRecursive((node)->child(i)) : 0);
   }
   return n;
-}
-
-template <typename T>
-inline uint Octree<T>::getMortonAtLevel(uint code, int level){
-  const int shift = MAX_BITS - max_level_;
-  return code & MASK[level + shift-1];
 }
 
 template <typename T>
