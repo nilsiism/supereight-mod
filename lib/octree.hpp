@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MAX_BITS 21
 #define CAST_STACK_DEPTH 23
-#define SCALE_MASK ((morton_type)0x1FFu)
+#define SCALE_MASK ((morton_type)0xFF)
 
 uint64_t MASK[] = {
   0xf000000000000000,
