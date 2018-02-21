@@ -49,28 +49,38 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CAST_STACK_DEPTH 23
 #define SCALE_MASK ((morton_type)0xFF)
 
-uint64_t MASK[] = {
-  0xf000000000000000,
-  0xfe00000000000000,
-  0xffc0000000000000,
-  0xfff8000000000000,
-  0xffff000000000000,
-  0xffffe00000000000,
-  0xfffffc0000000000,
-  0xffffff8000000000,
-  0xfffffff000000000,
-  0xfffffffe00000000,
-  0xffffffffc0000000,
-  0xfffffffff8000000,
-  0xffffffffff000000,
-  0xffffffffffe00000,
-  0xfffffffffffc0000,
-  0xffffffffffff8000,
-  0xfffffffffffff000,
-  0xfffffffffffffe00,
-  0xffffffffffffffc0,
-  0xfffffffffffffff8,
-  0xffffffffffffffff
+/*
+ * Mask generated with:  
+   MASK[0] = 0x7000000000000000,
+   for(int i = 1; i < 21; ++i) {
+   MASK[i] = MASK[i-1] | (MASK[0] >> (i*3));
+   std::bitset<64> b(MASK[i]);
+   std::cout << std::hex << b.to_ullong() << std::endl;
+   }
+ *
+*/
+constexpr uint64_t MASK[] = {
+  0x7000000000000000,
+  0x7e00000000000000,
+  0x7fc0000000000000,
+  0x7ff8000000000000,
+  0x7fff000000000000,
+  0x7fffe00000000000,
+  0x7ffffc0000000000,
+  0x7fffff8000000000,
+  0x7ffffff000000000,
+  0x7ffffffe00000000,
+  0x7fffffffc0000000,
+  0x7ffffffff8000000,
+  0x7fffffffff000000,
+  0x7fffffffffe00000,
+  0x7ffffffffffc0000,
+  0x7fffffffffff8000,
+  0x7ffffffffffff000,
+  0x7ffffffffffffe00,
+  0x7fffffffffffffc0,
+  0x7ffffffffffffff8,
+  0x7fffffffffffffff
 };
 
 inline int __float_as_int(float value){
