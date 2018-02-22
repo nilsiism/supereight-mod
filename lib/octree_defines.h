@@ -32,11 +32,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef OCTREE_CONFIG_H
 #define OCTREE_CONFIG_H
 
+#include <cstdint>
 #include "math_utils.h"
 
 #define BLOCK_SIDE 8
 
-typedef unsigned long long int morton_type; 
+typedef uint64_t morton_type; 
 //   typedef long long int morton_type; 
 
 #endif

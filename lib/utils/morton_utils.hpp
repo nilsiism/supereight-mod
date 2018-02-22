@@ -24,8 +24,8 @@ inline uint64_t compact(uint64_t value) {
 }
 
 inline uint3 unpack_morton(uint64_t code){
-  return make_uint3(compact(code >> 0), compact(code >> 1), 
-                    compact(code >> 2));
+  return make_uint3(compact(code >> 0ull), compact(code >> 1ull), 
+                    compact(code >> 2ull));
 }
 
 inline uint64_t compute_morton(uint64_t x, 
