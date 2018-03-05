@@ -3,6 +3,7 @@
 #include <lodepng.h>
 #include <sstream>
 #include <math_utils.h>
+#include <algorithm>
 
 //http://stackoverflow.com/questions/236129/split-a-string-in-c
 static inline void split(const std::string &s, char delim, std::vector<std::string> &elems) {
@@ -15,11 +16,13 @@ static inline void split(const std::string &s, char delim, std::vector<std::stri
 
 template <typename T>
 void savePointCloud(const T* in, const int num_points, 
-    const char* filename){
+    const char* filename, const float3 init_pose){
   std::stringstream points;
 
   for(int i = 0; i < num_points; ++i ){
-    points << in[i].x << " " << in[i].y << " " << in[i].z << std::endl; 
+    points << in[i].x - init_pose.x 
+           << " " << in[i].y  - init_pose.y << " " 
+           << in[i].z - init_pose.z << std::endl; 
   }   
 
   std::ofstream f;
@@ -177,6 +180,76 @@ void save3DSlice(const MapType& in, MapOp op, const int3 lower, const int3 upper
   f << "SCALARS scalars float 1" << std::endl;
   f << "LOOKUP_TABLE default" << std::endl;
   f << scalars.str() << std::endl;
+  f.close();
+} 
+
+template <typename BlockList>
+void saveBlockList(const BlockList& in, const int3 shift, const char* filename){
+
+  std::stringstream x_coordinates, y_coordinates, z_coordinates, scalars;
+  std::ofstream f;
+  f.open(filename);
+
+  std::stringstream points;
+  std::stringstream cells;
+  int voxel_count = 0;
+
+  std::vector<int3> coords;
+  int num_blocks = in.size();
+  for(int i = 0; i < num_blocks; ++i) {
+    auto * block = in[i];
+    coords.push_back(block->coordinates());
+  }
+
+  auto comp = [](const int3& a, const int3& b) -> bool {
+      return (a.z < b.z && a.y < b.y && a.x < b.x);
+      };
+
+
+  std::sort(coords.begin(), coords.end(), comp);
+
+  int3 min_elem = coords[0];
+
+  std::cout << "Min element: " << min_elem.x << ", " << min_elem.y << ", " 
+    << min_elem.z <<  std::endl;
+  std::cout << "Shift: " << shift.x << ", " << shift.y << ", " 
+    << shift.z <<  std::endl;
+
+  const int step = 8;
+  for(unsigned int i = 0; i < coords.size(); ++i) {
+    // shift it to the origin
+    const int3 voxel = coords[i] - shift;
+    points << voxel.x      << " " << voxel.y << " " <<  voxel.z   << std::endl;
+    points << voxel.x+step << " " << voxel.y << " " <<  voxel.z   << std::endl;
+    points << voxel.x      << " " << voxel.y+step << " " <<  voxel.z  << std::endl;
+    points << voxel.x+step << " " << voxel.y+step << " " <<  voxel.z   << std::endl;
+    points << voxel.x   << " " << voxel.y   << " " <<  voxel.z+step << std::endl;
+    points << voxel.x+step << " " << voxel.y   << " " <<  voxel.z+step << std::endl;
+    points << voxel.x   << " " << voxel.y+step << " " <<  voxel.z+step << std::endl;
+    points << voxel.x+step << " " << voxel.y+step << " " <<  voxel.z+step << std::endl;
+
+    cells << "8";
+    for(int w = 0; w < 8; ++w) cells << " " << (voxel_count*8)+w;
+    cells << std::endl;
+    voxel_count++;
+  }
+
+  // Writing output vtk.
+  int num_points = voxel_count * 8;
+  int num_cells = voxel_count + num_points; 
+
+  f << "# vtk DataFile Version 1.0" << std::endl;
+  f << "vtk mesh" << std::endl;
+  f << "ASCII" << std::endl;
+  f << "DATASET UNSTRUCTURED_GRID" << std::endl;
+  f << "POINTS " << num_points << " FLOAT" << std::endl; 
+  f << points.str() << std::endl; 
+  f << "CELLS " << voxel_count << " " << num_cells << std::endl; 
+  f << cells.str() << std::endl;
+  f << "CELL_TYPES " << voxel_count << std::endl;
+  std::stringstream types;
+  for(int i = 0; i < voxel_count; i++) types << "11\n";
+  f << types.str() << std::endl;
   f.close();
 } 
 
