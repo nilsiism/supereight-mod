@@ -23,7 +23,7 @@ class InterpTest : public ::testing::Test {
       const int3 blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
       {136, 128, 128}, {128, 136, 128}, {136, 136, 128}, 
       {128, 128, 136}, {136, 128, 136}, {128, 136, 136}, {136, 136, 136}};
-      morton_type alloc_list[10];
+      octlib::key_t alloc_list[10];
       for(int i = 0; i < 10; ++i) {
         alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z);
       }

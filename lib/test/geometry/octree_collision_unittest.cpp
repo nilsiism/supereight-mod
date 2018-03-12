@@ -30,7 +30,7 @@ class OctreeCollisionTest : public ::testing::Test {
     virtual void SetUp() {
       oct_.init(256, 5);
       const int3 blocks[1] = {{56, 12, 254}};
-      morton_type alloc_list[1];
+      octlib::key_t alloc_list[1];
       alloc_list[0] = oct_.hash(blocks[0].x, blocks[0].y, blocks[0].z);
 
       auto update = [](Node<testT> * n){

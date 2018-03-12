@@ -32,7 +32,7 @@ TEST_F(MultiscaleTest, Init) {
 
 TEST_F(MultiscaleTest, PlainAlloc) {
   const int3 blocks[2] = {{56, 12, 254}, {87, 32, 423}};
-  morton_type alloc_list[2];
+  octlib::key_t alloc_list[2];
   for(int i = 0; i < 2; ++i) {
     alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z);
   }
@@ -47,7 +47,7 @@ TEST_F(MultiscaleTest, PlainAlloc) {
 
 TEST_F(MultiscaleTest, ScaledAlloc) {
   const int3 blocks[2] = {{200, 12, 25}, {87, 32, 423}};
-  morton_type alloc_list[2];
+  octlib::key_t alloc_list[2];
   for(int i = 0; i < 2; ++i) {
     alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z, 5);
   }
@@ -61,7 +61,7 @@ TEST_F(MultiscaleTest, ScaledAlloc) {
 
 TEST_F(MultiscaleTest, Iterator) {
   const int3 blocks[1] = {{56, 12, 254}};
-  morton_type alloc_list[1];
+  octlib::key_t alloc_list[1];
   alloc_list[0] = oct_.hash(blocks[0].x, blocks[0].y, blocks[0].z);
 
   oct_.alloc_update(alloc_list, 1);
@@ -81,7 +81,7 @@ TEST_F(MultiscaleTest, ChildrenMaskTest) {
   const int3 blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
     {136, 128, 128}, {128, 136, 128}, {136, 136, 128}, 
     {128, 128, 136}, {136, 128, 136}, {128, 136, 136}, {136, 136, 136}};
-  morton_type alloc_list[10];
+  octlib::key_t alloc_list[10];
   for(int i = 0; i < 10; ++i) {
     alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z, 5);
   }
@@ -103,7 +103,7 @@ TEST_F(MultiscaleTest, OctantAlloc) {
   const int3 blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
     {136, 128, 128}, {128, 136, 128}, {136, 136, 128}, 
     {128, 128, 136}, {136, 128, 136}, {128, 136, 136}, {136, 136, 136}};
-  morton_type alloc_list[10];
+  octlib::key_t alloc_list[10];
   for(int i = 0; i < 10; ++i) {
     alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z);
   }

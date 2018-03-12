@@ -12,7 +12,7 @@ TEST(MortonCoding, RandomInts) {
 
   for(int i = 0; i < 1000; ++i) {
     const uint3 vox = {dis(gen), dis(gen), dis(gen)};
-    const morton_type code = compute_morton(vox.x, vox.y, vox.z);
+    const octlib::key_t code = compute_morton(vox.x, vox.y, vox.z);
     const uint3 decoded = unpack_morton(code);
     ASSERT_EQ(decoded.x, vox.x);
     ASSERT_EQ(decoded.y, vox.y);
@@ -27,7 +27,7 @@ TEST(MortonCoding, ExhaustiveTest) {
     for(unsigned int y = 2048; y < 2050; ++y)
       for(unsigned int x = 0; x < 4096; ++x){
         const uint3 vox = {x, y, z};
-        const morton_type code = compute_morton(vox.x, vox.y, vox.z);
+        const octlib::key_t code = compute_morton(vox.x, vox.y, vox.z);
         const uint3 decoded = unpack_morton(code);
         ASSERT_EQ(decoded.x, vox.x);
         ASSERT_EQ(decoded.y, vox.y);

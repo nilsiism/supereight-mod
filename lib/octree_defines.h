@@ -37,7 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define BLOCK_SIDE 8
 
-typedef uint64_t morton_type; 
+namespace octlib {
+typedef uint64_t key_t; 
 //   typedef long long int morton_type; 
+}
 
 #endif

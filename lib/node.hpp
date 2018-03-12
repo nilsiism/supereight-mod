@@ -49,7 +49,7 @@ public:
   compute_type init_val() const { return traits_type::initValue(); }
 
   compute_type value_;
-  morton_type code;
+  octlib::key_t code;
   unsigned int side;
   time_t timestamp_;
   unsigned char children_mask_;

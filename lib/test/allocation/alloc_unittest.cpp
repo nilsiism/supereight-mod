@@ -19,8 +19,8 @@ TEST(AllocationTest, EmptySingleVoxel) {
   OctreeF oct;
   oct.init(256, 5);
   const int3 vox = {25, 65, 127};
-  const morton_type code = oct.hash(vox.x, vox.y, vox.z); 
-  morton_type allocList[1] = {code};
+  const octlib::key_t code = oct.hash(vox.x, vox.y, vox.z); 
+  octlib::key_t allocList[1] = {code};
   const float val = oct.get(vox.x, vox.y, vox.z);
   EXPECT_EQ(val, voxel_traits<float>::empty());
 }
@@ -30,8 +30,8 @@ TEST(AllocationTest, SetSingleVoxel) {
   OctreeF oct;
   oct.init(256, 5);
   const int3 vox = {25, 65, 127};
-  const morton_type code = oct.hash(vox.x, vox.y, vox.z); 
-  morton_type allocList[1] = {code};
+  const octlib::key_t code = oct.hash(vox.x, vox.y, vox.z); 
+  octlib::key_t allocList[1] = {code};
   oct.allocate(allocList, 1);
 
   VoxelBlock<float> * block = oct.fetch(vox.x, vox.y, vox.z);
@@ -48,7 +48,7 @@ TEST(AllocationTest, FetchOctant) {
   oct.init(256, 5);
   const int3 vox = {25, 65, 127};
   const uint code = oct.hash(vox.x, vox.y, vox.z); 
-  morton_type allocList[1] = {code};
+  octlib::key_t allocList[1] = {code};
   oct.allocate(allocList, 1);
 
   const int depth = 3; /* 32 voxels per side */

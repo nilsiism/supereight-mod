@@ -47,7 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define MAX_BITS 21
 #define CAST_STACK_DEPTH 23
-#define SCALE_MASK ((morton_type)0xFF)
+#define SCALE_MASK ((octlib::key_t)0xFF)
 
 /*
  * Mask generated with:  
@@ -128,7 +128,7 @@ public:
   // # of voxels per side in a voxel block
   static constexpr unsigned int blockSide = BLOCK_SIDE;
   // maximum tree depth in bits
-  static constexpr unsigned int max_depth = ((sizeof(morton_type)*8)/3);
+  static constexpr unsigned int max_depth = ((sizeof(octlib::key_t)*8)/3);
   // Tree depth at which blocks are found
   static constexpr unsigned int block_depth = max_depth - log2_const(BLOCK_SIDE);
 
@@ -235,12 +235,12 @@ public:
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
    */
-  morton_type hash(const int x, const int y, const int z) {
+  octlib::key_t hash(const int x, const int y, const int z) {
     constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
     return compute_morton(x, y, z) & MASK[morton_mask];   
   }
 
-  morton_type hash(const int x, const int y, const int z, morton_type scale) {
+  octlib::key_t hash(const int x, const int y, const int z, octlib::key_t scale) {
     constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
     return (compute_morton(x, y, z) & MASK[morton_mask]) | scale; 
   }
@@ -250,8 +250,8 @@ public:
    * morton number)
    * \param number of keys in the keys array
    */
-  bool allocate(morton_type *keys, int num_elem);
-  bool alloc_update(morton_type *keys, int num_elem);
+  bool allocate(octlib::key_t *keys, int num_elem);
+  bool alloc_update(octlib::key_t *keys, int num_elem);
 
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
@@ -286,7 +286,7 @@ private:
   friend class leaf_iterator<T>;
 
   // Allocation specific variables
-  morton_type* keys_at_level_;
+  octlib::key_t* keys_at_level_;
   int reserved_;
 
   // Private implementation of cached methods
@@ -295,16 +295,16 @@ private:
 
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
-  bool allocateLevel(morton_type * keys, int num_tasks, int target_level);
-  bool updateLevel(morton_type * keys, int num_tasks, int target_level, 
-      const morton_type scale_mask = 0x0);
+  bool allocateLevel(octlib::key_t * keys, int num_tasks, int target_level);
+  bool updateLevel(octlib::key_t * keys, int num_tasks, int target_level, 
+      const octlib::key_t scale_mask = 0x0);
 
   void reserveBuffers(const int n);
-  bool getKeysAtLevel(const morton_type* inputKeys, morton_type* outpuKeys, 
+  bool getKeysAtLevel(const octlib::key_t* inputKeys, octlib::key_t* outpuKeys, 
       unsigned int num_keys, int level);
-  bool getKeysAtLevel(const morton_type* inputKeys, morton_type* outpuKeys, 
-      unsigned int num_keys, const morton_type scale_mask, int level);
-  uint3 getChildFromCode(const morton_type code, const unsigned int level);
+  bool getKeysAtLevel(const octlib::key_t* inputKeys, octlib::key_t* outpuKeys, 
+      unsigned int num_keys, const octlib::key_t scale_mask, int level);
+  uint3 getChildFromCode(const octlib::key_t code, const unsigned int level);
 
   // General helpers
 
@@ -473,7 +473,7 @@ void Octree<T>::init(int size, float dim) {
   root_ = new Node<T>();
   root_->side = size;
   reserved_ = 1024;
-  keys_at_level_ = new morton_type[reserved_];
+  keys_at_level_ = new octlib::key_t[reserved_];
   std::memset(keys_at_level_, 0, reserved_);
 }
 
@@ -762,8 +762,8 @@ int Octree<T>::nodeCountRecursive(Node<T> * node){
 }
 
 template <typename T>
-inline bool Octree<T>::getKeysAtLevel(const morton_type * inputKeys, 
-    morton_type * outputKeys,  unsigned int num_keys, int level){
+inline bool Octree<T>::getKeysAtLevel(const octlib::key_t * inputKeys, 
+    octlib::key_t * outputKeys,  unsigned int num_keys, int level){
 
   const int shift = MAX_BITS - max_level_;
   outputKeys[0] = inputKeys[0] & MASK[level + shift-1];
@@ -774,9 +774,9 @@ inline bool Octree<T>::getKeysAtLevel(const morton_type * inputKeys,
 }
 
 template <typename T>
-inline bool Octree<T>::getKeysAtLevel(const morton_type * inputKeys, 
-    morton_type * outputKeys, unsigned int num_keys, 
-    const morton_type scale_mask, int level){
+inline bool Octree<T>::getKeysAtLevel(const octlib::key_t * inputKeys, 
+    octlib::key_t * outputKeys, unsigned int num_keys, 
+    const octlib::key_t scale_mask, int level){
 
   const int shift = MAX_BITS - max_level_;
   outputKeys[0] = inputKeys[0] & MASK[level + shift-1];
@@ -793,14 +793,14 @@ void Octree<T>::reserveBuffers(const int n){
   if(n > reserved_){
     // std::cout << "Reserving " << n << " entries in allocation buffers" << std::endl;
     delete[] keys_at_level_;
-    keys_at_level_ = new morton_type[n];
+    keys_at_level_ = new octlib::key_t[n];
     reserved_ = n;
   }
   block_memory_.reserve(n);
 }
 
 template <typename T>
-bool Octree<T>::allocate(morton_type *keys, int num_elem){
+bool Octree<T>::allocate(octlib::key_t *keys, int num_elem){
 
 #ifdef _OPENMP
   __gnu_parallel::sort(keys, keys+num_elem);
@@ -823,7 +823,7 @@ std::sort(keys, keys+num_elem);
 }
 
 template <typename T>
-bool Octree<T>::alloc_update(morton_type *keys, int num_elem){
+bool Octree<T>::alloc_update(octlib::key_t *keys, int num_elem){
 
 #ifdef _OPENMP
   __gnu_parallel::sort(keys, keys+num_elem);
@@ -847,7 +847,7 @@ std::sort(keys, keys+num_elem);
 }
 
 template <typename T>
-bool Octree<T>::allocateLevel(morton_type* keys, int num_tasks, int target_level){
+bool Octree<T>::allocateLevel(octlib::key_t* keys, int num_tasks, int target_level){
 
   int leaves_level = max_level_ - log2(blockSide);
   nodes_buffer_.reserve(num_tasks);
@@ -855,7 +855,7 @@ bool Octree<T>::allocateLevel(morton_type* keys, int num_tasks, int target_level
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
     Node<T> ** n = &root_;
-    morton_type myKey = keys[i];
+    octlib::key_t myKey = keys[i];
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
@@ -887,8 +887,8 @@ bool Octree<T>::allocateLevel(morton_type* keys, int num_tasks, int target_level
 }
 
 template <typename T>
-bool Octree<T>::updateLevel(morton_type* keys, int num_tasks, int target_level,
-    const morton_type scale_mask){
+bool Octree<T>::updateLevel(octlib::key_t* keys, int num_tasks, int target_level,
+    const octlib::key_t scale_mask){
 
   int leaves_level = max_level_ - log2(blockSide);
   nodes_buffer_.reserve(num_tasks);
@@ -896,7 +896,7 @@ bool Octree<T>::updateLevel(morton_type* keys, int num_tasks, int target_level,
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
     Node<T> ** n = &root_;
-    morton_type myKey = keys[i] & (~scale_mask);
+    octlib::key_t myKey = keys[i] & (~scale_mask);
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
@@ -930,7 +930,7 @@ bool Octree<T>::updateLevel(morton_type* keys, int num_tasks, int target_level,
 
 
 template <typename T>
-inline uint3 Octree<T>::getChildFromCode(morton_type code, 
+inline uint3 Octree<T>::getChildFromCode(octlib::key_t code, 
     const unsigned int level){
 
   int shift = max_level_ - level;
