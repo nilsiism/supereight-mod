@@ -269,6 +269,7 @@ class KinectFusion(SLAMAlgorithm):
         self.quat = None
 
         self.impl = 'openmp'
+        self.dump_volume = ''
         #self.ate_remove_offset = True
         #self.ate_align = True
 
