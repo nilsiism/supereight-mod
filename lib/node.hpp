@@ -51,12 +51,10 @@ public:
   compute_type value_;
   octlib::key_t code;
   unsigned int side;
-  time_t timestamp_;
   unsigned char children_mask_;
 
   Node(){
     value_ = init_val();
-    timestamp_ = 0;
     code = 0;
     side = 0;
     children_mask_ = 0;
