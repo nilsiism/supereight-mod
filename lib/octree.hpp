@@ -300,10 +300,6 @@ private:
       const octlib::key_t scale_mask = 0x0);
 
   void reserveBuffers(const int n);
-  bool getKeysAtLevel(const octlib::key_t* inputKeys, octlib::key_t* outpuKeys, 
-      unsigned int num_keys, int level);
-  bool getKeysAtLevel(const octlib::key_t* inputKeys, octlib::key_t* outpuKeys, 
-      unsigned int num_keys, const octlib::key_t scale_mask, int level);
   uint3 getChildFromCode(const octlib::key_t code, const unsigned int level);
 
   // General helpers
@@ -762,32 +758,6 @@ int Octree<T>::nodeCountRecursive(Node<T> * node){
 }
 
 template <typename T>
-inline bool Octree<T>::getKeysAtLevel(const octlib::key_t * inputKeys, 
-    octlib::key_t * outputKeys,  unsigned int num_keys, int level){
-
-  const int shift = MAX_BITS - max_level_;
-  outputKeys[0] = inputKeys[0] & MASK[level + shift-1];
-  for (unsigned int i = 1; i < num_keys; i++){
-    outputKeys[i] = inputKeys[i] & MASK[level + shift-1];
-  }
-  return true;
-}
-
-template <typename T>
-inline bool Octree<T>::getKeysAtLevel(const octlib::key_t * inputKeys, 
-    octlib::key_t * outputKeys, unsigned int num_keys, 
-    const octlib::key_t scale_mask, int level){
-
-  const int shift = MAX_BITS - max_level_;
-  outputKeys[0] = inputKeys[0] & MASK[level + shift-1];
-  for (unsigned int i = 1; i < num_keys; i++){
-    outputKeys[i] = inputKeys[i] & (MASK[level + shift-1] | scale_mask);
-  }
-
-  return true;
-}
-
-template <typename T>
 void Octree<T>::reserveBuffers(const int n){
 
   if(n > reserved_){
@@ -813,9 +783,12 @@ std::sort(keys, keys+num_elem);
 
   int last_elem = 0;
   bool success = false;
+
   const int leaf_level = max_level_ - log2(blockSide);
+  const unsigned int shift = MAX_BITS - max_level_ - 1;
   for (int level = 1; level <= leaf_level; level++){
-    getKeysAtLevel(keys, keys_at_level_, num_elem, level);
+    const octlib::key_t mask = MASK[level + shift];
+    compute_prefix(keys, keys_at_level_, num_elem, mask);
     last_elem = algorithms::unique(keys_at_level_, num_elem);
     success = allocateLevel(keys_at_level_, last_elem, level);
   }
@@ -834,11 +807,14 @@ std::sort(keys, keys+num_elem);
   num_elem = algorithms::unique_multiscale(keys, num_elem, SCALE_MASK);
   reserveBuffers(num_elem);
 
-  int leaves_level = max_level_ - log2(blockSide);
   int last_elem = 0;
   bool success = false;
+
+  const int leaves_level = max_level_ - log2(blockSide);
+  const unsigned int shift = MAX_BITS - max_level_ - 1;
   for (int level = 1; level <= leaves_level; level++){
-    getKeysAtLevel(keys, keys_at_level_, num_elem, SCALE_MASK, level);
+    const octlib::key_t mask = MASK[level + shift] | SCALE_MASK;
+    compute_prefix(keys, keys_at_level_, num_elem, mask);
     last_elem = algorithms::unique_multiscale(keys_at_level_, num_elem, 
         SCALE_MASK, level);
     success = updateLevel(keys_at_level_, last_elem, level, SCALE_MASK);
