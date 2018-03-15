@@ -2,6 +2,7 @@
 #define MORTON_UTILS_HPP
 #include <math_utils.h>
 #include <cstdint>
+#include <octree_defines.h>
 
 inline uint64_t expand(unsigned long long value) {
   uint64_t x = value & 0x1fffff;
@@ -40,4 +41,12 @@ inline uint64_t compute_morton(uint64_t x,
   return code;
 }
 
+static inline void compute_prefix(const octlib::key_t * in, octlib::key_t * out,
+    unsigned int num_keys, const octlib::key_t mask){
+
+#pragma omp parallel for
+  for (unsigned int i = 0; i < num_keys; i++){
+    out[i] = in[i] & mask;
+  }
+}
 #endif

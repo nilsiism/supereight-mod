@@ -1,3 +1,4 @@
+#include <random>
 #include "octree.hpp"
 #include "math_utils.h"
 #include "utils/morton_utils.hpp"
@@ -55,4 +56,45 @@ TEST(AllocationTest, FetchOctant) {
   Node<float> * node = oct.fetch_octant(vox.x, vox.y, vox.z, 3);
 
   EXPECT_NE(node, nullptr);
+}
+
+TEST(AllocationTest, MortonPrefixMask) {
+
+  const unsigned int max_bits = 21; 
+  const unsigned int block_side = 8;
+  const unsigned int size = std::pow(2, max_bits);
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<unsigned int> dis(0, size);
+
+  constexpr int num_samples = 10;
+  octlib::key_t keys[num_samples];
+  octlib::key_t tempkeys[num_samples];
+  int3 coordinates[num_samples];
+
+  for(int i = 0; i < num_samples; ++i) {
+    const uint3 vox = {dis(gen), dis(gen), dis(gen)};
+    coordinates[i] = make_int3(vox);
+    const octlib::key_t code = compute_morton(vox.x, vox.y, vox.z);
+    keys[i] = code;
+  }
+
+  const int max_level = log2(size);
+  const int leaf_level = max_level - log2(block_side);
+  const unsigned int shift = max_bits - max_level;
+  int edge = size/2;
+  for (int level = 0; level <= leaf_level; level++){
+    const octlib::key_t mask = MASK[level + shift];
+    compute_prefix(keys, tempkeys, num_samples, mask);
+    for(int i = 0; i < num_samples; ++i) {
+      const uint3 masked_vox = unpack_morton(tempkeys[i]);
+      ASSERT_EQ(masked_vox.x % edge, 0);
+      ASSERT_EQ(masked_vox.y % edge, 0);
+      ASSERT_EQ(masked_vox.z % edge, 0);
+      const int3 vox = coordinates[i];
+      // printf("vox: %d, %d, %d\n", vox.x, vox.y, vox.z);
+      // printf("masked level %d: %d, %d, %d\n", level, masked_vox.x, masked_vox.y, masked_vox.z );
+    }
+    edge = edge/2;
+  }
 }
