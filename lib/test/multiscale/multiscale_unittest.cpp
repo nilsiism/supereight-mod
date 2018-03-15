@@ -55,7 +55,7 @@ TEST_F(MultiscaleTest, ScaledAlloc) {
   oct_.alloc_update(alloc_list, 2);
   Node<testT>* n = oct_.fetch_octant(87, 32, 420, 5);
   ASSERT_TRUE(n != NULL);
-  n->value_ = 10.f;
+  n->value_[0] = 10.f;
   EXPECT_EQ(oct_.get(87, 32, 420), 10.f);
 }
 

@@ -48,19 +48,20 @@ public:
   compute_type empty() const { return traits_type::empty(); }
   compute_type init_val() const { return traits_type::initValue(); }
 
-  compute_type value_;
+  compute_type value_[8];
   octlib::key_t code;
   unsigned int side;
   unsigned char children_mask_;
 
   Node(){
-    value_ = init_val();
     code = 0;
     side = 0;
     children_mask_ = 0;
-    for (unsigned int i = 0; i < 8; i++)
+    for (unsigned int i = 0; i < 8; i++){
+      value_[i]     = init_val();
       child_ptr_[i] = NULL;
     }
+  }
 
     virtual ~Node(){};
 

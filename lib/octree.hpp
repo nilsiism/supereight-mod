@@ -386,7 +386,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!tmp){
       if(edge >= 32) return init_val();
-      return n->value_;
+      return n->value_[0];
     }
     n = tmp;
   }
@@ -1200,7 +1200,7 @@ class leaf_iterator {
         if(last < map_.nodes_buffer_.size()) {
           Node<T>* n = map_.nodes_buffer_[last++];
           return std::make_tuple(make_int3(unpack_morton(n->code)), 
-                                 n->side, n->value_);
+                                 n->side, n->value_[0]);
         } else {
           last = 0;
           state_ = LEAF_NODES; 
@@ -1211,7 +1211,7 @@ class leaf_iterator {
         if(last < map_.block_memory_.size()) {
           VoxelBlock<T>* n = map_.block_memory_[last++];
           return std::make_tuple(make_int3(unpack_morton(n->code)), 
-              int(VoxelBlock<T>::side), n->value_); 
+              int(VoxelBlock<T>::side), n->value_[0]); 
               /* the above int init required due to odr-use of static member */
         } else {
           last = 0;

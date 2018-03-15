@@ -39,7 +39,7 @@ class OctreeCollisionTest : public ::testing::Test {
          * except where leaves are allocated.
          */
         if(coords.x >= 48 && coords.y >= 0 && coords.z >= 240) {
-          n->value_ = 10.f;
+          n->value_[0] = 10.f;
         }
       };
       oct_.alloc_update(alloc_list, 1);
