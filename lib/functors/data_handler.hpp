@@ -40,11 +40,11 @@ class NodeHandler: DataHandlerBase<NodeHandler<FieldType>, Node<FieldType> > {
     NodeHandler(Node<FieldType>* ptr) : _node(ptr) {}
 
     typename Node<FieldType>::compute_type get() {
-      return _node->value_;
+      return _node->value_[0];
     }
 
     void set(const typename Node<FieldType>::compute_type& val) {
-      _node->value_ = val;
+      _node->value_[0] = val;
     }
 
   private:
