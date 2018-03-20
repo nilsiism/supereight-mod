@@ -80,16 +80,16 @@ namespace iterators {
 
       void update_node(Node<FieldType> * node, const float voxel_size) { 
         const int3 voxel = make_int3(unpack_morton(node->code));
-        const float3 delta = rotate(_Tcw, make_float3(voxel_size * node->side));
+        const float3 delta = rotate(_Tcw, make_float3(0.5f * voxel_size * node->side));
         const float3 delta_c = rotate(_K, delta);
         float3 base_cam = _Tcw * (make_float3(voxel) * voxel_size);
         float3 basepix_hom = _K * base_cam;
 
 #pragma omp simd
         for(int i = 0; i < 8; ++i) {
-          const float3 dir =  make_float3(i & 1, i & 2, i & 4);
-          const float3 vox_cam = base_cam + dir * delta; 
-          const float3 pix_hom = basepix_hom + dir * delta_c; 
+          const int3 dir =  make_int3((i & 1) > 0, (i & 2) > 0, (i & 4) > 0);
+          const float3 vox_cam = base_cam + make_float3(dir) * delta; 
+          const float3 pix_hom = basepix_hom + make_float3(dir) * delta_c; 
 
           if (vox_cam.z < 0.0001f) continue;
           const float inverse_depth = 1.f / pix_hom.z;
@@ -100,7 +100,7 @@ namespace iterators {
               pixel.y < 0.5f || pixel.y > _frame_size.y - 1.5f) continue;
 
           NodeHandler<FieldType> handler = {node, i};
-          _function(handler, voxel, vox_cam, pixel);
+          _function(handler, voxel + dir, vox_cam, pixel);
         }
       }
 

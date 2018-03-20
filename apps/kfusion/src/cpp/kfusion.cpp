@@ -279,13 +279,15 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
       it.apply();
     }
 
-    // std::stringstream f;
-    // f << "./slices/integration_" << frame << ".vtk";
-    // save3DSlice(volume._map_index, make_int3(0, volume._size/2, 0),
-    //   make_int3(volume._size, volume._size/2 + 1, volume._size), make_int3(volume._size), f.str().c_str());
+    // if(frame % 15 == 0) {
+    //   std::stringstream f;
+    //   f << "./slices/integration_" << frame << ".vtk";
+    //   save3DSlice(volume._map_index, make_int3(0, volume._size/2, 0),
+    //       make_int3(volume._size, volume._size/2 + 1, volume._size), make_int3(volume._size), f.str().c_str());
+    //   f.str("");
+    //   f.clear();
+    //   }
 
-    // f.str("");
-    // f.clear();
     // f << "./slices/collision_" << frame << ".vtk";
     // save3DSlice(volume._map_index, [](const Octree<FieldType>& map,
     //       const int x, const int y, const int z) {
