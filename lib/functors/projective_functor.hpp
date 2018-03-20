@@ -14,9 +14,9 @@ namespace iterators {
   class projective_functor {
 
     public:
-      projective_functor(MapT<FieldType>& map, UpdateF f, const Matrix4& Twc, 
+      projective_functor(MapT<FieldType>& map, UpdateF f, const Matrix4& Tcw, 
           const Matrix4& K, const int2 framesize) : 
-        _map(map), _function(f), _Twc(Twc), _K(K), _frame_size(framesize) {
+        _map(map), _function(f), _Tcw(Tcw), _K(K), _frame_size(framesize) {
       } 
 
       void build_active_list() {
@@ -29,7 +29,7 @@ namespace iterators {
         const float voxel_size = _map.dim()/_map.size();
         auto in_frustum_predicate = 
           std::bind(algorithms::in_frustum<VoxelBlock<FieldType>>, _1, 
-              voxel_size, _K*_Twc, _frame_size); 
+              voxel_size, _K*_Tcw, _frame_size); 
         auto is_active_predicate = [](const VoxelBlock<FieldType>* b) {
           return b->active();
         };
@@ -41,7 +41,7 @@ namespace iterators {
       void update_block(VoxelBlock<FieldType> * block, const float voxel_size) {
 
         const int3 blockCoord = block->coordinates();
-        const float3 delta = rotate(_Twc, make_float3(voxel_size, 0, 0));
+        const float3 delta = rotate(_Tcw, make_float3(voxel_size, 0, 0));
         const float3 cameraDelta = rotate(_K, delta);
         bool is_visible = false;
 
@@ -53,7 +53,7 @@ namespace iterators {
         for(z = blockCoord.z; z < zlast; ++z)
           for (y = blockCoord.y; y < ylast; ++y){
             int3 pix = make_int3(blockCoord.x, y, z);
-            float3 start = _Twc * make_float3((pix.x) * voxel_size, 
+            float3 start = _Tcw * make_float3((pix.x) * voxel_size, 
                 (pix.y) * voxel_size, (pix.z) * voxel_size);
             float3 camerastart = _K * start;
 #pragma omp simd
@@ -80,9 +80,9 @@ namespace iterators {
 
       void update_node(Node<FieldType> * node, const float voxel_size) { 
         const int3 voxel = make_int3(unpack_morton(node->code));
-        const float3 delta = rotate(_Twc, make_float3(voxel_size * node->side));
+        const float3 delta = rotate(_Tcw, make_float3(voxel_size * node->side));
         const float3 delta_c = rotate(_K, delta);
-        float3 base_cam = _Twc * (make_float3(voxel) * voxel_size);
+        float3 base_cam = _Tcw * (make_float3(voxel) * voxel_size);
         float3 basepix_hom = _K * base_cam;
 
 #pragma omp simd
@@ -126,7 +126,7 @@ namespace iterators {
     private:
       MapT<FieldType>& _map; 
       UpdateF _function; 
-      Matrix4 _Twc;
+      Matrix4 _Tcw;
       Matrix4 _K;
       int2 _frame_size;
       std::vector<VoxelBlock<FieldType>*> _active_list;
