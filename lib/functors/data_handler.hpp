@@ -37,18 +37,19 @@ public:
 template<typename FieldType>
 class NodeHandler: DataHandlerBase<NodeHandler<FieldType>, Node<FieldType> > {
   public:
-    NodeHandler(Node<FieldType>* ptr) : _node(ptr) {}
+    NodeHandler(Node<FieldType>* ptr, int i) : _node(ptr), _idx(i) {}
 
     typename Node<FieldType>::compute_type get() {
-      return _node->value_[0];
+      return _node->value_[_idx];
     }
 
     void set(const typename Node<FieldType>::compute_type& val) {
-      _node->value_[0] = val;
+      _node->value_[_idx] = val;
     }
 
   private:
     Node<FieldType> * _node; 
+    int _idx; 
 };
 
 

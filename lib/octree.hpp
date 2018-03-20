@@ -383,10 +383,11 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
+    const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) +  4*((z & edge) > 0);
+    Node<T>* tmp = n->child(childid);
     if(!tmp){
       if(edge >= 32) return init_val();
-      return n->value_[0];
+      return n->value_[childid];
     }
     n = tmp;
   }
@@ -405,7 +406,8 @@ inline typename Octree<T>::compute_type Octree<T>::get_fine(const int x,
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
+    const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) +  4*((z & edge) > 0);
+    Node<T>* tmp = n->child(childid);
     if(!tmp){
       return init_val();
     }
