@@ -13,9 +13,11 @@ namespace iterators {
 
   template <typename FieldType, template <typename FieldT> class MapT, 
             typename UpdateF>
+
     class axis_aligned {
+      public:
       axis_aligned(MapT<FieldType>& map, UpdateF f) : _map(map), _function(f),
-      _min(make_int3(0)), _max(make_int3(map.size)){ }
+      _min(make_int3(0)), _max(make_int3(map.size())){ }
 
       void update_block(VoxelBlock<FieldType> * block) {
         const int3 blockCoord = block->coordinates();
@@ -58,7 +60,7 @@ namespace iterators {
         list_size = nodes_list.size();
 #pragma omp parallel for
         for(unsigned int i = 0; i < list_size; ++i){
-          update_block(nodes_list[i]);
+          update_node(nodes_list[i]);
         }
       }
 

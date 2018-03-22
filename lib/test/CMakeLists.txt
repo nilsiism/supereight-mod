@@ -10,6 +10,7 @@ add_compile_options(-std=c++1y )
 include_directories(../../lib ../../utils ../../lib/geometry)
 
 add_subdirectory(allocation)
+add_subdirectory(functor)
 add_subdirectory(interp)
 add_subdirectory(multiscale)
 add_subdirectory(algorithms)
