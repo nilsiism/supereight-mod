@@ -49,8 +49,8 @@ namespace iterators {
 
       void apply() {
 
-        size_t list_size = 0;
         auto& block_list = _map.getBlockBuffer();
+        size_t list_size = block_list.size();
 #pragma omp parallel for
         for(unsigned int i = 0; i < list_size; ++i){
           update_block(block_list[i]);
