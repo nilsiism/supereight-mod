@@ -3,14 +3,15 @@
 #include "math_utils.h"
 #include "gtest/gtest.h"
 #include "functors/axis_aligned_functor.hpp"
+#include "../../../apps/kfusion/include/vtk-io.h"
 
 typedef float testT;
 template <>
 struct voxel_traits<testT> {
-  typedef float ComputeType;
-  typedef float StoredType;
-  static inline ComputeType empty(){ return 0.f; }
-  static inline ComputeType initValue(){ return 1.f; }
+  typedef float1 ComputeType;
+  typedef float1 StoredType;
+  static inline ComputeType empty(){ return {0.f}; }
+  static inline ComputeType initValue(){ return {1.f}; }
   static inline StoredType translate(const ComputeType value) {
      return value;
   }
@@ -23,7 +24,7 @@ float test_fun(float x, float y, float z) {
 class InterpolationTest : public ::testing::Test {
   protected:
     virtual void SetUp() {
-      unsigned size = 256;
+      unsigned size = 512;
       float dim = 5.f;
       oct_.init(size, dim); // 5 meters
 
@@ -32,14 +33,17 @@ class InterpolationTest : public ::testing::Test {
 
       const float voxelsize = oct_.dim()/oct_.size();
       const float inverse_voxelsize = 1.f/voxelsize;
+      const int band = 1 * inverse_voxelsize;
+      const int3 offset = make_int3(oct_.size()/2 - band/2);
       unsigned leaf_level = log2(size) - log2(Octree<testT>::blockSide);
-      for(float z = center - radius; z < center + radius; ++z)
-        for(float y = center - radius; y < center + radius; ++y)
-          for(float x = center - radius; x < center + radius; ++x) {
-            const int3 vox =  make_int3(x * inverse_voxelsize, 
-                y * inverse_voxelsize, z * inverse_voxelsize);
+      for(int z = 0; z < band; ++z) {
+        for(int y = 0; y < band; ++y) {
+          for(int x = 0; x < band; ++x) {
+            const int3 vox =  make_int3(x + offset.x, y + offset.y, z + offset.z);
             alloc_list.push_back(oct_.hash(vox.x, vox.y, vox.z, leaf_level));
           }
+        }
+      }
       oct_.alloc_update(alloc_list.data(), alloc_list.size());
     }
 
@@ -51,27 +55,37 @@ class InterpolationTest : public ::testing::Test {
 TEST_F(InterpolationTest, Init) {
 
   auto initialise = [](auto& handler, const int3& v) {
-    handler.set(test_fun(v.x, v.y, v.z));
+    float1 data;
+    data.x = test_fun(v.x, v.y, v.z);
+    handler.set(data);
   }; 
+
   iterators::functor::axis_aligned<testT, Octree, decltype(initialise)> 
     funct(oct_, initialise);
   funct.apply();
 
   auto test = [](auto& handler, const int3& v) {
     auto data = handler.get();
-    ASSERT_EQ(data, test_fun(v.x, v.y, v.z));
+    ASSERT_EQ(data.x, test_fun(v.x, v.y, v.z));
   }; 
   iterators::functor::axis_aligned<testT, Octree, decltype(test)> 
     funct_test(oct_, test);
   funct_test.apply();
+
+  std::stringstream f;
+  f << "./analytical_function.vtk";
+  save3DSlice(oct_, make_int3(0, oct_.size()/2, 0),
+      make_int3(oct_.size(), oct_.size()/2 + 1, oct_.size()), make_int3(oct_.size()), f.str().c_str());
+  f.str("");
+  f.clear();
 }
 
 // TEST_F(InterpolationTest, InterpAtPoints) {
 // 
 //   auto test = [this](auto& handler, const int3& v) {
 //     auto data = handler.get();
-//     float interpolated = oct_.interp(make_float3(v.x, v.y, v.z), [](const auto& val){ return val; });
-//     ASSERT_EQ(data, interpolated);
+//     float interpolated = oct_.interp(make_float3(v.x, v.y, v.z), [](const auto& val){ return val.x; });
+//     ASSERT_EQ(data.x, interpolated);
 //   }; 
 // 
 //   iterators::functor::axis_aligned<testT, Octree, decltype(test)> 
