@@ -386,7 +386,6 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) +  4*((z & edge) > 0);
     Node<T>* tmp = n->child(childid);
     if(!tmp){
-      if(edge >= 32) return init_val();
       return n->value_[childid];
     }
     n = tmp;
