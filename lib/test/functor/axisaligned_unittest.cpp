@@ -48,12 +48,12 @@ class AxisAlignedTest : public ::testing::Test {
 TEST_F(AxisAlignedTest, Init) {
 
   auto initialise = [](auto& handler, const int3&) {
-    handler.set(1.f);
+    handler.set(voxel_traits<testT>::initValue());
   }; 
 
   auto test = [](auto& handler, const int3&) {
     auto data = handler.get();
-    ASSERT_EQ(data, 1.f);
+    ASSERT_EQ(data, voxel_traits<testT>::initValue());
   }; 
 
   iterators::functor::axis_aligned<testT, Octree, decltype(initialise)> 
@@ -67,27 +67,23 @@ TEST_F(AxisAlignedTest, Init) {
 
 TEST_F(AxisAlignedTest, BBoxTest) {
 
-  auto set_to_ten = [](auto& handler, const int3& v) {
-        if(v.x > 100 && v.x < 150 && v.y > 100 && v.y < 150 && v.z > 100 
-            && v.z < 150) {
+  auto set_to_ten = [](auto& handler, const int3&) {
           handler.set(10.f);
-        }
     };
 
   iterators::functor::axis_aligned<testT, Octree, decltype(set_to_ten)> 
-    funct(oct_, set_to_ten);
+    funct(oct_, set_to_ten, make_int3(100), make_int3(151));
   funct.apply();
 
   for(int z = 50; z < 200; ++z)
     for(int y = 50; y < 200; ++y)
       for(int x = 50; x < 200; ++x) {
-        auto data = oct_.get(x, y, z);
-        if(x > 100 && x < 150 && y > 100 && y < 150 && z > 100 
-            && z < 150) {
-          if(data != 10.f) {
-            oct_.get(x, y, z);
-          }
+        auto * block = oct_.fetch(x, y, z);
+        if(block && in(x, 100, 150) && in(y, 100, 150) && in(z, 100, 150)){
+          ASSERT_EQ(block->data(make_int3(x, y, z)), 10.f);
+        }
+        else if(block) { 
+          ASSERT_EQ(block->data(make_int3(x, y, z)), voxel_traits<testT>::initValue());
         }
       }
-
 }

@@ -41,6 +41,11 @@ inline __host__ __device__ bool in(const unsigned int value, const unsigned int 
   return value >= lower && value <= upper;
 }
 
+inline __host__ __device__ bool in(const int value, const int lower, 
+               const int upper){
+  return value >= lower && value <= upper;
+}
+
 inline __host__     __device__ uchar3 operator*(const uchar3 a, float v) {
 	return make_uchar3(a.x * v, a.y * v, a.z * v);
 }
