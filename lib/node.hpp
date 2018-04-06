@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math_utils.h>
 #include <atomic>
 #include <octree_defines.h>
-#include <memory_pool.hpp>
+#include <utils/memory_pool.hpp>
 
 template <typename T>
 class Node {

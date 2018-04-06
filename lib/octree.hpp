@@ -40,7 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <tuple>
 #include <parallel/algorithm>
 #include <node.hpp>
-#include <memory_pool.hpp>
+#include <utils/memory_pool.hpp>
 #include <algorithms/unique.hpp>
 #include <geometry/aabb_collision.hpp>
 #include <interp_gather.hpp>
