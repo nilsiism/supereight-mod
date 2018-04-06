@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utils/memory_pool.hpp>
 #include <algorithms/unique.hpp>
 #include <geometry/aabb_collision.hpp>
-#include <interp_gather.hpp>
+#include <interpolation/interp_gather.hpp>
 
 #define MAX_BITS 21
 #define CAST_STACK_DEPTH 23

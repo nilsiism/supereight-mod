@@ -1,6 +1,6 @@
 #include "octree.hpp"
 #include "math_utils.h"
-#include "interp_gather.hpp"
+#include "interpolation/interp_gather.hpp"
 #include "gtest/gtest.h"
 
 typedef float testT;
