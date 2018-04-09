@@ -19,10 +19,10 @@ TEST(AllocationTest, EmptySingleVoxel) {
   typedef Octree<float> OctreeF;
   OctreeF oct;
   oct.init(256, 5);
-  const int3 vox = {25, 65, 127};
-  const octlib::key_t code = oct.hash(vox.x, vox.y, vox.z); 
+  const Eigen::Vector3i vox = {25, 65, 127};
+  const octlib::key_t code = oct.hash(vox(0), vox(1), vox(2)); 
   octlib::key_t allocList[1] = {code};
-  const float val = oct.get(vox.x, vox.y, vox.z);
+  const float val = oct.get(vox(0), vox(1), vox(2));
   EXPECT_EQ(val, voxel_traits<float>::empty());
 }
 
@@ -30,16 +30,16 @@ TEST(AllocationTest, SetSingleVoxel) {
   typedef Octree<float> OctreeF;
   OctreeF oct;
   oct.init(256, 5);
-  const int3 vox = {25, 65, 127};
-  const octlib::key_t code = oct.hash(vox.x, vox.y, vox.z); 
+  const Eigen::Vector3i vox = {25, 65, 127};
+  const octlib::key_t code = oct.hash(vox(0), vox(1), vox(2)); 
   octlib::key_t allocList[1] = {code};
   oct.allocate(allocList, 1);
 
-  VoxelBlock<float> * block = oct.fetch(vox.x, vox.y, vox.z);
+  VoxelBlock<float> * block = oct.fetch(vox(0), vox(1), vox(2));
   float written_val = 2.f;
   block->data(vox, written_val);
 
-  const float read_val = oct.get(vox.x, vox.y, vox.z);
+  const float read_val = oct.get(vox(0), vox(1), vox(2));
   EXPECT_EQ(written_val, read_val);
 }
 
@@ -47,13 +47,13 @@ TEST(AllocationTest, FetchOctant) {
   typedef Octree<float> OctreeF;
   OctreeF oct;
   oct.init(256, 5);
-  const int3 vox = {25, 65, 127};
-  const uint code = oct.hash(vox.x, vox.y, vox.z); 
+  const Eigen::Vector3i vox = {25, 65, 127};
+  const uint code = oct.hash(vox(0), vox(1), vox(2)); 
   octlib::key_t allocList[1] = {code};
   oct.allocate(allocList, 1);
 
   const int depth = 3; /* 32 voxels per side */
-  Node<float> * node = oct.fetch_octant(vox.x, vox.y, vox.z, 3);
+  Node<float> * node = oct.fetch_octant(vox(0), vox(1), vox(2), 3);
 
   EXPECT_NE(node, nullptr);
 }
@@ -65,17 +65,17 @@ TEST(AllocationTest, MortonPrefixMask) {
   const unsigned int size = std::pow(2, max_bits);
   std::random_device rd;
   std::mt19937 gen(rd());
-  std::uniform_int_distribution<unsigned int> dis(0, size);
+  std::uniform_int_distribution<int> dis(0, size);
 
   constexpr int num_samples = 10;
   octlib::key_t keys[num_samples];
   octlib::key_t tempkeys[num_samples];
-  int3 coordinates[num_samples];
+  Eigen::Vector3i coordinates[num_samples];
 
   for(int i = 0; i < num_samples; ++i) {
-    const uint3 vox = {dis(gen), dis(gen), dis(gen)};
-    coordinates[i] = make_int3(vox);
-    const octlib::key_t code = compute_morton(vox.x, vox.y, vox.z);
+    const Eigen::Vector3i vox = {dis(gen), dis(gen), dis(gen)};
+    coordinates[i] = Eigen::Vector3i(vox);
+    const octlib::key_t code = compute_morton(vox(0), vox(1), vox(2));
     keys[i] = code;
   }
 
@@ -87,13 +87,13 @@ TEST(AllocationTest, MortonPrefixMask) {
     const octlib::key_t mask = MASK[level + shift];
     compute_prefix(keys, tempkeys, num_samples, mask);
     for(int i = 0; i < num_samples; ++i) {
-      const uint3 masked_vox = unpack_morton(tempkeys[i]);
-      ASSERT_EQ(masked_vox.x % edge, 0);
-      ASSERT_EQ(masked_vox.y % edge, 0);
-      ASSERT_EQ(masked_vox.z % edge, 0);
-      const int3 vox = coordinates[i];
-      // printf("vox: %d, %d, %d\n", vox.x, vox.y, vox.z);
-      // printf("masked level %d: %d, %d, %d\n", level, masked_vox.x, masked_vox.y, masked_vox.z );
+      const Eigen::Vector3i masked_vox = unpack_morton(tempkeys[i]);
+      ASSERT_EQ(masked_vox(0) % edge, 0);
+      ASSERT_EQ(masked_vox(1) % edge, 0);
+      ASSERT_EQ(masked_vox(2) % edge, 0);
+      const Eigen::Vector3i vox = coordinates[i];
+      // printf("vox: %d, %d, %d\n", vox(0), vox(1), vox(2));
+      // printf("masked level %d: %d, %d, %d\n", level, masked_vox(0), masked_vox(1), masked_vox(2) );
     }
     edge = edge/2;
   }

@@ -8,6 +8,7 @@
 #include <cuda_runtime.h>
 #endif
 #include "cutil_math.h"
+#include "Eigen/Dense"
 
 
 typedef struct sMatrix4 {
@@ -16,6 +17,31 @@ typedef struct sMatrix4 {
 
 inline __host__ __device__ float3 get_translation(const Matrix4& view) {
 	return make_float3(view.data[0].w, view.data[1].w, view.data[2].w);
+}
+
+template <typename T>
+T fracf(const T& v) {
+  return v - floor(v);
+}
+
+template <typename T>
+T floorf(const T& v) {
+  return floor(v);
+}
+
+template <typename S, typename T>
+auto max(const S& a, const T& b) {
+  return a.cwiseMax(b);
+}
+
+template <typename S, typename T>
+auto min(const S& a, const T& b) {
+  return a.cwiseMin(b);
+}
+
+template <typename T>
+T fabs(const T& v) {
+  return v.cwiseAbs();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

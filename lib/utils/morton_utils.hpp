@@ -3,6 +3,7 @@
 #include <math_utils.h>
 #include <cstdint>
 #include <octree_defines.h>
+#include <Eigen/Dense>
 
 inline uint64_t expand(unsigned long long value) {
   uint64_t x = value & 0x1fffff;
@@ -24,8 +25,8 @@ inline uint64_t compact(uint64_t value) {
   return x;
 }
 
-inline uint3 unpack_morton(uint64_t code){
-  return make_uint3(compact(code >> 0ull), compact(code >> 1ull), 
+inline Eigen::Vector3i unpack_morton(uint64_t code){
+  return Eigen::Vector3i(compact(code >> 0ull), compact(code >> 1ull), 
                     compact(code >> 2ull));
 }
 

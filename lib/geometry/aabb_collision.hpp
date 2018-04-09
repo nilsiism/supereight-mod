@@ -20,12 +20,12 @@ namespace geometry {
     return (std::fabs(b - a) > (a_edge + b_edge)/2) ? 0 : 1;
   }
 
-  inline int aabb_aabb_collision(const int3 a, const int3 a_edge, 
-      const int3 b, const int3 b_edge){
+  inline int aabb_aabb_collision(const Eigen::Vector3i a, const Eigen::Vector3i a_edge, 
+      const Eigen::Vector3i b, const Eigen::Vector3i b_edge){
 
-    return axis_overlap(a.x, a_edge.x, b.x, b_edge.x) && 
-           axis_overlap(a.y, a_edge.y, b.y, b_edge.y) && 
-           axis_overlap(a.z, a_edge.z, b.z, b_edge.z);
+    return axis_overlap(a(0), a_edge(0), b(0), b_edge(0)) && 
+           axis_overlap(a(1), a_edge(1), b(1), b_edge(1)) && 
+           axis_overlap(a(2), a_edge(2), b(2), b_edge(2));
   }
 }
 #endif

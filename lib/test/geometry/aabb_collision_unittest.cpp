@@ -4,34 +4,34 @@
 
 TEST(AABBAABBTest, SquareOverlap) {
 
-  const int3 a = make_int3(5, 6, 9);
-  const int3 a_edge = make_int3(3);
-  const int3 b = make_int3(4, 4, 8);
-  const int3 b_edge = make_int3(3);
+  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(3);
+  const Eigen::Vector3i b = Eigen::Vector3i{4, 4, 8};
+  const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(3);
   int overlaps = geometry::aabb_aabb_collision(a, a_edge, b, b_edge);
   ASSERT_EQ(overlaps, 1);
 }
 
 TEST(AABBAABBTest, SquareDisjoint1Axis) {
 
-  const int3 a = make_int3(5, 6, 9);
-  const int3 a_edge = make_int3(3);
-  const int3 b = make_int3(4, 4, 1);
-  const int3 b_edge = make_int3(3);
+  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(3);
+  const Eigen::Vector3i b = Eigen::Vector3i{4, 4, 1};
+  const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(3);
   int overlaps = geometry::aabb_aabb_collision(a, a_edge, b, b_edge);
   ASSERT_EQ(overlaps, 0);
 }
 
 TEST(AABBAABBTest, SquareDisjoint2Axis) {
   /* Disjoint on y and z */
-  const int3 a = make_int3(5, 6, 9);
-  const int3 a_edge = make_int3(3);
-  const int3 b = make_int3(6, 22, 13);
-  const int3 b_edge = make_int3(10);
+  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(3);
+  const Eigen::Vector3i b = Eigen::Vector3i{6, 22, 13};
+  const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(10);
 
-  int overlapx = geometry::axis_overlap(a.x, a_edge.x, b.x, b_edge.x);
-  int overlapy = geometry::axis_overlap(a.y, a_edge.y, b.y, b_edge.y);
-  int overlapz = geometry::axis_overlap(a.z, a_edge.z, b.z, b_edge.z);
+  int overlapx = geometry::axis_overlap(a(0), a_edge(0), b(0), b_edge(0));
+  int overlapy = geometry::axis_overlap(a(1), a_edge(1), b(1), b_edge(1));
+  int overlapz = geometry::axis_overlap(a(2), a_edge(2), b(2), b_edge(2));
 
   ASSERT_EQ(overlapx, 1);
   ASSERT_EQ(overlapy, 0);
@@ -43,14 +43,14 @@ TEST(AABBAABBTest, SquareDisjoint2Axis) {
 
 TEST(AABBAABBTest, SquareDisjoint) {
   /* Disjoint on x, y and z */
-  const int3 a = make_int3(5, 6, 9);
-  const int3 a_edge = make_int3(4);
-  const int3 b = make_int3(12, 22, 43);
-  const int3 b_edge = make_int3(10);
+  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(4);
+  const Eigen::Vector3i b = Eigen::Vector3i{12, 22, 43};
+  const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(10);
 
-  int overlapx = geometry::axis_overlap(a.x, a_edge.x, b.x, b_edge.x);
-  int overlapy = geometry::axis_overlap(a.y, a_edge.y, b.y, b_edge.y);
-  int overlapz = geometry::axis_overlap(a.z, a_edge.z, b.z, b_edge.z);
+  int overlapx = geometry::axis_overlap(a(0), a_edge(0), b(0), b_edge(0));
+  int overlapy = geometry::axis_overlap(a(1), a_edge(1), b(1), b_edge(1));
+  int overlapz = geometry::axis_overlap(a(2), a_edge(2), b(2), b_edge(2));
 
   ASSERT_EQ(overlapx, 0);
   ASSERT_EQ(overlapy, 0);
@@ -62,14 +62,14 @@ TEST(AABBAABBTest, SquareDisjoint) {
 
 TEST(AABBAABBTest, SquareEnclosed) {
   /* Disjoint on x, y and z */
-  const int3 a = make_int3(5, 6, 9);
-  const int3 a_edge = make_int3(10);
-  const int3 b = make_int3(6, 7, 8);
-  const int3 b_edge = make_int3(2);
+  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(10);
+  const Eigen::Vector3i b = Eigen::Vector3i{6, 7, 8};
+  const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(2);
 
-  int overlapx = geometry::axis_overlap(a.x, a_edge.x, b.x, b_edge.x);
-  int overlapy = geometry::axis_overlap(a.y, a_edge.y, b.y, b_edge.y);
-  int overlapz = geometry::axis_overlap(a.z, a_edge.z, b.z, b_edge.z);
+  int overlapx = geometry::axis_overlap(a(0), a_edge(0), b(0), b_edge(0));
+  int overlapy = geometry::axis_overlap(a(1), a_edge(1), b(1), b_edge(1));
+  int overlapz = geometry::axis_overlap(a(2), a_edge(2), b(2), b_edge(2));
 
   ASSERT_EQ(overlapx, 1);
   ASSERT_EQ(overlapy, 1);
