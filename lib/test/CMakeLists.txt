@@ -9,6 +9,7 @@ enable_testing()
 add_compile_options(-std=c++1y )
 include_directories(../../lib ../../utils ../../lib/geometry)
 
+add_subdirectory(octree)
 add_subdirectory(allocation)
 add_subdirectory(functor)
 add_subdirectory(interp)
