@@ -7,7 +7,7 @@ find_package(GTest REQUIRED)
 find_package(Eigen3 REQUIRED)
 
 enable_testing()
-add_compile_options(-std=c++1y )
+add_compile_options(-std=c++1y -O3)
 include_directories(../../lib ../../utils ../../lib/geometry ${EIGEN3_INCLUDE_DIR})
 
 add_subdirectory(allocation)
