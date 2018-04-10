@@ -112,7 +112,7 @@ TEST_F(OctreeCollisionTest, Collision){
     for(z = blockCoord(2); z < zlast; ++z){
       for (y = blockCoord(1); y < ylast; ++y){
         for (x = blockCoord(0); x < xlast; ++x){
-          block->data(Eigen::Vector3i{x, y, z}, 2.f);
+          block->data(Eigen::Vector3i(x, y, z), 2.f);
         }
       }
     }
@@ -141,14 +141,14 @@ TEST_F(OctreeCollisionTest, CollisionFreeLeaf){
     for(z = blockCoord(2); z < zlast; ++z){
       for (y = blockCoord(1); y < ylast; ++y){
         for (x = blockCoord(0); x < xlast; ++x){
-          block->data(Eigen::Vector3i{x, y, z}, 2.f);
+          block->data(Eigen::Vector3i(x, y, z), 2.f);
         }
       }
     }
     for(z = zlast; z < zlast + blockSide/2; ++z){
       for (y = ylast; y < ylast + blockSide/2; ++y){
         for (x = xlast; x < xlast + blockSide/2; ++x){
-          block->data(Eigen::Vector3i{x, y, z}, 10.f);
+          block->data(Eigen::Vector3i(x, y, z), 10.f);
         }
       }
     }

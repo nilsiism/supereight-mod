@@ -368,7 +368,7 @@ inline void  Octree<T>::set(const int x,
     n = tmp;
   }
 
-  static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i{x, y, z}, val);
+  static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z), val);
 }
 
 
@@ -392,7 +392,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     n = tmp;
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i{x, y, z});
+  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
 }
 
 template <typename T>
@@ -414,7 +414,7 @@ inline typename Octree<T>::compute_type Octree<T>::get_fine(const int x,
     n = tmp;
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i{x, y, z});
+  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
 }
 
 template <typename T>
@@ -426,7 +426,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     const Eigen::Vector3i upper = lower + Eigen::Vector3i::Constant(blockSide-1);
     if(in(x, lower(0), upper(0)) && in(y, lower(1), upper(1)) &&
        in(z, lower(2), upper(2))){
-      return cached->data(Eigen::Vector3i{x, y, z});
+      return cached->data(Eigen::Vector3i(x, y, z));
     }
   }
 
@@ -443,7 +443,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     }
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i{x, y, z});
+  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
 }
 
 template <typename T>
@@ -624,7 +624,7 @@ Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos) const {
           * factor(0)) * factor(1)) * factor(2);
 
   return gradient
-    * Eigen::Vector3f{dim_ / size_, dim_ / size_, dim_ / size_}
+    * Eigen::Vector3f(dim_ / size_, dim_ / size_, dim_ / size_)
     * (0.5f);
 
 }
@@ -714,7 +714,7 @@ Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos, FieldSelector select)
           * factor(0)) * factor(1)) * factor(2);
 
   return gradient
-    * Eigen::Vector3f{dim_ / size_, dim_ / size_, dim_ / size_}
+    * Eigen::Vector3f(dim_ / size_, dim_ / size_, dim_ / size_)
     * (0.5f);
 }
 
@@ -980,7 +980,7 @@ class ray_iterator {
     ray_iterator(const Octree<T>& m, const Eigen::Vector3f origin, 
         const Eigen::Vector3f direction, float nearPlane, float farPlane) : map_(m) {
 
-      pos_ = Eigen::Vector3f{1.0f, 1.0f, 1.0f};
+      pos_ = Eigen::Vector3f(1.0f, 1.0f, 1.0f);
       idx_ = 0;
       parent_ = map_.root_;
       child_ = NULL;

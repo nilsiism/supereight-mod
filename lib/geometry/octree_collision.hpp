@@ -59,7 +59,7 @@ collision_status collides_with(const VoxelBlock<FieldType>* block,
         const Eigen::Vector3i vox{x, y, z};
         if(!geometry::aabb_aabb_collision(bbox, side, 
           vox, Eigen::Vector3i::Constant(1))) continue;
-        value = block->data(Eigen::Vector3i{x, y, z});
+        value = block->data(Eigen::Vector3i(x, y, z));
         status = update_status(status, test(value));
       }
     }

@@ -4,9 +4,9 @@
 
 TEST(AABBAABBTest, SquareOverlap) {
 
-  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a = Eigen::Vector3i(5, 6, 9);
   const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(3);
-  const Eigen::Vector3i b = Eigen::Vector3i{4, 4, 8};
+  const Eigen::Vector3i b = Eigen::Vector3i(4, 4, 8);
   const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(3);
   int overlaps = geometry::aabb_aabb_collision(a, a_edge, b, b_edge);
   ASSERT_EQ(overlaps, 1);
@@ -14,9 +14,9 @@ TEST(AABBAABBTest, SquareOverlap) {
 
 TEST(AABBAABBTest, SquareDisjoint1Axis) {
 
-  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a = Eigen::Vector3i(5, 6, 9);
   const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(3);
-  const Eigen::Vector3i b = Eigen::Vector3i{4, 4, 1};
+  const Eigen::Vector3i b = Eigen::Vector3i(4, 4, 1);
   const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(3);
   int overlaps = geometry::aabb_aabb_collision(a, a_edge, b, b_edge);
   ASSERT_EQ(overlaps, 0);
@@ -24,9 +24,9 @@ TEST(AABBAABBTest, SquareDisjoint1Axis) {
 
 TEST(AABBAABBTest, SquareDisjoint2Axis) {
   /* Disjoint on y and z */
-  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a = Eigen::Vector3i(5, 6, 9);
   const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(3);
-  const Eigen::Vector3i b = Eigen::Vector3i{6, 22, 13};
+  const Eigen::Vector3i b = Eigen::Vector3i(6, 22, 13);
   const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(10);
 
   int overlapx = geometry::axis_overlap(a(0), a_edge(0), b(0), b_edge(0));
@@ -43,9 +43,9 @@ TEST(AABBAABBTest, SquareDisjoint2Axis) {
 
 TEST(AABBAABBTest, SquareDisjoint) {
   /* Disjoint on x, y and z */
-  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a = Eigen::Vector3i(5, 6, 9);
   const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(4);
-  const Eigen::Vector3i b = Eigen::Vector3i{12, 22, 43};
+  const Eigen::Vector3i b = Eigen::Vector3i(12, 22, 43);
   const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(10);
 
   int overlapx = geometry::axis_overlap(a(0), a_edge(0), b(0), b_edge(0));
@@ -62,9 +62,9 @@ TEST(AABBAABBTest, SquareDisjoint) {
 
 TEST(AABBAABBTest, SquareEnclosed) {
   /* Disjoint on x, y and z */
-  const Eigen::Vector3i a = Eigen::Vector3i{5, 6, 9};
+  const Eigen::Vector3i a = Eigen::Vector3i(5, 6, 9);
   const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(10);
-  const Eigen::Vector3i b = Eigen::Vector3i{6, 7, 8};
+  const Eigen::Vector3i b = Eigen::Vector3i(6, 7, 8);
   const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(2);
 
   int overlapx = geometry::axis_overlap(a(0), a_edge(0), b(0), b_edge(0));
