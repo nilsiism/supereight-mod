@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(kfusion)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g ")
@@ -121,7 +122,7 @@ find_package(Qt5Widgets)
 find_package(Qt5Gui)
 find_package(Qt5OpenGL)
 find_package(Qt5PrintSupport)
-include_directories(./include ${TOON_INCLUDE_PATHS} ${EIGEN3_INCLUDE_DIRS} 
+include_directories(./include ${TOON_INCLUDE_PATHS} ${EIGEN3_INCLUDE_DIR} 
   ./thirdparty ../../lib ../../utils)
 
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
