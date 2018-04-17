@@ -1,6 +1,7 @@
 #ifndef OCTANT_OPS_HPP
 #define OCTANT_OPS_HPP
 #include "utils/morton_utils.hpp"
+#include "octree_defines.h"
 /*
  * Algorithm 5 of p4est paper: https://epubs.siam.org/doi/abs/10.1137/100791634
  */
