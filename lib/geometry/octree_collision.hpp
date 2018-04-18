@@ -88,9 +88,6 @@ collision_status collides_with(const Octree<FieldType>& map,
     typename Node<FieldType>::compute_type parent_val;
   } stack_entry;
 
-  constexpr int3 offsets[8] = {{0, 0 ,0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0},
-    {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};
-
   stack_entry stack[Octree<FieldType>::max_depth*8 + 1];
   size_t stack_idx = 0;
 
@@ -123,9 +120,9 @@ collision_status collides_with(const Octree<FieldType>& map,
       child_descr.node_ptr = NULL;
       child_descr.side = current.side / 2;
       child_descr.coordinates = 
-          make_int3(current.coordinates.x + child_descr.side*offsets[i].x,
-                    current.coordinates.y + child_descr.side*offsets[i].y,
-                    current.coordinates.z + child_descr.side*offsets[i].z);
+          make_int3(current.coordinates.x + child_descr.side*((i & 1) > 0),
+                    current.coordinates.y + child_descr.side*((i & 2) > 0),
+                    current.coordinates.z + child_descr.side*((i & 4) > 0));
       const bool overlaps = geometry::aabb_aabb_collision(bbox, side, 
           child_descr.coordinates, 
               make_int3(child_descr.side));
