@@ -2,6 +2,7 @@
 #define OCTANT_OPS_HPP
 #include "utils/morton_utils.hpp"
 #include "octree_defines.h"
+
 /*
  * Algorithm 5 of p4est paper: https://epubs.siam.org/doi/abs/10.1137/100791634
  */
@@ -15,6 +16,22 @@ inline uint3 face_neighbour(const octlib::key_t o,
   coords.z = coords.z + ((face == 4) ? -side : (face == 5) ? side : 0);
   return {coords.x, coords.y, coords.z};
 }
+
+/*
+ * Return true if octant is a descendant of ancestor
+ */
+inline bool descendant(const octlib::key_t& octant,
+    const octlib::key_t& ancestor) {
+  return ancestor & octant;
+}
+
+/*
+ * Compute the morton code
+ */
+// inline octlib::key_t parent(const octlib::key_t& octant) {
+// 
+// }
+                       
 
 #endif
 

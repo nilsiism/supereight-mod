@@ -19,3 +19,10 @@ TEST(Octree, OctantFaceNeighbours) {
   }
 }
 
+TEST(Octree, OctantDescendant) {
+  const unsigned max_depth = 8;
+  uint3 octant = {112, 80, 160};
+  octlib::key_t code = compute_morton(octant.x, octant.y, octant.z);
+  octlib::key_t root = 0;
+  ASSERT_EQ(root, descendant(code, root)); 
+}
