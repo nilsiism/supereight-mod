@@ -25,7 +25,7 @@ inline uint3 face_neighbour(const octlib::key_t o,
  */
 inline bool descendant(const octlib::key_t& octant,
     const octlib::key_t& ancestor) {
-  return ancestor & octant;
+  return (ancestor & octant) == ancestor;
 }
 
 /*
