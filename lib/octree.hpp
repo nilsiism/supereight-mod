@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math_utils.h>
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
+#include "octant_ops.hpp"
 #include <algorithm>
 #include <tuple>
 #include <parallel/algorithm>
@@ -263,7 +264,6 @@ private:
       const octlib::key_t scale_mask = 0x0);
 
   void reserveBuffers(const int n);
-  uint3 getChildFromCode(const octlib::key_t code, const unsigned int level);
 
   // General helpers
 
@@ -799,9 +799,7 @@ bool Octree<T>::allocateLevel(octlib::key_t* keys, int num_tasks, int target_lev
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
-
-      uint3 child = getChildFromCode(myKey, level);
-      int index = child.x + child.y*2 + child.z*4;
+      int index = child_id(myKey, level, max_level_); 
       Node<T> * parent = *n;
       n = &(*n)->child(index);
 
@@ -840,9 +838,7 @@ bool Octree<T>::updateLevel(octlib::key_t* keys, int num_tasks, int target_level
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
-
-      uint3 child = getChildFromCode(myKey, level);
-      int index = child.x + child.y*2 + child.z*4;
+      int index = child_id(myKey, level, max_level_); 
       Node<T> * parent = *n;
       n = &(*n)->child(index);
 
@@ -866,20 +862,6 @@ bool Octree<T>::updateLevel(octlib::key_t* keys, int num_tasks, int target_level
   }
   return true;
 }
-
-
-
-template <typename T>
-inline uint3 Octree<T>::getChildFromCode(octlib::key_t code, 
-    const unsigned int level){
-
-  int shift = max_level_ - level;
-  code = code >> shift*3;
-  uint3 coordinates = make_uint3(code & 0x01, (code >> 1) & 0x01, (code >> 2) & 0x01);
-  return coordinates;
-
-}
-
 
 template <typename T>
 void Octree<T>::getBlockList(std::vector<VoxelBlock<T>*>& blocklist, bool active){

@@ -38,5 +38,13 @@ inline octlib::key_t parent(const octlib::key_t& octant, const int max_depth) {
   const int idx = level + MAX_BITS - 1 - max_depth;
   return (octant & MASK[idx]) | level;
 }
+
+inline int child_id(octlib::key_t octant, const int level, 
+    const int max_depth) {
+  int shift = max_depth - level;
+  octant = octant >> shift*3;
+  int idx = (octant & 0x01) | (octant & 0x02) | (octant & 0x04);
+  return idx;
+}
 #endif
 
