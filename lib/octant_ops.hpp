@@ -19,7 +19,9 @@ inline uint3 face_neighbour(const octlib::key_t o,
 }
 
 /*
- * Return true if octant is a descendant of ancestor
+ * \brief Return true if octant is a descendant of ancestor
+ * \param octant 
+ * \param ancestor 
  */
 inline bool descendant(const octlib::key_t& octant,
     const octlib::key_t& ancestor) {
@@ -27,7 +29,9 @@ inline bool descendant(const octlib::key_t& octant,
 }
 
 /*
- * Compute the morton code
+ * \brief Computes the parent's morton code of a given octant
+ * \param octant
+ * \param max_depth max depth of the tree on which the octant lives
  */
 inline octlib::key_t parent(const octlib::key_t& octant, const int max_depth) {
   const int level = (octant & SCALE_MASK) - 1;
