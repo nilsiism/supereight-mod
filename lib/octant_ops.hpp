@@ -2,6 +2,7 @@
 #define OCTANT_OPS_HPP
 #include "utils/morton_utils.hpp"
 #include "octree_defines.h"
+#include <bitset>
 
 /*
  * Algorithm 5 of p4est paper: https://epubs.siam.org/doi/abs/10.1137/100791634
@@ -28,10 +29,10 @@ inline bool descendant(const octlib::key_t& octant,
 /*
  * Compute the morton code
  */
-// inline octlib::key_t parent(const octlib::key_t& octant) {
-// 
-// }
-                       
-
+inline octlib::key_t parent(const octlib::key_t& octant, const int max_depth) {
+  const int level = (octant & SCALE_MASK) - 1;
+  const int idx = level + MAX_BITS - 1 - max_depth;
+  return (octant & MASK[idx]) | level;
+}
 #endif
 

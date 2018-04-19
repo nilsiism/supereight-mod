@@ -23,6 +23,25 @@ TEST(Octree, OctantDescendant) {
   const unsigned max_depth = 8;
   uint3 octant = {112, 80, 160};
   octlib::key_t code = compute_morton(octant.x, octant.y, octant.z);
-  octlib::key_t root = 0;
-  ASSERT_EQ(root, descendant(code, root)); 
+  octlib::key_t ancestor = compute_morton(64, 64, 128);
+  ASSERT_EQ(true , descendant(code, ancestor)); 
+}
+
+TEST(Octree, OctantParent) {
+  const int max_depth = 8;
+  uint3 octant = {112, 80, 160};
+  octlib::key_t code = compute_morton(octant.x, octant.y, octant.z) | 5;
+  octlib::key_t p = parent(code, max_depth);
+  ASSERT_EQ(code & ~SCALE_MASK, p & ~SCALE_MASK);
+  ASSERT_EQ(4, p & SCALE_MASK);
+
+  code = p;
+  p = parent(code, max_depth); 
+  ASSERT_EQ(3, p & SCALE_MASK);
+  ASSERT_EQ(p & ~SCALE_MASK, compute_morton(96, 64, 160));
+
+  code = p;
+  p = parent(code, max_depth); 
+  ASSERT_EQ(2, p & SCALE_MASK);
+  ASSERT_EQ(p & ~SCALE_MASK, compute_morton(64, 64, 128));
 }
