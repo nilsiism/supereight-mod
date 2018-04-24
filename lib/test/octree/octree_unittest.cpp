@@ -47,6 +47,14 @@ TEST(Octree, OctantParent) {
 }
 
 TEST(Octree, FarCorner) {
+  /*
+   * The far corner should always be "exterior", meaning that moving one step
+   * in the outward direction (i.e. away from the center) in *any* direction 
+   * implies leaving the parent octant. For simplicity here the corners
+   * individually, but this can be done programmatically testing this property.
+   * TODO: change this test case to be more exhaustive.
+   */
+
   const int max_depth = 5;
   const int level = 2;
 
