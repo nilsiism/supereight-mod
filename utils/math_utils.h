@@ -1,6 +1,7 @@
 #ifndef MATH_UTILS_H
 #define MATH_UTILS_H
 
+#include <iostream>
 #include <cmath>
 #ifndef CUDA
 #include "vector_types.h"
@@ -96,6 +97,11 @@ inline Matrix4 toMatrix4(float4 quat, const float3& trans) {
 
 constexpr int log2_const(int n){
   return (n < 2 ? 0 : 1 + log2_const(n/2));
+}
+
+static inline std::ostream& operator<<(std::ostream& os, const uint3& val) {
+  os << "(" << val.x << ", " << val.y << ", " << val.x << ")";
+  return os;
 }
 
 #endif
