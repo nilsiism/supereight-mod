@@ -22,9 +22,12 @@ TEST(Octree, OctantFaceNeighbours) {
 TEST(Octree, OctantDescendant) {
   const unsigned max_depth = 8;
   uint3 octant = {112, 80, 160};
-  octlib::key_t code = compute_morton(octant.x, octant.y, octant.z);
-  octlib::key_t ancestor = compute_morton(64, 64, 128);
-  ASSERT_EQ(true , descendant(code, ancestor)); 
+  octlib::key_t code = compute_morton(octant.x, octant.y, octant.z) | 5;
+  octlib::key_t ancestor = compute_morton(64, 64, 128) | 3;
+  ASSERT_EQ(true , descendant(code, ancestor, max_depth)); 
+
+  ancestor = compute_morton(128, 64, 64) | 3;
+  ASSERT_FALSE(descendant(code, ancestor, max_depth)); 
 }
 
 TEST(Octree, OctantParent) {
@@ -113,4 +116,39 @@ TEST(Octree, FarCorner) {
   ASSERT_EQ(fc7.x, 32);
   ASSERT_EQ(fc7.y, 32);
   ASSERT_EQ(fc7.z, 32);
+}
+
+TEST(Octree, InnerOctantNeighbours) {
+  const int max_depth = 5;
+  const int level = 2;
+  const octlib::key_t cell = (compute_morton(16, 16, 16) & ~SCALE_MASK) | level;
+  octlib::key_t N[7];
+  neighbours(N, cell, level, max_depth);
+  const octlib::key_t p = parent(cell, max_depth);
+  
+  for(int i = 0; i < 7; ++i) {
+    // std::bitset<64> c(N[i]);
+    // std::bitset<64> a(p);
+    // std::cout << a << std::endl;
+    // std::cout << c << std::endl << std::endl;
+    ASSERT_FALSE(parent(N[i], max_depth) == p);
+    // std::cout << (unpack_morton(N[i] & ~SCALE_MASK)) << std::endl;
+  }
+}
+
+TEST(Octree, EdgeOctantNeighbours) {
+  const int max_depth = 5;
+  const uint size = std::pow(2, 5);
+  const int level = 2;
+  const octlib::key_t cell = (compute_morton(0, 16, 16) & ~SCALE_MASK) | level;
+  octlib::key_t N[7];
+  neighbours(N, cell, level, max_depth);
+  const octlib::key_t p = parent(cell, max_depth);
+  
+  for(int i = 0; i < 7; ++i) {
+    const uint3 corner = unpack_morton(N[i] & ~SCALE_MASK);
+    ASSERT_TRUE(in(corner.x, 0u, size - 1) && 
+                in(corner.y, 0u, size - 1) &&
+                in(corner.z, 0u, size - 1));
+  }
 }
