@@ -121,16 +121,26 @@ TEST(Octree, FarCorner) {
 TEST(Octree, InnerOctantNeighbours) {
   const int max_depth = 5;
   const int level = 2;
+  const int side = 1 << (max_depth - level);
   const octlib::key_t cell = (compute_morton(16, 16, 16) & ~SCALE_MASK) | level;
   octlib::key_t N[7];
   neighbours(N, cell, level, max_depth);
   const octlib::key_t p = parent(cell, max_depth);
   
+  const octlib::key_t neighbours_gt[7] = 
+    {(compute_morton(15, 16, 16) & ~SCALE_MASK) | level,
+     (compute_morton(16, 15, 16) & ~SCALE_MASK) | level,
+     (compute_morton(15, 15, 16)  & ~SCALE_MASK) | level,
+     (compute_morton(16, 16, 15) & ~SCALE_MASK) | level,
+     (compute_morton(15, 16, 15)  & ~SCALE_MASK) | level,
+     (compute_morton(16, 15, 15)  & ~SCALE_MASK) | level,
+     (compute_morton(15, 15, 15)   & ~SCALE_MASK) | level };
   for(int i = 0; i < 7; ++i) {
     // std::bitset<64> c(N[i]);
     // std::bitset<64> a(p);
     // std::cout << a << std::endl;
     // std::cout << c << std::endl << std::endl;
+    ASSERT_EQ(neighbours_gt[i], N[i]);
     ASSERT_FALSE(parent(N[i], max_depth) == p);
     // std::cout << (unpack_morton(N[i] & ~SCALE_MASK)) << std::endl;
   }
