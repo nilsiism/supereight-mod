@@ -162,3 +162,20 @@ TEST(Octree, EdgeOctantExteriorNeighbours) {
                 in(corner.z, 0u, size - 1));
   }
 }
+
+TEST(Octree, OctantSiblings) {
+  const int max_depth = 5;
+  const uint size = std::pow(2, 5);
+  const int level = 2;
+  const octlib::key_t cell = (compute_morton(16, 16, 16) & ~SCALE_MASK) | level;
+  octlib::key_t s[8];
+  siblings(s, cell, max_depth);
+
+  const int childidx = child_id(cell, level, max_depth);
+  ASSERT_EQ(s[childidx], cell);
+  
+  for(int i = 0; i < 8; ++i) {
+    // std::cout << (unpack_morton(s[i] & ~SCALE_MASK)) << std::endl;
+    ASSERT_TRUE(parent(s[i], max_depth) == parent(cell, max_depth));
+  }
+}
