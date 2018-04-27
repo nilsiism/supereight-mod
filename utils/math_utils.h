@@ -100,7 +100,7 @@ constexpr int log2_const(int n){
 }
 
 static inline std::ostream& operator<<(std::ostream& os, const uint3& val) {
-  os << "(" << val.x << ", " << val.y << ", " << val.x << ")";
+  os << "(" << val.x << ", " << val.y << ", " << val.z << ")";
   return os;
 }
 
