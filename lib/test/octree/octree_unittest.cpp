@@ -118,13 +118,13 @@ TEST(Octree, FarCorner) {
   ASSERT_EQ(fc7.z, 32);
 }
 
-TEST(Octree, InnerOctantNeighbours) {
+TEST(Octree, InnerOctantExteriorNeighbours) {
   const int max_depth = 5;
   const int level = 2;
   const int side = 1 << (max_depth - level);
   const octlib::key_t cell = (compute_morton(16, 16, 16) & ~SCALE_MASK) | level;
   octlib::key_t N[7];
-  neighbours(N, cell, level, max_depth);
+  exterior_neighbours(N, cell, level, max_depth);
   const octlib::key_t p = parent(cell, max_depth);
   
   const octlib::key_t neighbours_gt[7] = 
@@ -146,13 +146,13 @@ TEST(Octree, InnerOctantNeighbours) {
   }
 }
 
-TEST(Octree, EdgeOctantNeighbours) {
+TEST(Octree, EdgeOctantExteriorNeighbours) {
   const int max_depth = 5;
   const uint size = std::pow(2, 5);
   const int level = 2;
   const octlib::key_t cell = (compute_morton(0, 16, 16) & ~SCALE_MASK) | level;
   octlib::key_t N[7];
-  neighbours(N, cell, level, max_depth);
+  exterior_neighbours(N, cell, level, max_depth);
   const octlib::key_t p = parent(cell, max_depth);
   
   for(int i = 0; i < 7; ++i) {

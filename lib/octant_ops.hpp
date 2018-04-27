@@ -81,7 +81,7 @@ inline int3 far_corner(const octlib::key_t octant, const int level,
  * \param level of octant 
  * \param max_depth max depth of the tree on which the octant lives
  */
-inline void neighbours(octlib::key_t result[7], 
+inline void exterior_neighbours(octlib::key_t result[7], 
     const octlib::key_t octant, const int level, const int max_depth) {
 
   const int idx = child_id(octant, level, max_depth);
