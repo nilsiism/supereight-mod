@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <math_utils.h>
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
+#include "octant_ops.hpp"
 #include <algorithm>
 #include <tuple>
 #include <parallel/algorithm>
@@ -45,43 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <geometry/aabb_collision.hpp>
 #include <interpolation/interp_gather.hpp>
 
-#define MAX_BITS 21
-#define CAST_STACK_DEPTH 23
-#define SCALE_MASK ((octlib::key_t)0xFF)
-
-/*
- * Mask generated with:  
-   MASK[0] = 0x7000000000000000,
-   for(int i = 1; i < 21; ++i) {
-   MASK[i] = MASK[i-1] | (MASK[0] >> (i*3));
-   std::bitset<64> b(MASK[i]);
-   std::cout << std::hex << b.to_ullong() << std::endl;
-   }
- *
-*/
-constexpr uint64_t MASK[] = {
-  0x7000000000000000,
-  0x7e00000000000000,
-  0x7fc0000000000000,
-  0x7ff8000000000000,
-  0x7fff000000000000,
-  0x7fffe00000000000,
-  0x7ffffc0000000000,
-  0x7fffff8000000000,
-  0x7ffffff000000000,
-  0x7ffffffe00000000,
-  0x7fffffffc0000000,
-  0x7ffffffff8000000,
-  0x7fffffffff000000,
-  0x7fffffffffe00000,
-  0x7ffffffffffc0000,
-  0x7fffffffffff8000,
-  0x7ffffffffffff000,
-  0x7ffffffffffffe00,
-  0x7fffffffffffffc0,
-  0x7ffffffffffffff8,
-  0x7fffffffffffffff
-};
 
 inline int __float_as_int(float value){
 
@@ -300,7 +264,6 @@ private:
       const octlib::key_t scale_mask = 0x0);
 
   void reserveBuffers(const int n);
-  uint3 getChildFromCode(const octlib::key_t code, const unsigned int level);
 
   // General helpers
 
@@ -386,7 +349,6 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) +  4*((z & edge) > 0);
     Node<T>* tmp = n->child(childid);
     if(!tmp){
-      if(edge >= 32) return init_val();
       return n->value_[childid];
     }
     n = tmp;
@@ -837,9 +799,7 @@ bool Octree<T>::allocateLevel(octlib::key_t* keys, int num_tasks, int target_lev
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
-
-      uint3 child = getChildFromCode(myKey, level);
-      int index = child.x + child.y*2 + child.z*4;
+      int index = child_id(myKey, level, max_level_); 
       Node<T> * parent = *n;
       n = &(*n)->child(index);
 
@@ -878,9 +838,7 @@ bool Octree<T>::updateLevel(octlib::key_t* keys, int num_tasks, int target_level
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
-
-      uint3 child = getChildFromCode(myKey, level);
-      int index = child.x + child.y*2 + child.z*4;
+      int index = child_id(myKey, level, max_level_); 
       Node<T> * parent = *n;
       n = &(*n)->child(index);
 
@@ -904,20 +862,6 @@ bool Octree<T>::updateLevel(octlib::key_t* keys, int num_tasks, int target_level
   }
   return true;
 }
-
-
-
-template <typename T>
-inline uint3 Octree<T>::getChildFromCode(octlib::key_t code, 
-    const unsigned int level){
-
-  int shift = max_level_ - level;
-  code = code >> shift*3;
-  uint3 coordinates = make_uint3(code & 0x01, (code >> 1) & 0x01, (code >> 2) & 0x01);
-  return coordinates;
-
-}
-
 
 template <typename T>
 void Octree<T>::getBlockList(std::vector<VoxelBlock<T>*>& blocklist, bool active){

@@ -33,5 +33,5 @@ TEST(MortonCoding, ExhaustiveTest) {
         ASSERT_EQ(decoded.y, vox.y);
         ASSERT_EQ(decoded.z, vox.z);
   }
-
 }
+
