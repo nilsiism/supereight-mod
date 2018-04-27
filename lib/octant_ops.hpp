@@ -2,6 +2,8 @@
 #define OCTANT_OPS_HPP
 #include "utils/morton_utils.hpp"
 #include "octree_defines.h"
+#include <iostream>
+#include <bitset>
 
 /*
  * Algorithm 5 of p4est paper: https://epubs.siam.org/doi/abs/10.1137/100791634
@@ -107,6 +109,23 @@ inline void exterior_neighbours(octlib::key_t result[7],
                & ~SCALE_MASK) | level; 
   result[6] = (compute_morton(base.x + dir.x, base.y + dir.y, base.z +  dir.z)
                & ~SCALE_MASK) | level; 
+}
+
+/*
+ * \brief Computes the morton number of all siblings around an octant,
+ * including itself.
+ * \param result 8-vector containing the neighbours
+ * \param octant
+ * \param max_depth max depth of the tree on which the octant lives
+ */
+inline void siblings(octlib::key_t result[8], 
+    const octlib::key_t octant, const int max_depth) {
+  const int level = (octant & SCALE_MASK);
+  const int shift = 3*(max_depth - level);
+  const octlib::key_t p = parent(octant, max_depth) + 1; // set-up next level
+  for(int i = 0; i < 8; ++i) {
+    result[i] = p | (i << shift);
+  }
 }
 #endif
 
