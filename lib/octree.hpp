@@ -847,12 +847,12 @@ bool Octree<T>::updateLevel(octlib::key_t* keys, int num_tasks, int target_level
           *n = block_memory_.acquire_block();
           static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
-          static_cast<VoxelBlock<T> *>(*n)->code = myKey;
+          static_cast<VoxelBlock<T> *>(*n)->code = myKey | level;
           parent->children_mask_ = parent->children_mask_ | (1 << index);
         }
         else  {
           *n = nodes_buffer_.acquire_block();;
-          (*n)->code = myKey;
+          (*n)->code = myKey | level;
           (*n)->side = edge;
           parent->children_mask_ = parent->children_mask_ | (1 << index);
         }
