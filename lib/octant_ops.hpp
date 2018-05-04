@@ -5,13 +5,36 @@
 #include <iostream>
 #include <bitset>
 
+namespace octlib {
+  namespace keyops {
+
+    octlib::key_t code(const octlib::key_t key) {
+      return key & ~SCALE_MASK;
+    }
+
+    int level(const octlib::key_t key) {
+      return key & SCALE_MASK;
+    }
+
+    octlib::key_t encode(const int x, const int y, const int z, 
+        const int level, const int max_depth) {
+      const int offset = MAX_BITS - max_depth + level - 1;
+      return (compute_morton(x, y, z) & MASK[offset]) | level;
+    }
+
+    uint3 decode(const octlib::key_t key) {
+      return unpack_morton(key & ~SCALE_MASK);
+    }
+  }
+}
+
 /*
  * Algorithm 5 of p4est paper: https://epubs.siam.org/doi/abs/10.1137/100791634
  */
 inline uint3 face_neighbour(const octlib::key_t o, 
     const unsigned int face, const unsigned int l, 
     const unsigned int max_depth) {
-  uint3 coords = unpack_morton(o & ~SCALE_MASK);
+  uint3 coords = octlib::keyops::decode(o);
   const unsigned int side = 1 << (max_depth - l); 
   coords.x = coords.x + ((face == 0) ? -side : (face == 1) ? side : 0);
   coords.y = coords.y + ((face == 2) ? -side : (face == 3) ? side : 0);
@@ -26,10 +49,10 @@ inline uint3 face_neighbour(const octlib::key_t o,
  */
 inline bool descendant(octlib::key_t octant, 
     octlib::key_t ancestor, const int max_depth) {
-  const int level = (ancestor & SCALE_MASK) - 1;
-  const int idx = level + MAX_BITS - 1 - max_depth;
+  const int level = octlib::keyops::level(ancestor);
+  const int idx = MAX_BITS - max_depth - 1 + level;
   octant = octant & MASK[idx];
-  ancestor = ancestor & MASK[idx];
+  ancestor = octlib::keyops::code(ancestor);
   return (ancestor ^ octant) == 0;
 }
 
@@ -39,8 +62,8 @@ inline bool descendant(octlib::key_t octant,
  * \param max_depth max depth of the tree on which the octant lives
  */
 inline octlib::key_t parent(const octlib::key_t& octant, const int max_depth) {
-  const int level = (octant & SCALE_MASK) - 1;
-  const int idx = level + MAX_BITS - 1 - max_depth;
+  const int level = octlib::keyops::level(octant) - 1;
+  const int idx = MAX_BITS - max_depth + level - 1;
   return (octant & MASK[idx]) | level;
 }
 
@@ -53,7 +76,7 @@ inline octlib::key_t parent(const octlib::key_t& octant, const int max_depth) {
 inline int child_id(octlib::key_t octant, const int level, 
     const int max_depth) {
   int shift = max_depth - level;
-  octant = (octant & ~SCALE_MASK) >> shift*3;
+  octant = octlib::keyops::code(octant) >> shift*3;
   int idx = (octant & 0x01) | (octant & 0x02) | (octant & 0x04);
   return idx;
 }
@@ -68,7 +91,7 @@ inline int3 far_corner(const octlib::key_t octant, const int level,
     const int max_depth) {
   const unsigned int side = 1 << (max_depth - level); 
   const int idx = child_id(octant, level, max_depth);
-  const uint3 coordinates = unpack_morton(octant & ~SCALE_MASK);
+  const uint3 coordinates = octlib::keyops::decode(octant);
   return make_int3(coordinates.x + (idx & 1) * side,
                    coordinates.y + ((idx & 2) >> 1) * side,
                    coordinates.z + ((idx & 4) >> 2) * side);
@@ -95,20 +118,20 @@ inline void exterior_neighbours(octlib::key_t result[7],
   dir.y = in(base.y + dir.y , 0, std::pow(2, max_depth) - 1) ? dir.y : 0;
   dir.z = in(base.z + dir.z , 0, std::pow(2, max_depth) - 1) ? dir.z : 0;
 
-  result[0] = (compute_morton(base.x + dir.x, base.y +     0, base.z +      0)
-               & ~SCALE_MASK) | level;
-  result[1] = (compute_morton(base.x +     0, base.y + dir.y, base.z +      0)
-               & ~SCALE_MASK) | level; 
-  result[2] = (compute_morton(base.x + dir.x, base.y + dir.y, base.z +      0)
-               & ~SCALE_MASK) | level; 
-  result[3] = (compute_morton(base.x +     0, base.y +     0, base.z +  dir.z)
-               & ~SCALE_MASK) | level; 
-  result[4] = (compute_morton(base.x + dir.x, base.y +     0, base.z +  dir.z)
-               & ~SCALE_MASK) | level; 
-  result[5] = (compute_morton(base.x +     0, base.y + dir.y, base.z +  dir.z)
-               & ~SCALE_MASK) | level; 
-  result[6] = (compute_morton(base.x + dir.x, base.y + dir.y, base.z +  dir.z)
-               & ~SCALE_MASK) | level; 
+ result[0] = octlib::keyops::encode(base.x + dir.x, base.y + 0, base.z + 0, 
+     level, max_depth);
+ result[1] = octlib::keyops::encode(base.x + 0, base.y + dir.y, base.z + 0, 
+     level, max_depth); 
+ result[2] = octlib::keyops::encode(base.x + dir.x, base.y + dir.y, base.z + 0, 
+     level, max_depth); 
+ result[3] = octlib::keyops::encode(base.x + 0, base.y + 0, base.z + dir.z, 
+     level, max_depth); 
+ result[4] = octlib::keyops::encode(base.x + dir.x, base.y + 0, base.z + dir.z, 
+     level, max_depth); 
+ result[5] = octlib::keyops::encode(base.x + 0, base.y + dir.y, base.z + dir.z, 
+     level, max_depth); 
+ result[6] = octlib::keyops::encode(base.x + dir.x, base.y + dir.y, 
+     base.z + dir.z, level, max_depth); 
 }
 
 /*
