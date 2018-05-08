@@ -200,13 +200,12 @@ public:
    * \param z z coordinate in interval [0, size]
    */
   octlib::key_t hash(const int x, const int y, const int z) {
-    constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
-    return compute_morton(x, y, z) & MASK[morton_mask];   
+    const int scale = max_level_ - log2_const(blockSide); // depth of blocks
+    return octlib::keyops::encode(x, y, z, scale, max_level_);   
   }
 
   octlib::key_t hash(const int x, const int y, const int z, octlib::key_t scale) {
-    constexpr int morton_mask = MAX_BITS - log2_const(blockSide) - 1;
-    return (compute_morton(x, y, z) & MASK[morton_mask]) | scale; 
+    return octlib::keyops::encode(x, y, z, scale, max_level_); 
   }
 
   /*! \brief allocate a set of voxel blocks via their positional key  

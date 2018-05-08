@@ -43,21 +43,26 @@ class UniqueTest : public ::testing::Test {
 class UniqueMultiscaleTest : public ::testing::Test {
   protected:
     virtual void SetUp() {
+
+      oct.init(256, 10);
+
       const int3 blocks[10] = {
-        {56, 12, 12}, {56, 12, 15}, 
+        {56, 12, 12}, 
+        {56, 12, 15}, 
         {128, 128, 128},
-        {128, 128, 125}, {128, 128, 127}, 
+        {128, 128, 125}, 
+        {128, 128, 127}, 
         {128, 136, 129}, 
         {128, 136, 127}, 
         {136, 128, 136}, 
         {128, 240, 136}, {128, 241, 136}};
       for(int i = 0; i < 10; ++i) { 
-        keys[i] = oct.hash(blocks[i].x, blocks[i].y, blocks[i].z, 9);
+        keys[i] = oct.hash(blocks[i].x, blocks[i].y, blocks[i].z, 7);
       }
 
-      keys[2] = (keys[2] & ~0x1FFu) | 3;
-      keys[3] = (keys[3] & ~0x1FFu) | 5;
-      keys[4] = (keys[4] & ~0x1FFu) | 6;
+      keys[2] = oct.hash(blocks[2].x, blocks[2].y, blocks[2].z, 3);
+      keys[3] = oct.hash(blocks[3].x, blocks[3].y, blocks[3].z, 5);
+      keys[4] = oct.hash(blocks[4].x, blocks[4].y, blocks[4].z, 6);
       std::sort(keys, keys + 10); 
     }
    
@@ -69,7 +74,6 @@ class UniqueMultiscaleTest : public ::testing::Test {
 TEST_F(UniqueTest, FilterDuplicates) {
   std::sort(keys, keys + 10);
   const int last = algorithms::unique(keys, 10);
-  ASSERT_EQ(last, 7);
   for(int i = 1; i < last; ++i) { 
     ASSERT_TRUE(keys[i] != keys[i-1]);
   }
