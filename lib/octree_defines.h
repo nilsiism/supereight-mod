@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define BLOCK_SIDE 8
 #define MAX_BITS 21
 #define CAST_STACK_DEPTH 23
-#define SCALE_MASK ((octlib::key_t)0xFF)
+#define SCALE_MASK ((octlib::key_t)0x1FF)
 
 namespace octlib {
 typedef uint64_t key_t; 
