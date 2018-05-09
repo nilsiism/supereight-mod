@@ -1,7 +1,7 @@
 #ifndef ACTIVE_LIST_HPP
 #define ACTIVE_LIST_HPP
 
-#include <math_utils.h> 
+#include <utils/eigen_helper.h> 
 #include <node.hpp>
 #include <utils/memory_pool.hpp>
 #include <utils/morton_utils.hpp>

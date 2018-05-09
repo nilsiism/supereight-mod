@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef _VOXEL_TRAITS_
 #define _VOXEL_TRAITS_
-#include <math_utils.h>
+#include <utils/eigen_helper.h>
 
 template <class VoxelTraits>
 struct voxel_traits{ };

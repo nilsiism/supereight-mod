@@ -1,4 +1,4 @@
-#include "math_utils.h"
+#include "utils/eigen_helper.h"
 #include "gtest/gtest.h"
 #include "octant_ops.hpp"
 #include <bitset>
@@ -163,9 +163,9 @@ TEST(Octree, EdgeOctantExteriorNeighbours) {
   
   for(int i = 0; i < 7; ++i) {
     const Eigen::Vector3i corner = unpack_morton(N[i] & ~SCALE_MASK);
-    ASSERT_TRUE(in(corner(0), 0, size - 1) && 
-                in(corner(1), 0, size - 1) &&
-                in(corner(2), 0, size - 1));
+    const int res = octlib::math::in(corner, Eigen::Vector3i::Constant(0), 
+        Eigen::Vector3i::Constant(size - 1)).all();
+    ASSERT_TRUE(res);
   }
 }
 

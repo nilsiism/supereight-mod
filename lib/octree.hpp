@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OCTREE_H
 
 #include <cstring>
-#include <math_utils.h>
+#include <utils/eigen_helper.h>
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
 #include "octant_ops.hpp"
@@ -94,7 +94,7 @@ public:
   // maximum tree depth in bits
   static constexpr unsigned int max_depth = ((sizeof(octlib::key_t)*8)/3);
   // Tree depth at which blocks are found
-  static constexpr unsigned int block_depth = max_depth - log2_const(BLOCK_SIDE);
+  static constexpr unsigned int block_depth = max_depth - octlib::math::log2_const(BLOCK_SIDE);
 
 
   Octree(){
@@ -164,26 +164,6 @@ public:
   template <typename FieldSelect>
   Eigen::Vector3f grad(const Eigen::Vector3f pos, FieldSelect selector) const;
 
-  /*! \brief Cast a ray to find the closest signed distance function 
-   * intersection.
-   * \param pos camera pixel from which the ray is originating 
-   * \param view camera SE3 pose 
-   * \param nearPlane search range (in meters) 
-   * \param farPlane maximum search range (in meters) 
-   * \param mu signed distance function truncation value (in meters) 
-   * \param step ray-casting step size (usually proportional to 
-   * the voxel spacing 
-   * \param largeStep larger step size (usually a fraction of mu)
-   * \return float4 with the first three coordinates indicating the 
-   * intersection position and the last one the distance travelled 
-   * (in metric units). If no intersection is found the last coordinate is set
-   * to 0.
-   */
-
-  float4 raycast(const uint2 pos, const Matrix4 view,
-      const float nearPlane, const float farPlane, const float mu,
-      const float step, const float largeStep) const;
-
   /*! \brief Get the list of allocated block. If the active switch is set to
    * true then only the visible blocks are retrieved.
    * \param blocklist output vector of allocated blocks
@@ -200,7 +180,7 @@ public:
    * \param z z coordinate in interval [0, size]
    */
   octlib::key_t hash(const int x, const int y, const int z) {
-    const int scale = max_level_ - log2_const(blockSide); // depth of blocks
+    const int scale = max_level_ - octlib::math::log2_const(blockSide); // depth of blocks
     return octlib::keyops::encode(x, y, z, scale, max_level_);   
   }
 
@@ -287,8 +267,8 @@ inline typename Octree<T>::compute_type Octree<T>::get(const Eigen::Vector3f p,
   if(cached != NULL){
     Eigen::Vector3i lower = cached->coordinates();
     Eigen::Vector3i upper = lower + Eigen::Vector3i::Constant(blockSide-1);
-    if(in(pos(0), lower(0), upper(0)) && in(pos(1), lower(1), upper(1)) &&
-       in(pos(2), lower(2), upper(2))){
+    const int contained = octlib::math::in(pos, lower, upper).prod();
+    if(contained){
       return cached->data(pos);
     }
   }
@@ -385,8 +365,9 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
   if(cached != NULL){
     const Eigen::Vector3i lower = cached->coordinates();
     const Eigen::Vector3i upper = lower + Eigen::Vector3i::Constant(blockSide-1);
-    if(in(x, lower(0), upper(0)) && in(y, lower(1), upper(1)) &&
-       in(z, lower(2), upper(2))){
+    const int contained = 
+      octlib::math::in(Eigen::Vector3i(x, y, z), lower, upper).all();
+    if(contained){
       return cached->data(Eigen::Vector3i(x, y, z));
     }
   }
@@ -480,9 +461,9 @@ template <typename T>
 template <typename FieldSelector>
 float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
   
-  const Eigen::Vector3i base = Eigen::Vector3i(floorf(pos));
-  const Eigen::Vector3f factor = fracf(pos);
-  const Eigen::Vector3i lower = max(base, Eigen::Vector3i::Constant(0));
+  const Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos));
+  const Eigen::Vector3f factor = octlib::math::fracf(pos);
+  const Eigen::Vector3i lower = octlib::math::max(base, Eigen::Vector3i::Constant(0));
 
   float points[8];
   gather_points(*this, lower, select, points);
@@ -504,13 +485,15 @@ float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
 template <typename T>
 Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos) const {
 
-   Eigen::Vector3i base = Eigen::Vector3i(floorf(pos));
-   Eigen::Vector3f factor = fracf(pos);
-   Eigen::Vector3i lower_lower = max(base - Eigen::Vector3i::Constant(1), Eigen::Vector3i::Constant(0));
-   Eigen::Vector3i lower_upper = max(base, Eigen::Vector3i::Constant(0));
-   Eigen::Vector3i upper_lower = min(base + Eigen::Vector3i::Constant(1),
+   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos));
+   Eigen::Vector3f factor = octlib::math::fracf(pos);
+   Eigen::Vector3i lower_lower = 
+     octlib::math::max(base - Eigen::Vector3i::Constant(1), 
+         Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i lower_upper = octlib::math::max(base, Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i upper_lower = octlib::math::min(base + Eigen::Vector3i::Constant(1),
       Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
-   Eigen::Vector3i upper_upper = min(base + Eigen::Vector3i::Constant(2),
+   Eigen::Vector3i upper_upper = octlib::math::min(base + Eigen::Vector3i::Constant(2),
       Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
    Eigen::Vector3i & lower = lower_upper;
    Eigen::Vector3i & upper = upper_lower;
@@ -594,13 +577,13 @@ template <typename T>
 template <typename FieldSelector>
 Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos, FieldSelector select) const {
 
-   Eigen::Vector3i base = Eigen::Vector3i(floorf(pos));
-   Eigen::Vector3f factor = fracf(pos);
-   Eigen::Vector3i lower_lower = max(base - Eigen::Vector3i::Constant(1), Eigen::Vector3i::Constant(0));
-   Eigen::Vector3i lower_upper = max(base, Eigen::Vector3i::Constant(0));
-   Eigen::Vector3i upper_lower = min(base + Eigen::Vector3i::Constant(1),
+   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos));
+   Eigen::Vector3f factor = octlib::math::fracf(pos);
+   Eigen::Vector3i lower_lower = octlib::math::max(base - Eigen::Vector3i::Constant(1), Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i lower_upper = octlib::math::max(base, Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i upper_lower = octlib::math::min(base + Eigen::Vector3i::Constant(1),
       Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
-   Eigen::Vector3i upper_upper = min(base + Eigen::Vector3i::Constant(2),
+   Eigen::Vector3i upper_upper = octlib::math::min(base + Eigen::Vector3i::Constant(2),
       Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
    Eigen::Vector3i & lower = lower_upper;
    Eigen::Vector3i & upper = upper_lower;
@@ -945,7 +928,7 @@ class ray_iterator {
       const Eigen::Vector3f scaled_origin = origin/map_.dim_ + 1.f;
 
       /* Precomputing the ray coefficients */
-      t_coef_ = -1.f * fabs(direction_).cwiseInverse();
+      t_coef_ = -1.f * octlib::math::fabs(direction_).cwiseInverse();
       t_bias_ = t_coef_ * scaled_origin;
 
 

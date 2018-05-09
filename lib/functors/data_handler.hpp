@@ -1,6 +1,6 @@
 #ifndef DATA_HANDLER_HPP
 #define DATA_HANDLER_HPP
-#include "math_utils.h"
+#include "utils/eigen_helper.h"
 #include "node.hpp"
 
 template <typename SpecialisedHandlerT, typename NodeT>

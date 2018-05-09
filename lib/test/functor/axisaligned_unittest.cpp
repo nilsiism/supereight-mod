@@ -1,5 +1,5 @@
 #include "octree.hpp"
-#include "math_utils.h"
+#include "utils/eigen_helper.h"
 #include "gtest/gtest.h"
 #include "functors/axis_aligned_functor.hpp"
 

@@ -1,5 +1,5 @@
 #include "octree.hpp"
-#include "math_utils.h"
+#include "utils/eigen_helper.h"
 #include "interpolation/interp_gather.hpp"
 #include "gtest/gtest.h"
 

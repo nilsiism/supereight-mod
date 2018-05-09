@@ -1,6 +1,6 @@
 #include <random>
 #include "octree.hpp"
-#include "math_utils.h"
+#include "utils/eigen_helper.h"
 #include "utils/morton_utils.hpp"
 #include "gtest/gtest.h"
 

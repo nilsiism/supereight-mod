@@ -1,6 +1,6 @@
 #ifndef MORTON_UTILS_HPP
 #define MORTON_UTILS_HPP
-#include <math_utils.h>
+#include <utils/eigen_helper.h>
 #include <cstdint>
 #include <octree_defines.h>
 #include <Eigen/Dense>

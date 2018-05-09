@@ -1,4 +1,4 @@
-#include "math_utils.h"
+#include "utils/eigen_helper.h"
 #include "geometry/octree_collision.hpp"
 #include "geometry/aabb_collision.hpp"
 #include "algorithms/mapping.hpp"
