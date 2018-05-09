@@ -1,6 +1,6 @@
 #include "octree.hpp"
 #include "math_utils.h"
-#include "interp_gather.hpp"
+#include "interpolation/interp_gather.hpp"
 #include "gtest/gtest.h"
 
 typedef float testT;
@@ -16,7 +16,7 @@ struct voxel_traits<testT> {
   }
 };
 
-class InterpTest : public ::testing::Test {
+class GatherTest : public ::testing::Test {
   protected:
     virtual void SetUp() {
       oct_.init(512, 5);
@@ -34,11 +34,11 @@ class InterpTest : public ::testing::Test {
   OctreeF oct_;
 };
 
-TEST_F(InterpTest, Init) {
+TEST_F(GatherTest, Init) {
   EXPECT_EQ(oct_.get(137, 138, 130), voxel_traits<testT>::initValue());
 }
 
-TEST_F(InterpTest, GatherLocal) {
+TEST_F(GatherTest, GatherLocal) {
   float points[8];
   const Eigen::Vector3i base = {136, 128, 136};
   gather_points(oct_, base, [](const auto& val){ return val; }, points);
@@ -48,7 +48,7 @@ TEST_F(InterpTest, GatherLocal) {
   }
 }
 
-TEST_F(InterpTest, ZCrosses) {
+TEST_F(GatherTest, ZCrosses) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {132, 128, 135};
@@ -64,7 +64,7 @@ TEST_F(InterpTest, ZCrosses) {
   }
 }
 
-TEST_F(InterpTest, YCrosses) {
+TEST_F(GatherTest, YCrosses) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {132, 135, 132};
@@ -80,7 +80,7 @@ TEST_F(InterpTest, YCrosses) {
   }
 }
 
-TEST_F(InterpTest, XCrosses) {
+TEST_F(GatherTest, XCrosses) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {135, 132, 132};
@@ -96,7 +96,7 @@ TEST_F(InterpTest, XCrosses) {
   }
 }
 
-TEST_F(InterpTest, YZCross) {
+TEST_F(GatherTest, YZCross) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {129, 135, 135};
@@ -112,7 +112,7 @@ TEST_F(InterpTest, YZCross) {
   }
 }
 
-TEST_F(InterpTest, XZCross) {
+TEST_F(GatherTest, XZCross) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {135, 131, 135};
@@ -128,7 +128,7 @@ TEST_F(InterpTest, XZCross) {
   }
 }
 
-TEST_F(InterpTest, XYCross) {
+TEST_F(GatherTest, XYCross) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {135, 135, 138};
@@ -144,7 +144,7 @@ TEST_F(InterpTest, XYCross) {
   }
 }
 
-TEST_F(InterpTest, AllCross) {
+TEST_F(GatherTest, AllCross) {
   float points[8];
   const uint blockSize = VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {135, 135, 135};

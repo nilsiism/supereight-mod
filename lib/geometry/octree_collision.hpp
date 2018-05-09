@@ -88,9 +88,6 @@ collision_status collides_with(const Octree<FieldType>& map,
     typename Node<FieldType>::compute_type parent_val;
   } stack_entry;
 
-  const Eigen::Vector3i offsets[8] = {{0, 0 ,0}, {1, 0, 0}, {0, 1, 0}, {1, 1, 0},
-    {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};
-
   stack_entry stack[Octree<FieldType>::max_depth*8 + 1];
   size_t stack_idx = 0;
 
@@ -123,9 +120,10 @@ collision_status collides_with(const Octree<FieldType>& map,
       child_descr.node_ptr = NULL;
       child_descr.side = current.side / 2;
       child_descr.coordinates = 
-          Eigen::Vector3i{current.coordinates(0) + child_descr.side*offsets[i](0),
-                    current.coordinates(1) + child_descr.side*offsets[i](1),
-                    current.coordinates(2) + child_descr.side*offsets[i](2)};
+        Eigen::Vector3i(current.coordinates(0) + child_descr.side*((i & 1) > 0),
+            current.coordinates(1) + child_descr.side*((i & 2) > 0),
+            current.coordinates(2) + child_descr.side*((i & 4) > 0));
+
       const bool overlaps = geometry::aabb_aabb_collision(bbox, side, 
           child_descr.coordinates, Eigen::Vector3i::Constant(child_descr.side));
 

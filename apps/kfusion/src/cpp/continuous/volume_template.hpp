@@ -2,7 +2,7 @@
 #define VOLUME_TEMPLATE_H
 
 #include <voxel_traits.hpp>
-#include <memory_pool.hpp>
+#include <utils/memory_pool.hpp>
 #include <data.hpp>
 #include <type_traits>
 #include <cstring>

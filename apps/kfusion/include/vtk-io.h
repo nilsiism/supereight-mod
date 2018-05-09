@@ -1,7 +1,9 @@
 #ifndef VTK_IO_H
 #define VTK_IO_H
 #include <lodepng.h>
+#include <fstream>
 #include <sstream>
+#include <iostream>
 #include <math_utils.h>
 #include <algorithm>
 

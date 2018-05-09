@@ -34,9 +34,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <time.h>
 #include <atomic>
-#include <octree_defines.h>
-#include <memory_pool.hpp>
 #include <Eigen/Dense>
+#include "octree_defines.h"
+#include "utils/memory_pool.hpp"
 
 template <typename T>
 class Node {

@@ -78,3 +78,12 @@ TEST(AABBAABBTest, SquareEnclosed) {
   int overlaps = geometry::aabb_aabb_collision(a, a_edge, b, b_edge);
   ASSERT_EQ(overlaps, 1);
 }
+
+TEST(AABBAABBTest, Inclusion) {
+  const Eigen::Vector3i a = Eigen::Vector3i(2, 1, 3); 
+  const Eigen::Vector3i a_edge = Eigen::Vector3i::Constant(10);
+  const Eigen::Vector3i b = Eigen::Vector3i(3, 4, 5);
+  const Eigen::Vector3i b_edge = Eigen::Vector3i::Constant(2);
+  int included = geometry::aabb_aabb_inclusion(a, a_edge, b, b_edge);
+  ASSERT_EQ(included, 1);
+}

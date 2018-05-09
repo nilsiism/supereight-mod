@@ -1,6 +1,7 @@
 #ifndef MATH_UTILS_H
 #define MATH_UTILS_H
 
+#include <iostream>
 #include <cmath>
 #ifndef CUDA
 #include "vector_types.h"
@@ -67,6 +68,11 @@ inline __host__ __device__ bool in(const unsigned int value, const unsigned int 
   return value >= lower && value <= upper;
 }
 
+inline __host__ __device__ bool in(const int value, const int lower, 
+               const int upper){
+  return value >= lower && value <= upper;
+}
+
 inline __host__     __device__ uchar3 operator*(const uchar3 a, float v) {
 	return make_uchar3(a.x * v, a.y * v, a.z * v);
 }
@@ -117,6 +123,11 @@ inline Matrix4 toMatrix4(float4 quat, const float3& trans) {
 
 constexpr int log2_const(int n){
   return (n < 2 ? 0 : 1 + log2_const(n/2));
+}
+
+static inline std::ostream& operator<<(std::ostream& os, const uint3& val) {
+  os << "(" << val.x << ", " << val.y << ", " << val.z << ")";
+  return os;
 }
 
 #endif

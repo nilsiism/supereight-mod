@@ -3,7 +3,7 @@
 
 #include <math_utils.h> 
 #include <node.hpp>
-#include <memory_pool.hpp>
+#include <utils/memory_pool.hpp>
 #include <utils/morton_utils.hpp>
 
 namespace algorithms {
