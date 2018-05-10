@@ -10,21 +10,21 @@
 namespace octlib {
   namespace keyops {
 
-    octlib::key_t code(const octlib::key_t key) {
+    inline octlib::key_t code(const octlib::key_t key) {
       return key & ~SCALE_MASK;
     }
 
-    int level(const octlib::key_t key) {
+    inline int level(const octlib::key_t key) {
       return key & SCALE_MASK;
-    }
+}
 
-    octlib::key_t encode(const int x, const int y, const int z, 
+    inline octlib::key_t encode(const int x, const int y, const int z, 
         const int level, const int max_depth) {
       const int offset = MAX_BITS - max_depth + level - 1;
       return (compute_morton(x, y, z) & MASK[offset]) | level;
     }
 
-    Eigen::Vector3i decode(const octlib::key_t key) {
+    inline Eigen::Vector3i decode(const octlib::key_t key) {
       return unpack_morton(key & ~SCALE_MASK);
     }
   }
@@ -155,4 +155,3 @@ inline void siblings(octlib::key_t result[8],
   }
 }
 #endif
-
