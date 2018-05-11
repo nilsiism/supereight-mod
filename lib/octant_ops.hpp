@@ -116,8 +116,9 @@ inline void exterior_neighbours(octlib::key_t result[7],
                        (idx & 2) ? 1 : -1,
                        (idx & 4) ? 1 : -1);
   Eigen::Vector3i base = far_corner(octant, level, max_depth);
-  dir = octlib::math::in(base, Eigen::Vector3i::Constant(0), 
-      Eigen::Vector3i::Constant((1 << max_depth) - 1));
+  Eigen::Vector3i zero = Eigen::Vector3i::Constant(0);
+  Eigen::Vector3i upper = Eigen::Vector3i::Constant((1 << max_depth) - 1);
+  dir = octlib::math::in(base, zero, upper);
   // dir(0) = in(base(0) + dir(0) , 0, std::pow(2, max_depth) - 1) ? dir(0) : 0;
   // dir(1) = in(base(1) + dir(1) , 0, std::pow(2, max_depth) - 1) ? dir(1) : 0;
   // dir(2) = in(base(2) + dir(2) , 0, std::pow(2, max_depth) - 1) ? dir(2) : 0;

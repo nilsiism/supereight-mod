@@ -32,8 +32,10 @@ namespace octlib {
       }
 
     template <typename T, typename U, typename V>
-      T in(const T&v, const U& a, const V& b) {
-        return (v.array() >= a.array()) && (v.array() <= b.array());
+    T in(const Eigen::MatrixBase<T>&v, const Eigen::MatrixBase<U>& a, 
+          const Eigen::MatrixBase<V>& b) {
+      T res = v.array() >= a.array();
+        return res;
       }
 
     constexpr int log2_const(int n){
