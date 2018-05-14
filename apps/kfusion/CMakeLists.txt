@@ -122,8 +122,8 @@ find_package(Qt5Widgets)
 find_package(Qt5Gui)
 find_package(Qt5OpenGL)
 find_package(Qt5PrintSupport)
-include_directories(./include ${TOON_INCLUDE_PATHS} ${EIGEN3_INCLUDE_DIR} 
-  ./thirdparty ../../lib ../../utils)
+include_directories(./include ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR} 
+  ${SOPHUS_INCLUDE_PATH} ./thirdparty ../../lib ../../utils)
 
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
 add_library(tiny_obj thirdparty/tiny_obj_loader.cc)

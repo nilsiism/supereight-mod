@@ -17,14 +17,20 @@ TOON_INCLUDE_DIR=${TOON_DIR}/include/
 
 all : TooN
 	mkdir -p build/
-	cd build/ && cmake -DCMAKE_BUILD_TYPE=Release -DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR} $(CMAKE_ARGUMENTS) ..
+	cd build/ && cmake -DCMAKE_BUILD_TYPE=Release \
+	 	-DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR} \
+	 	-DSOPHUS_INCLUDE_PATH=${SOPHUS_ROOT} \
+		$(CMAKE_ARGUMENTS) ..
 	$(MAKE) -C build  $(MFLAGS) $(SPECIFIC_TARGET)
 
 
 debug: TooN
 	mkdir -p build/
 	mkdir -p build/logs/
-	cd build/ && cmake -DCMAKE_BUILD_TYPE=Debug -DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR} $(CMAKE_ARGUMENTS) ..
+	cd build/ && cmake -DCMAKE_BUILD_TYPE=Debug \
+	 	-DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR} \
+	 	-DSOPHUS_INCLUDE_PATH=${SOPHUS_ROOT} \
+		$(CMAKE_ARGUMENTS) ..
 	$(MAKE) -C build $(MFLAGS)
 
 stats: 
