@@ -17,7 +17,7 @@ struct voxel_traits<testT> {
 };
 
 float test_fun(float x, float y, float z) {
-  return sq(z) + std::sin(2*x + y);
+  return octlib::math::sq(z) + std::sin(2*x + y);
 }
 
 class InterpolationTest : public ::testing::Test {

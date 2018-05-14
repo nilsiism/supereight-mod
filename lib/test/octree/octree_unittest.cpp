@@ -163,8 +163,8 @@ TEST(Octree, EdgeOctantExteriorNeighbours) {
   
   for(int i = 0; i < 7; ++i) {
     const Eigen::Vector3i corner = unpack_morton(N[i] & ~SCALE_MASK);
-    const int res = octlib::math::in(corner, Eigen::Vector3i::Constant(0), 
-        Eigen::Vector3i::Constant(size - 1)).all();
+    const int res = ((corner.array() >= Eigen::Vector3i::Constant(0).array()) 
+     && (corner.array() <= Eigen::Vector3i::Constant(size - 1).array())).all();
     ASSERT_TRUE(res);
   }
 }

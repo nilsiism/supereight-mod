@@ -82,7 +82,10 @@ TEST_F(AxisAlignedTest, BBoxTest) {
     for(int y = 50; y < 200; ++y)
       for(int x = 50; x < 200; ++x) {
         auto * block = oct_.fetch(x, y, z);
-        if(block && in(x, 100, 150) && in(y, 100, 150) && in(z, 100, 150)){
+        if(block && 
+           octlib::math::in(x, 100, 150) && 
+           octlib::math::in(y, 100, 150) && 
+           octlib::math::in(z, 100, 150)){
           ASSERT_EQ(block->data(Eigen::Vector3i(x, y, z)), 10.f);
         }
         else if(block) { 

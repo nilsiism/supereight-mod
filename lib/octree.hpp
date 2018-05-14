@@ -267,7 +267,8 @@ inline typename Octree<T>::compute_type Octree<T>::get(const Eigen::Vector3f p,
   if(cached != NULL){
     Eigen::Vector3i lower = cached->coordinates();
     Eigen::Vector3i upper = lower + Eigen::Vector3i::Constant(blockSide-1);
-    const int contained = octlib::math::in(pos, lower, upper).prod();
+    const int contained = 
+      ((pos.array() >= lower.array()) * (pos.array() <= upper.array())).all();
     if(contained){
       return cached->data(pos);
     }
@@ -363,10 +364,11 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
    const int y, const int z, VoxelBlock<T>* cached) const {
 
   if(cached != NULL){
+    const Eigen::Vector3i pos = Eigen::Vector3i(x, y, z);
     const Eigen::Vector3i lower = cached->coordinates();
     const Eigen::Vector3i upper = lower + Eigen::Vector3i::Constant(blockSide-1);
     const int contained = 
-      octlib::math::in(Eigen::Vector3i(x, y, z), lower, upper).all();
+      ((pos.array() >= lower.array()) * (pos.array() <= upper.array())).all();
     if(contained){
       return cached->data(Eigen::Vector3i(x, y, z));
     }

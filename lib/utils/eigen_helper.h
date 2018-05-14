@@ -22,20 +22,24 @@ namespace octlib {
       }
 
     template <typename S, typename T>
-      auto min(const S& a, const T& b) {
+    inline  auto min(const S& a, const T& b) {
         return a.cwiseMin(b);
       }
 
     template <typename T>
-      T fabs(const T& v) {
+    inline T fabs(const T& v) {
         return v.cwiseAbs();
       }
 
-    template <typename T, typename U, typename V>
-    T in(const Eigen::MatrixBase<T>&v, const Eigen::MatrixBase<U>& a, 
-          const Eigen::MatrixBase<V>& b) {
-      T res = v.array() >= a.array();
-        return res;
+    template <typename Scalar>
+      inline Scalar sq(Scalar a) {
+        return a*a;
+      };
+
+    template <typename Scalar>
+    inline bool in(const Scalar v, const Scalar a, 
+          const Scalar b) {
+        return v >= a && v <= b;
       }
 
     constexpr int log2_const(int n){
