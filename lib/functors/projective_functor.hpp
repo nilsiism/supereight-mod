@@ -3,6 +3,7 @@
 #include <functional>
 #include <vector>
 
+#include <sophus/se3.hpp>
 #include "utils/eigen_helper.h"
 #include "algorithms/filter.hpp"
 #include "node.hpp"
@@ -14,8 +15,8 @@ namespace iterators {
   class projective_functor {
 
     public:
-      projective_functor(MapT<FieldType>& map, UpdateF f, const Matrix4& Tcw, 
-          const Matrix4& K, const int2 framesize) : 
+      projective_functor(MapT<FieldType>& map, UpdateF f, const Sophus::SE3f& Tcw, 
+          const Sophus::SE3f& K, const int2 framesize) : 
         _map(map), _function(f), _Tcw(Tcw), _K(K), _frame_size(framesize) {
       } 
 
@@ -126,8 +127,8 @@ namespace iterators {
     private:
       MapT<FieldType>& _map; 
       UpdateF _function; 
-      Matrix4 _Tcw;
-      Matrix4 _K;
+      Sophus::SE3f _Tcw;
+      Sophus::SE3f _K;
       int2 _frame_size;
       std::vector<VoxelBlock<FieldType>*> _active_list;
   };
