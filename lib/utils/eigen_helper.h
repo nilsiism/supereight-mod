@@ -8,12 +8,12 @@ namespace octlib {
   namespace math {
     template <typename T>
       T fracf(const T& v) {
-        return v - floor(v);
+        return v - v.array().floor().matrix();
       }
 
     template <typename T>
       T floorf(const T& v) {
-        return floor(v);
+        return v.array().floor();
       }
 
     template <typename S, typename T>

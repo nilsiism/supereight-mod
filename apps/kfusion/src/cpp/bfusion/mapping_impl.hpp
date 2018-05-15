@@ -3,6 +3,7 @@
 
 #include <node.hpp>
 #include <constant_parameters.h>
+#include <Eigen/Dense>
 #include "bspline_lookup.cc"
 #include "../continuous/volume_traits.hpp"
 #include "functors/projective_functor.hpp"
@@ -127,16 +128,16 @@ static inline float applyWindow(const float occupancy, const float ,
 struct bfusion_update {
 
   template <typename DataHandlerT>
-  void operator()(DataHandlerT& handler, const int3&, const float3& pos, 
-     const float2& pixel) {
+  void operator()(DataHandlerT& handler, const Eigen::Vector3i&, 
+      const Eigen::Vector3f& pos, const Eigen::Vector2f& pixel) {
 
-    const uint2 px = make_uint2(pixel.x, pixel.y);
-    const float depthSample = depth[px.x + depthSize.x*px.y];
+    const Eigen::Vector2i px = pixel.cast <int> ();
+    const float depthSample = depth[px(0) + depthSize(0)*px(1)];
     if (depthSample <=  0) return;
 
-    const float diff = (pos.z - depthSample)
-      * std::sqrt( 1 + sq(pos.x / pos.z) + sq(pos.y / pos.z));
-    float sample = HNew(diff/(noiseFactor *sq(pos.z)), pos.z);
+    const float diff = (pos(2) - depthSample)
+      * std::sqrt( 1 + sq(pos(0) / pos(2)) + sq(pos(1) / pos(2)));
+    float sample = HNew(diff/(noiseFactor *sq(pos(2))), pos(2));
     if(sample == 0.5f) return;
     sample = clamp(sample, 0.03f, 0.97f);
     auto data = handler.get();
@@ -147,11 +148,11 @@ struct bfusion_update {
     handler.set(data);
   } 
 
-  bfusion_update(const float * d, const uint2 framesize, float n, float t) : 
-    depth(d), depthSize(framesize), noiseFactor(n), timestamp(t){};
+  bfusion_update(const float * d, const Eigen::Vector2i framesize, float n, 
+      float t): depth(d), depthSize(framesize), noiseFactor(n), timestamp(t){};
 
   const float * depth;
-  uint2 depthSize;
+  Eigen::Vector2i depthSize;
   float noiseFactor;
   float timestamp;
 };

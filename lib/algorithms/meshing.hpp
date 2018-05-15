@@ -56,31 +56,31 @@ namespace meshing {
     inline Eigen::Vector3f interp_vertexes(const Map& volume, FieldSelector select, 
         const uint x, const uint y, const uint z, const int edge){
       switch(edge){
-        case 0:  return compute_intersection(volume, select, make_uint3(x,   y, z),     
-                     make_uint3(x+1, y, z));
-        case 1:  return compute_intersection(volume, select, make_uint3(x+1, y, z),     
-                     make_uint3(x+1, y, z+1));
-        case 2:  return compute_intersection(volume, select, make_uint3(x+1, y, z+1),   
-                     make_uint3(x, y, z+1));
-        case 3:  return compute_intersection(volume, select, make_uint3(x,   y, z),     
-                     make_uint3(x, y, z+1));
-        case 4:  return compute_intersection(volume, select, make_uint3(x,   y+1, z),   
-                     make_uint3(x+1, y+1, z));
-        case 5:  return compute_intersection(volume, select, make_uint3(x+1, y+1, z),   
-                     make_uint3(x+1, y+1, z+1));
-        case 6:  return compute_intersection(volume, select, make_uint3(x+1, y+1, z+1), 
-                     make_uint3(x, y+1, z+1));
-        case 7:  return compute_intersection(volume, select, make_uint3(x,   y+1, z),   
-                     make_uint3(x,   y+1, z+1));
+        case 0:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z),     
+                     Eigen::Vector3i(x+1, y, z));
+        case 1:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y, z),     
+                     Eigen::Vector3i(x+1, y, z+1));
+        case 2:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y, z+1),   
+                     Eigen::Vector3i(x, y, z+1));
+        case 3:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z),     
+                     Eigen::Vector3i(x, y, z+1));
+        case 4:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y+1, z),   
+                     Eigen::Vector3i(x+1, y+1, z));
+        case 5:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y+1, z),   
+                     Eigen::Vector3i(x+1, y+1, z+1));
+        case 6:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y+1, z+1), 
+                     Eigen::Vector3i(x, y+1, z+1));
+        case 7:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y+1, z),   
+                     Eigen::Vector3i(x,   y+1, z+1));
 
-        case 8:  return compute_intersection(volume, select, make_uint3(x,   y, z),     
-                     make_uint3(x,   y+1, z));
-        case 9:  return compute_intersection(volume, select, make_uint3(x+1, y, z),     
-                     make_uint3(x+1, y+1, z));
-        case 10: return compute_intersection(volume, select, make_uint3(x+1, y, z+1),   
-                     make_uint3(x+1, y+1, z+1));
-        case 11: return compute_intersection(volume, select, make_uint3(x,   y, z+1),   
-                     make_uint3(x,   y+1, z+1));
+        case 8:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z),     
+                     Eigen::Vector3i(x,   y+1, z));
+        case 9:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y, z),     
+                     Eigen::Vector3i(x+1, y+1, z));
+        case 10: return compute_intersection(volume, select, Eigen::Vector3i(x+1, y, z+1),   
+                     Eigen::Vector3i(x+1, y+1, z+1));
+        case 11: return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z+1),   
+                     Eigen::Vector3i(x,   y+1, z+1));
       }
       return Eigen::Vector3f(0);
     }
@@ -127,14 +127,14 @@ namespace meshing {
 
     uint8_t index = 0;
 
-    if(points[0](1) == 0.f) return 0;
-    if(points[1](1) == 0.f) return 0;
-    if(points[2](1) == 0.f) return 0;
-    if(points[3](1) == 0.f) return 0;
-    if(points[4](1) == 0.f) return 0;
-    if(points[5](1) == 0.f) return 0;
-    if(points[6](1) == 0.f) return 0;
-    if(points[7](1) == 0.f) return 0;
+    if(points[0].y == 0.f) return 0;
+    if(points[1].y == 0.f) return 0;
+    if(points[2].y == 0.f) return 0;
+    if(points[3].y == 0.f) return 0;
+    if(points[4].y == 0.f) return 0;
+    if(points[5].y == 0.f) return 0;
+    if(points[6].y == 0.f) return 0;
+    if(points[7].y == 0.f) return 0;
 
     if(inside(points[0])) index |= 1;
     if(inside(points[1])) index |= 2;

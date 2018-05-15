@@ -463,7 +463,7 @@ template <typename T>
 template <typename FieldSelector>
 float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
   
-  const Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos));
+  const Eigen::Vector3i base = octlib::math::floorf(pos).cast<int>();
   const Eigen::Vector3f factor = octlib::math::fracf(pos);
   const Eigen::Vector3i lower = octlib::math::max(base, Eigen::Vector3i::Constant(0));
 
@@ -569,17 +569,14 @@ Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos) const {
             - get(upper(0), upper(1), lower_upper(2), n)(0))
           * factor(0)) * factor(1)) * factor(2);
 
-  return gradient
-    * Eigen::Vector3f(dim_ / size_, dim_ / size_, dim_ / size_)
-    * (0.5f);
-
+  return (0.5f * dim_ / size_) * gradient;
 }
 
 template <typename T>
 template <typename FieldSelector>
 Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos, FieldSelector select) const {
 
-   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos));
+   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos).cast<int>());
    Eigen::Vector3f factor = octlib::math::fracf(pos);
    Eigen::Vector3i lower_lower = octlib::math::max(base - Eigen::Vector3i::Constant(1), Eigen::Vector3i::Constant(0));
    Eigen::Vector3i lower_upper = octlib::math::max(base, Eigen::Vector3i::Constant(0));
@@ -659,9 +656,7 @@ Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos, FieldSelector select)
             - select(get(upper(0), upper(1), lower_upper(2), n)))
           * factor(0)) * factor(1)) * factor(2);
 
-  return gradient
-    * Eigen::Vector3f(dim_ / size_, dim_ / size_, dim_ / size_)
-    * (0.5f);
+  return (0.5f * dim_ / size_) * gradient;
 }
 
 template <typename T>
@@ -932,7 +927,7 @@ class ray_iterator {
 
       /* Precomputing the ray coefficients */
       t_coef_ = -1.f * octlib::math::fabs(direction_).cwiseInverse();
-      t_bias_ = t_coef_ * scaled_origin;
+      t_bias_ = t_coef_.cwiseProduct(scaled_origin);
 
 
       /* Build the octrant mask to to mirror the coordinate system such that
@@ -1059,7 +1054,7 @@ class ray_iterator {
       else if (state_ == FINISHED) return std::make_tuple(-1.f, -1.f, -1.f);
 
       while (scale_ < CAST_STACK_DEPTH) {
-        t_corner_ = pos_ * t_coef_ - t_bias_;
+        t_corner_ = pos_.cwiseProduct(t_coef_) - t_bias_;
         tc_max_ = fminf(fminf(t_corner_(0), t_corner_(1)), t_corner_(2));
 
         child_ = parent_->child(idx_ ^ octant_mask_ ^ 7);

@@ -12,8 +12,9 @@ namespace algorithms {
   template <typename VoxelBlockType>
     bool in_frustum(const VoxelBlockType* v, float voxelSize, 
         const Sophus::SE3f& camera, const Eigen::Vector2i& frameSize) {
-      const Eigen::Vector3f block_coord = v->coordinates() 
-        * Eigen::Vector3f::Constant(voxelSize);
+      const Eigen::Vector3f block_coord = 
+            v->coordinates().template cast<float>().cwiseProduct(
+            Eigen::Vector3f::Constant(voxelSize));
       const Eigen::Vector3f v_camera = camera*block_coord;
       const Eigen::Vector2i px = Eigen::Vector2i(v_camera(0)/v_camera(2), 
           v_camera(1)/v_camera(2));
