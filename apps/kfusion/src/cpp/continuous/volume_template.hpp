@@ -71,7 +71,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
     }
 
     template <typename FieldSelector>
-    float3 grad(const float3 & pos, FieldSelector select) const {
+    Eigen::Vector3f grad(const float3 & pos, FieldSelector select) const {
 
       const float inverseVoxelSize = _size / _dim;
       const Eigen::Vector3f scaled_pos((pos.x * inverseVoxelSize),

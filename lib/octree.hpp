@@ -927,7 +927,8 @@ class ray_iterator {
         copysignf(epsilon, direction(2)) : direction(2);
 
       /* Scaling the origin to resides between coordinates [1,2] */
-      const Eigen::Vector3f scaled_origin = origin/map_.dim_ + 1.f;
+      const Eigen::Vector3f scaled_origin = origin/map_.dim_ + 
+        Eigen::Vector3f::Constant(1.f);
 
       /* Precomputing the ray coefficients */
       t_coef_ = -1.f * octlib::math::fabs(direction_).cwiseInverse();

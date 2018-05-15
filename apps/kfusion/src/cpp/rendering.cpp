@@ -34,9 +34,10 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
           farPlane, mu, step, largestep) : make_float4(0.f);
 			if(hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
-				float3 surfNorm = volume.grad(make_float3(hit), 
+        Eigen::Vector3f tmp = volume.grad(make_float3(hit), 
             [](const auto& val){ return val.x; });
-				if (length(surfNorm) == 0) {
+				float3 surfNorm = make_float3(tmp(0), tmp(1), tmp(2));
+          if (length(surfNorm) == 0) {
 					//normal[pos] = normalize(surfNorm); // APN added
 					normal[pos.x + pos.y * inputSize.x].x = INVALID;
 				} else {
@@ -160,7 +161,9 @@ void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthS
           farPlane, mu, step, largestep) : make_float4(0.f);
 			if (hit.w > 0) {
 				const float3 test = make_float3(hit);
-				const float3 surfNorm = volume.grad(test, [](const auto& val){ return val.x; });
+        Eigen::Vector3f tmp = volume.grad(make_float3(hit), 
+            [](const auto& val){ return val.x; });
+				float3 surfNorm = make_float3(tmp(0), tmp(1), tmp(2));
 				if (length(surfNorm) > 0) {
 					const float3 diff = (std::is_same<T, SDF>::value ?
               normalize(light - test) : normalize(test - light));
