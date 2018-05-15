@@ -43,6 +43,8 @@
 #include <TooN/se3.h>
 #include <TooN/GR_SVD.h>
 #include <tiny_obj_loader.h>
+#include <Eigen/Dense>
+#include <sophus/se3.hpp>
 ////////////////////////// MATh STUFF //////////////////////
 
 #define INVALID -2
@@ -1027,4 +1029,7 @@ inline void writeObjMesh(const char * filename,
             << " points" << std::endl;
 }
 
+static inline Sophus::SE3f to_sophus(const Matrix4& m) {
+  return Sophus::SE3f(Eigen::Matrix<float, 4, 4, Eigen::RowMajor>(&m.data[0].x));
+}
 #endif

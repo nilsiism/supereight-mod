@@ -6,6 +6,7 @@
 #include <data.hpp>
 #include <type_traits>
 #include <cstring>
+#include <Eigen/Dense>
 
 template <typename T>
 class Void {};
@@ -63,7 +64,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
     template <typename FieldSelector>
     float interp(const float3 & pos, FieldSelector select) const {
       const float inverseVoxelSize = _size / _dim;
-      const float3 scaled_pos = make_float3((pos.x * inverseVoxelSize),
+      const Eigen::Vector3f scaled_pos((pos.x * inverseVoxelSize),
           (pos.y * inverseVoxelSize),
           (pos.z * inverseVoxelSize));
       return _map_index.interp(scaled_pos, select);
@@ -73,7 +74,7 @@ class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
     float3 grad(const float3 & pos, FieldSelector select) const {
 
       const float inverseVoxelSize = _size / _dim;
-      const float3 scaled_pos = make_float3((pos.x * inverseVoxelSize),
+      const Eigen::Vector3f scaled_pos((pos.x * inverseVoxelSize),
           (pos.y * inverseVoxelSize),
           (pos.z * inverseVoxelSize));
       return _map_index.grad(scaled_pos, select);

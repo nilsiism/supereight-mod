@@ -2,6 +2,8 @@
 #include "timings.h"
 #include "continuous/volume_instance.hpp"
 #include <tuple>
+#include <Eigen/Dense>
+#include <sophus/se3.hpp>
 
 /* Raycasting implementations */ 
 #include "bfusion/rendering_impl.hpp"
@@ -12,6 +14,7 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
     const Matrix4 view, const float nearPlane, const float farPlane, 
     const float mu, const float step, const float largestep) {
 	TICK();
+  
 	unsigned int y;
 #pragma omp parallel for shared(normal, vertex), private(y)
 	for (y = 0; y < inputSize.y; y++)
@@ -19,8 +22,11 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
 		for (unsigned int x = 0; x < inputSize.x; x++) {
 
 			uint2 pos = make_uint2(x, y);
-      ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, get_translation(view), 
-          normalize(rotate(view, make_float3(x, y, 1.f))), nearPlane, farPlane);
+      const Eigen::Vector3f dir = 
+        (to_sophus(view).so3() * Eigen::Vector3f(x, y, 1.f)).normalized();
+      const float3 transl = get_translation(view);
+      ray_iterator<typename Volume<T>::field_type> ray(volume._map_index,
+          Eigen::Vector3f(transl.x, transl.y, transl.z), dir, nearPlane, farPlane);
       const std::tuple<float, float, float> t = ray.next(); /* Get distance to the first intersected block */
       float t_min = std::get<0>(t);
       const float4 hit = t_min > 0.f ? 
@@ -142,8 +148,12 @@ void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthS
 	for (y = 0; y < depthSize.y; y++) {
 		for (unsigned int x = 0; x < depthSize.x; x++) {
 			const uint2 pos = make_uint2(x, y);
-      ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, get_translation(view), 
-          normalize(rotate(view, make_float3(x, y, 1.f))), nearPlane, farPlane);
+      const Eigen::Vector3f dir = 
+        (to_sophus(view).so3() * Eigen::Vector3f(x, y, 1.f)).normalized();
+      const float3 transl = get_translation(view);
+      ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, 
+          Eigen::Vector3f(transl.x, transl.y, transl.z), dir, nearPlane, 
+          farPlane);
       const float t_min = std::get<0>(ray.next()); /* Get distance to the first intersected block */
       const float4 hit = t_min > 0.f ? 
         raycast(volume, pos, view, t_min*volume._dim/volume._size, 

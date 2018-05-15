@@ -16,7 +16,7 @@ namespace iterators {
 
     public:
       projective_functor(MapT<FieldType>& map, UpdateF f, const Sophus::SE3f& Tcw, 
-          const Sophus::SE3f& K, const int2 framesize) : 
+          const Sophus::SE3f& K, const Eigen::Vector2i framesize) : 
         _map(map), _function(f), _Tcw(Tcw), _K(K), _frame_size(framesize) {
       } 
 
@@ -41,35 +41,35 @@ namespace iterators {
 
       void update_block(VoxelBlock<FieldType> * block, const float voxel_size) {
 
-        const int3 blockCoord = block->coordinates();
-        const float3 delta = rotate(_Tcw, make_float3(voxel_size, 0, 0));
-        const float3 cameraDelta = rotate(_K, delta);
+        const Eigen::Vector3i blockCoord = block->coordinates();
+        const Eigen::Vector3f delta = _Tcw.rotationMatrix() * Eigen::Vector3f(voxel_size, 0, 0);
+        const Eigen::Vector3f cameraDelta = _K.rotationMatrix() * delta;
         bool is_visible = false;
 
         unsigned int y, z, blockSide; 
         blockSide = VoxelBlock<FieldType>::side;
-        unsigned int ylast = blockCoord.y + blockSide;
-        unsigned int zlast = blockCoord.z + blockSide;
+        unsigned int ylast = blockCoord(1) + blockSide;
+        unsigned int zlast = blockCoord(2) + blockSide;
 
-        for(z = blockCoord.z; z < zlast; ++z)
-          for (y = blockCoord.y; y < ylast; ++y){
-            int3 pix = make_int3(blockCoord.x, y, z);
-            float3 start = _Tcw * make_float3((pix.x) * voxel_size, 
-                (pix.y) * voxel_size, (pix.z) * voxel_size);
-            float3 camerastart = _K * start;
+        for(z = blockCoord(2); z < zlast; ++z)
+          for (y = blockCoord(1); y < ylast; ++y){
+            Eigen::Vector3i pix = Eigen::Vector3i(blockCoord(0), y, z);
+            Eigen::Vector3f start = _Tcw * Eigen::Vector3f((pix(0)) * voxel_size, 
+                (pix(1)) * voxel_size, (pix(2)) * voxel_size);
+            Eigen::Vector3f camerastart = _K * start;
 #pragma omp simd
             for (unsigned int x = 0; x < blockSide; ++x){
-              pix.x = x + blockCoord.x; 
-              const float3 camera_voxel = camerastart + (x*cameraDelta);
-              const float3 pos = start + (x*delta);
-              if (pos.z < 0.0001f) continue;
+              pix(0) = x + blockCoord(0); 
+              const Eigen::Vector3f camera_voxel = camerastart + (x*cameraDelta);
+              const Eigen::Vector3f pos = start + (x*delta);
+              if (pos(2) < 0.0001f) continue;
 
-              const float inverse_depth = 1.f / camera_voxel.z;
-              const float2 pixel = make_float2(
-                  camera_voxel.x * inverse_depth + 0.5f,
-                  camera_voxel.y * inverse_depth + 0.5f);
-              if (pixel.x < 0.5f || pixel.x > _frame_size.x - 1.5f || 
-                  pixel.y < 0.5f || pixel.y > _frame_size.y - 1.5f) continue;
+              const float inverse_depth = 1.f / camera_voxel(2);
+              const Eigen::Vector2f pixel = Eigen::Vector2f(
+                  camera_voxel(0) * inverse_depth + 0.5f,
+                  camera_voxel(1) * inverse_depth + 0.5f);
+              if (pixel(0) < 0.5f || pixel(0) > _frame_size(0) - 1.5f || 
+                  pixel(1) < 0.5f || pixel(1) > _frame_size(1) - 1.5f) continue;
               is_visible = true;
 
               VoxelBlockHandler<FieldType> handler = {block, pix};
@@ -80,25 +80,25 @@ namespace iterators {
       }
 
       void update_node(Node<FieldType> * node, const float voxel_size) { 
-        const int3 voxel = make_int3(unpack_morton(node->code));
-        const float3 delta = rotate(_Tcw, make_float3(0.5f * voxel_size * node->side));
-        const float3 delta_c = rotate(_K, delta);
-        float3 base_cam = _Tcw * (make_float3(voxel) * voxel_size);
-        float3 basepix_hom = _K * base_cam;
+        const Eigen::Vector3i voxel = Eigen::Vector3i(unpack_morton(node->code));
+        const Eigen::Vector3f delta = _Tcw.rotationMatrix() * Eigen::Vector3f::Constant(0.5f * voxel_size * node->side);
+        const Eigen::Vector3f delta_c = _K.rotationMatrix() * delta;
+        Eigen::Vector3f base_cam = _Tcw * (voxel_size * voxel.cast<float> ());
+        Eigen::Vector3f basepix_hom = _K * base_cam;
 
 #pragma omp simd
         for(int i = 0; i < 8; ++i) {
-          const int3 dir =  make_int3((i & 1) > 0, (i & 2) > 0, (i & 4) > 0);
-          const float3 vox_cam = base_cam + make_float3(dir) * delta; 
-          const float3 pix_hom = basepix_hom + make_float3(dir) * delta_c; 
+          const Eigen::Vector3i dir =  Eigen::Vector3i((i & 1) > 0, (i & 2) > 0, (i & 4) > 0);
+          const Eigen::Vector3f vox_cam = base_cam + Eigen::Vector3f(dir).cwiseProduct(delta); 
+          const Eigen::Vector3f pix_hom = basepix_hom + Eigen::Vector3f(dir).cwiseProduct(delta_c); 
 
-          if (vox_cam.z < 0.0001f) continue;
-          const float inverse_depth = 1.f / pix_hom.z;
-          const float2 pixel = make_float2(
-              pix_hom.x * inverse_depth + 0.5f,
-              pix_hom.y * inverse_depth + 0.5f);
-          if (pixel.x < 0.5f || pixel.x > _frame_size.x - 1.5f || 
-              pixel.y < 0.5f || pixel.y > _frame_size.y - 1.5f) continue;
+          if (vox_cam(2) < 0.0001f) continue;
+          const float inverse_depth = 1.f / pix_hom(2);
+          const Eigen::Vector2f pixel = Eigen::Vector2f(
+              pix_hom(0) * inverse_depth + 0.5f,
+              pix_hom(1) * inverse_depth + 0.5f);
+          if (pixel(0) < 0.5f || pixel(0) > _frame_size(0) - 1.5f || 
+              pixel(1) < 0.5f || pixel(1) > _frame_size(1) - 1.5f) continue;
 
           NodeHandler<FieldType> handler = {node, i};
           _function(handler, voxel + dir, vox_cam, pixel);
@@ -129,7 +129,7 @@ namespace iterators {
       UpdateF _function; 
       Sophus::SE3f _Tcw;
       Sophus::SE3f _K;
-      int2 _frame_size;
+      Eigen::Vector2i _frame_size;
       std::vector<VoxelBlock<FieldType>*> _active_list;
   };
 }
