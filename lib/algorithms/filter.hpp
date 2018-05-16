@@ -2,7 +2,6 @@
 #define ACTIVE_LIST_HPP
 
 #include <utils/se_common.h> 
-#include <sophus/se3.hpp>
 #include <node.hpp>
 #include <utils/memory_pool.hpp>
 #include <utils/morton_utils.hpp>
@@ -11,11 +10,11 @@ namespace algorithms {
 
   template <typename VoxelBlockType>
     bool in_frustum(const VoxelBlockType* v, float voxelSize, 
-        const Sophus::SE3f& camera, const Eigen::Vector2i& frameSize) {
-      const Eigen::Vector3f block_coord = 
+        const Eigen::Matrix4f& camera, const Eigen::Vector2i& frameSize) {
+      const Eigen::Vector3f v_camera = camera.topLeftCorner<3, 4>() * 
             v->coordinates().template cast<float>().cwiseProduct(
-            Eigen::Vector3f::Constant(voxelSize));
-      const Eigen::Vector3f v_camera = camera*block_coord;
+            Eigen::Vector3f::Constant(voxelSize)).homogeneous();
+;
       const Eigen::Vector2i px = Eigen::Vector2i(v_camera(0)/v_camera(2), 
           v_camera(1)/v_camera(2));
       if(px(0) >= 0 && px(0) < frameSize(0) && px(1) >= 0 && px(1) < frameSize(1))

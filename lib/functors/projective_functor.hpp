@@ -16,7 +16,7 @@ namespace iterators {
 
     public:
       projective_functor(MapT<FieldType>& map, UpdateF f, const Sophus::SE3f& Tcw, 
-          const Sophus::SE3f& K, const Eigen::Vector2i framesize) : 
+          const Eigen::Matrix4f& K, const Eigen::Vector2i framesize) : 
         _map(map), _function(f), _Tcw(Tcw), _K(K), _frame_size(framesize) {
       } 
 
@@ -30,7 +30,7 @@ namespace iterators {
         const float voxel_size = _map.dim()/_map.size();
         auto in_frustum_predicate = 
           std::bind(algorithms::in_frustum<VoxelBlock<FieldType>>, _1, 
-              voxel_size, _K*_Tcw, _frame_size); 
+              voxel_size, _K*_Tcw.matrix(), _frame_size); 
         auto is_active_predicate = [](const VoxelBlock<FieldType>* b) {
           return b->active();
         };
@@ -43,7 +43,7 @@ namespace iterators {
 
         const Eigen::Vector3i blockCoord = block->coordinates();
         const Eigen::Vector3f delta = _Tcw.rotationMatrix() * Eigen::Vector3f(voxel_size, 0, 0);
-        const Eigen::Vector3f cameraDelta = _K.rotationMatrix() * delta;
+        const Eigen::Vector3f cameraDelta = _K.topLeftCorner<3,3>() * delta;
         bool is_visible = false;
 
         unsigned int y, z, blockSide; 
@@ -56,7 +56,7 @@ namespace iterators {
             Eigen::Vector3i pix = Eigen::Vector3i(blockCoord(0), y, z);
             Eigen::Vector3f start = _Tcw * Eigen::Vector3f((pix(0)) * voxel_size, 
                 (pix(1)) * voxel_size, (pix(2)) * voxel_size);
-            Eigen::Vector3f camerastart = _K * start;
+            Eigen::Vector3f camerastart = _K.topLeftCorner<3,3>() * start;
 #pragma omp simd
             for (unsigned int x = 0; x < blockSide; ++x){
               pix(0) = x + blockCoord(0); 
@@ -82,9 +82,9 @@ namespace iterators {
       void update_node(Node<FieldType> * node, const float voxel_size) { 
         const Eigen::Vector3i voxel = Eigen::Vector3i(unpack_morton(node->code));
         const Eigen::Vector3f delta = _Tcw.rotationMatrix() * Eigen::Vector3f::Constant(0.5f * voxel_size * node->side);
-        const Eigen::Vector3f delta_c = _K.rotationMatrix() * delta;
+        const Eigen::Vector3f delta_c = _K.topLeftCorner<3,3>() * delta;
         Eigen::Vector3f base_cam = _Tcw * (voxel_size * voxel.cast<float> ());
-        Eigen::Vector3f basepix_hom = _K * base_cam;
+        Eigen::Vector3f basepix_hom = _K.topLeftCorner<3,3>() * base_cam;
 
 #pragma omp simd
         for(int i = 0; i < 8; ++i) {
@@ -128,7 +128,7 @@ namespace iterators {
       MapT<FieldType>& _map; 
       UpdateF _function; 
       Sophus::SE3f _Tcw;
-      Sophus::SE3f _K;
+      Eigen::Matrix4f _K;
       Eigen::Vector2i _frame_size;
       std::vector<VoxelBlock<FieldType>*> _active_list;
   };

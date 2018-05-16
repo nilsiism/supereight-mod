@@ -722,4 +722,8 @@ inline void writeObjMesh(const char * filename,
 static inline Sophus::SE3f to_sophus(const Matrix4& m) {
   return Sophus::SE3f(Eigen::Matrix<float, 4, 4, Eigen::RowMajor>(&m.data[0].x));
 }
+
+static inline Eigen::Matrix4f to_eigen(const Matrix4& m) {
+  return Eigen::Matrix<float, 4, 4, Eigen::RowMajor>(&m.data[0].x);
+}
 #endif
