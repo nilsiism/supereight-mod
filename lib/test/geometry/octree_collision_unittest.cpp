@@ -1,4 +1,4 @@
-#include "utils/eigen_helper.h"
+#include "utils/se_common.h"
 #include "geometry/octree_collision.hpp"
 #include "geometry/aabb_collision.hpp"
 #include "utils/morton_utils.hpp"

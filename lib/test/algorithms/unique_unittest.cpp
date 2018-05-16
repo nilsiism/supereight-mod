@@ -1,5 +1,5 @@
 #include "octree.hpp"
-#include "utils/eigen_helper.h"
+#include "utils/se_common.h"
 #include "utils/morton_utils.hpp"
 #include "algorithms/unique.hpp"
 #include "gtest/gtest.h"

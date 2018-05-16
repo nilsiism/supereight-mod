@@ -1,5 +1,5 @@
 #include "octree.hpp"
-#include "utils/eigen_helper.h"
+#include "utils/se_common.h"
 #include "gtest/gtest.h"
 
 typedef float testT;

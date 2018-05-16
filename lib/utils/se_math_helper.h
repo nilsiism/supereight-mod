@@ -1,8 +1,7 @@
-#ifndef EIGEN_HELPER_H
-#define EIGEN_HELPER_H
+#ifndef SE_MATH_HELPER_H
+#define SE_MATH_HELPER_H
 
-#include <cmath>
-#include "Eigen/Dense"
+#include "se_common.h"
 
 namespace octlib {
   namespace math {

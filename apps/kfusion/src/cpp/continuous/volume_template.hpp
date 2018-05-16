@@ -6,7 +6,6 @@
 #include <data.hpp>
 #include <type_traits>
 #include <cstring>
-#include <Eigen/Dense>
 
 template <typename T>
 class Void {};

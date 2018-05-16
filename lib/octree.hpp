@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OCTREE_H
 
 #include <cstring>
-#include <utils/eigen_helper.h>
+#include <utils/se_common.h>
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
 #include "octant_ops.hpp"

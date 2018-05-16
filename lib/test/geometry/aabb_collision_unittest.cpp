@@ -1,4 +1,4 @@
-#include "utils/eigen_helper.h"
+#include "utils/se_common.h"
 #include "geometry/aabb_collision.hpp"
 #include "gtest/gtest.h"
 

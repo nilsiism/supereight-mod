@@ -1,7 +1,7 @@
 #ifndef ACTIVE_LIST_HPP
 #define ACTIVE_LIST_HPP
 
-#include <utils/eigen_helper.h> 
+#include <utils/se_common.h> 
 #include <sophus/se3.hpp>
 #include <node.hpp>
 #include <utils/memory_pool.hpp>

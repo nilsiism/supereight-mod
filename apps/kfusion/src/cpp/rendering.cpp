@@ -2,7 +2,6 @@
 #include "timings.h"
 #include "continuous/volume_instance.hpp"
 #include <tuple>
-#include <Eigen/Dense>
 #include <sophus/se3.hpp>
 
 /* Raycasting implementations */ 

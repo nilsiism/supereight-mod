@@ -1,5 +1,5 @@
 #include <random>
-#include "utils/eigen_helper.h"
+#include "utils/se_common.h"
 #include "utils/morton_utils.hpp"
 #include "octree_defines.h"
 #include "gtest/gtest.h"

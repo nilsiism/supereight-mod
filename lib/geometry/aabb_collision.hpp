@@ -1,7 +1,7 @@
 #ifndef AABB_COLLISION_HPP
 #define AABB_COLLISION_HPP
 #include <cmath>
-#include <utils/eigen_helper.h> 
+#include <utils/se_common.h> 
 
 namespace geometry {
   inline int axis_overlap(int a, const int a_edge, 

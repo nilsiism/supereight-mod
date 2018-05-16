@@ -4,7 +4,7 @@
 #include <vector>
 
 #include <sophus/se3.hpp>
-#include "utils/eigen_helper.h"
+#include "utils/se_common.h"
 #include "algorithms/filter.hpp"
 #include "node.hpp"
 #include "functors/data_handler.hpp"

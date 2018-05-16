@@ -10,7 +10,6 @@
 #include "timings.h"
 #include <perfstats.h>
 #include <vtk-io.h>
-#include <Eigen/Dense>
 #include <octree.hpp>
 #include "continuous/volume_instance.hpp"
 #include "algorithms/meshing.hpp"

@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <atomic>
 #include <mutex>
-#include <utils/eigen_helper.h>
+#include <utils/se_common.h>
 #include <voxel_traits.hpp>
 
 class StaticStorage;

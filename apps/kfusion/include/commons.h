@@ -43,8 +43,6 @@
 #include <TooN/se3.h>
 #include <TooN/GR_SVD.h>
 #include <tiny_obj_loader.h>
-#include <Eigen/Dense>
-#include <sophus/se3.hpp>
 ////////////////////////// MATh STUFF //////////////////////
 
 #define INVALID -2
@@ -161,7 +159,7 @@ typedef struct Triangle {
   }
   
   inline bool iszero(const Eigen::Vector3f& v){ 
-    return (v(0) == 0) && (v(1) == 0) && (v(2) == 0);
+    return !(v.array() == 0).all();
   }
 
   inline bool valid(){

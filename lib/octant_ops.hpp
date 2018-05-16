@@ -1,7 +1,7 @@
 #ifndef OCTANT_OPS_HPP
 #define OCTANT_OPS_HPP
 #include "utils/morton_utils.hpp"
-#include "utils/eigen_helper.h"
+#include "utils/se_common.h"
 #include "octree_defines.h"
 #include <iostream>
 #include <bitset>

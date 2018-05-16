@@ -1,9 +1,8 @@
 #ifndef MORTON_UTILS_HPP
 #define MORTON_UTILS_HPP
-#include <utils/eigen_helper.h>
 #include <cstdint>
-#include <octree_defines.h>
-#include <Eigen/Dense>
+#include "octree_defines.h"
+#include "se_common.h"
 
 inline uint64_t expand(unsigned long long value) {
   uint64_t x = value & 0x1fffff;

@@ -1,6 +1,6 @@
 #include <cmath>
 #include "octree.hpp"
-#include "utils/eigen_helper.h"
+#include "utils/se_common.h"
 #include "gtest/gtest.h"
 #include "functors/axis_aligned_functor.hpp"
 

@@ -3,7 +3,6 @@
 
 #include <node.hpp>
 #include <constant_parameters.h>
-#include <Eigen/Dense>
 #include "bspline_lookup.cc"
 #include "../continuous/volume_traits.hpp"
 #include "functors/projective_functor.hpp"

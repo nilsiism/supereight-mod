@@ -2,7 +2,6 @@
 #define KFUSION_MAPPING_HPP
 #include <node.hpp>
 #include "../continuous/volume_traits.hpp"
-#include <Eigen/Dense>
 
 struct sdf_update {
 
