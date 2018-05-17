@@ -63,8 +63,8 @@ namespace octlib {
           t_min_ = fmaxf(
               fmaxf(2.0f * t_coef_(0) - t_bias_(0), 2.0f * t_coef_(1) - t_bias_(1)), 2.0f * t_coef_(2) - t_bias_(2));
           t_max_ = fminf(fminf(t_coef_(0) - t_bias_(0), t_coef_(1) - t_bias_(1)), t_coef_(2) - t_bias_(2));
-          t_min_ = fmaxf(t_min_, nearPlane/map_.dim_);
-          t_max_ = fminf(t_max_, farPlane/map_.dim_ );
+          t_min_ = t_min_init_ = fmaxf(t_min_, nearPlane/map_.dim_);
+          t_max_ = t_max_init_ = fminf(t_max_, farPlane/map_.dim_ );
           h_ = t_max_;
 
           /*
@@ -191,6 +191,30 @@ namespace octlib {
           return nullptr;
         }
 
+        /*
+         * \brief Returns the minimum distance in meters to be travelled along
+         * the ray to intersect the voxel cube.
+         */
+        float tmin() { return t_min_init_ * map_.dim_; }
+
+        /*
+         * \brief Returns the minimum distance in meters to be travelled along
+         * the ray to exit the voxel cube.
+         */
+        float tmax() { return t_max_init_ * map_.dim_; }
+
+        /*
+         * \brief Returns the minimum distance in meters to be travelled along
+         * the ray to reach the currently intersected leaf.
+         */
+        float tcmin() { return t_min_ * map_.dim_; }
+
+        /*
+         * \brief Returns the minimum distance in meters to be travelled along
+         * the ray to exit the currently intersected grid.
+         */
+        float tcmax() { return tc_max_ * map_.dim_; }
+
       private:
         struct stack_entry {
           int scale;
@@ -219,7 +243,9 @@ namespace octlib {
         int min_scale_;
         float scale_exp2_;
         float t_min_;
+        float t_min_init_;
         float t_max_;
+        float t_max_init_;
         float tc_max_;
         Eigen::Vector3f t_corner_;
         float h_;

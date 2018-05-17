@@ -24,10 +24,10 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
       const Eigen::Vector3f dir = 
         (to_sophus(view).so3() * Eigen::Vector3f(x, y, 1.f)).normalized();
       const float3 transl = get_translation(view);
-      ray_iterator<typename Volume<T>::field_type> ray(volume._map_index,
+      octlib::ray_iterator<typename Volume<T>::field_type> ray(volume._map_index,
           Eigen::Vector3f(transl.x, transl.y, transl.z), dir, nearPlane, farPlane);
-      const std::tuple<float, float, float> t = ray.next(); /* Get distance to the first intersected block */
-      float t_min = std::get<0>(t);
+      ray.next();
+      const float t_min = ray.tmin(); /* Get distance to the first intersected block */
       const float4 hit = t_min > 0.f ? 
         raycast(volume, pos, view, t_min*volume._dim/volume._size, 
           farPlane, mu, step, largestep) : make_float4(0.f);
@@ -151,10 +151,11 @@ void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthS
       const Eigen::Vector3f dir = 
         (to_sophus(view).so3() * Eigen::Vector3f(x, y, 1.f)).normalized();
       const float3 transl = get_translation(view);
-      ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, 
+      octlib::ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, 
           Eigen::Vector3f(transl.x, transl.y, transl.z), dir, nearPlane, 
           farPlane);
-      const float t_min = std::get<0>(ray.next()); /* Get distance to the first intersected block */
+      ray.next();
+      const float t_min = ray.tmin(); /* Get distance to the first intersected block */
       const float4 hit = t_min > 0.f ? 
         raycast(volume, pos, view, t_min*volume._dim/volume._size, 
           farPlane, mu, step, largestep) : make_float4(0.f);

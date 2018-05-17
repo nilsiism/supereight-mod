@@ -57,4 +57,21 @@ TEST_F(RayIteratorTest, FetchAlongRay) {
     ASSERT_EQ(current->code, alloc_list_[i]);
     i++; 
   }
+  ASSERT_EQ(i, alloc_list_.size());
+}
+
+TEST_F(RayIteratorTest, CheckTminTmax) {
+  // const float blocksize = OctreeF::blockSide * (oct_.dim()/oct_.size());
+  // const float diag = sqrtf((blocksize*blocksize) + (blocksize*blocksize));
+  // octlib::ray_iterator<OctreeF::compute_type> it(oct_, p_, dir_, 0.4, 4.0f); 
+
+  // int i = 0;
+  // VoxelBlock<testT> * current;
+  // while(current = it.next()) {
+  //   float diff = it.tcmax() - it.tcmin();
+  //   std::cout << diff << std::endl;
+  //   ASSERT_LT(diff, diag);
+  //   i++; 
+  // }
+  // ASSERT_EQ(i, alloc_list_.size());
 }
