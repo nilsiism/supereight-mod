@@ -3,6 +3,8 @@
 
 #include <cmath>
 
+#define SOPHUS_DISABLE_ENSURES
+
 /* 
  * When compiling in debug mode Eigen compilation fails 
  * due to -Wunused-parameter. Disable it if compiling with GCC.
