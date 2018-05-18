@@ -33,7 +33,7 @@ size_t buildOctantList(HashType* allocationList, size_t reserved,
   const Matrix4 kPose = pose * invK;
   const int size = map_index.size();
   const int max_depth = log2(size);
-  const int leaves_depth = OctreeT<FieldType>::block_depth;
+  const int leaves_depth = max_depth - log2_const(OctreeT<FieldType>::blockSide);
 
 #ifdef _OPENMP
   std::atomic<unsigned int> voxelCount;
@@ -74,7 +74,8 @@ size_t buildOctantList(HashType* allocationList, size_t reserved,
           auto node_ptr = map_index.fetch_octant(voxel.x, voxel.y, voxel.z, 
               tree_depth);
           if(!node_ptr){
-            HashType k = map_index.hash(voxel.x, voxel.y, voxel.z, tree_depth);
+            HashType k = map_index.hash(voxel.x, voxel.y, voxel.z, 
+                std::min(tree_depth, leaves_depth));
             unsigned int idx = ++(voxelCount);
             if(idx < reserved) {
               allocationList[idx] = k;
