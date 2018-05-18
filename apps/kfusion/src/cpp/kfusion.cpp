@@ -427,7 +427,7 @@ void Kfusion::renderVolume(uchar4 * out, uint2 outputSize, int frame,
         *(this->viewPose) * getInverseCameraMatrix(k), nearPlane, 
         farPlane * 2.0f, _mu, step, largestep, 
         get_translation(*(this->viewPose)), ambient, 
-        !compareMatrix4(*(this->viewPose), raycastPose));
+        !compareMatrix4(*(this->viewPose), raycastPose), vertex, normal);
 }
 
 void Kfusion::renderTrack(uchar4 * out, uint2 outputSize) {

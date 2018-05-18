@@ -135,37 +135,46 @@ template <typename T>
 void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthSize, const Matrix4 view, 
     const float nearPlane, const float farPlane, const float mu,
 		const float step, const float largestep, const float3 light,
-		const float3 ambient, bool ) {
+		const float3 ambient, bool render, const float3 * vertex, 
+    const float3 * normal) {
 	TICK();
   unsigned int y;
 #pragma omp parallel for shared(out), private(y)
 	for (y = 0; y < depthSize.y; y++) {
 		for (unsigned int x = 0; x < depthSize.x; x++) {
 			const uint2 pos = make_uint2(x, y);
-      ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, get_translation(view), 
-          normalize(rotate(view, make_float3(x, y, 1.f))), nearPlane, farPlane);
-      const float t_min = std::get<0>(ray.next()); /* Get distance to the first intersected block */
-      const float4 hit = t_min > 0.f ? 
-        raycast(volume, pos, view, t_min*volume._dim/volume._size, 
-          farPlane, mu, step, largestep) : make_float4(0.f);
-			if (hit.w > 0) {
-				const float3 test = make_float3(hit);
-				const float3 surfNorm = volume.grad(test, [](const auto& val){ return val.x; });
-				if (length(surfNorm) > 0) {
-					const float3 diff = (std::is_same<T, SDF>::value ?
-              normalize(light - test) : normalize(test - light));
-					const float dir = fmaxf(dot(normalize(surfNorm), diff),
-							0.f);
-					const float3 col = clamp(make_float3(dir) + ambient, 0.f,
-							1.f) * 255;
-					out[x + depthSize.x*y] = make_uchar4(col.x, col.y, col.z, 0); // The forth value is a padding to align memory
-				} else {
-					out[x + depthSize.x*y] = make_uchar4(0, 0, 0, 0); // The forth value is a padding to align memory
-				}
-			} else {
-				out[x + depthSize.x*y] = make_uchar4(0, 0, 0, 0); // The forth value is a padding to align memory
-			}
-		}
+
+      float4 hit;
+      float3 test, surfNorm;
+      if(render) {
+        ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, get_translation(view), 
+            normalize(rotate(view, make_float3(x, y, 1.f))), nearPlane, farPlane);
+        const float t_min = std::get<0>(ray.next()); /* Get distance to the first intersected block */
+        hit = t_min > 0.f ? 
+          raycast(volume, pos, view, t_min*volume._dim/volume._size, 
+              farPlane, mu, step, largestep) : make_float4(0.f);
+        if (hit.w > 0) {
+          test = make_float3(hit);
+          surfNorm = volume.grad(test, [](const auto& val){ return val.x; });
+        } else {
+          out[x + depthSize.x*y] = make_uchar4(0, 0, 0, 0); // The forth value is a padding to align memory
+          continue;
+        }
+      } else {
+        test = vertex[x + depthSize.x*y];
+        surfNorm = normal[x + depthSize.x*y];
+      }
+
+      if (length(surfNorm) > 0) {
+        const float3 diff = (std::is_same<T, SDF>::value ?
+            normalize(light - test) : normalize(test - light));
+        const float dir = fmaxf(dot(normalize(surfNorm), diff),
+            0.f);
+        const float3 col = clamp(make_float3(dir) + ambient, 0.f,
+            1.f) * 255;
+        out[x + depthSize.x*y] = make_uchar4(col.x, col.y, col.z, 0); // The forth value is a padding to align memory
+      }
+    } 		
 	}
 	TOCK("renderVolumeKernel", depthSize.x * depthSize.y);
 }
