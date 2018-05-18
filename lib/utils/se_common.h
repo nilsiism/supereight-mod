@@ -12,6 +12,7 @@
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wint-in-bool-context"
 #include <Eigen/Dense>
 #include <sophus/se3.hpp>
 #pragma GCC diagnostic pop
