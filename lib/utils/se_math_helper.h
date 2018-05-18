@@ -15,16 +15,6 @@ namespace octlib {
         return v.array().floor();
       }
 
-    template <typename S, typename T>
-      auto max(const S& a, const T& b) {
-        return a.cwiseMax(b);
-      }
-
-    template <typename S, typename T>
-    inline  auto min(const S& a, const T& b) {
-        return a.cwiseMin(b);
-      }
-
     template <typename T>
     inline T fabs(const T& v) {
         return v.cwiseAbs();

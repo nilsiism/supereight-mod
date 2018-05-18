@@ -468,7 +468,7 @@ float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
   
   const Eigen::Vector3i base = octlib::math::floorf(pos).cast<int>();
   const Eigen::Vector3f factor = octlib::math::fracf(pos);
-  const Eigen::Vector3i lower = octlib::math::max(base, Eigen::Vector3i::Constant(0));
+  const Eigen::Vector3i lower = base.cwiseMax(Eigen::Vector3i::Constant(0));
 
   float points[8];
   gather_points(*this, lower, select, points);
@@ -490,15 +490,13 @@ float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
 template <typename T>
 Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos) const {
 
-   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos));
+   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos).cast<int>());
    Eigen::Vector3f factor = octlib::math::fracf(pos);
-   Eigen::Vector3i lower_lower = 
-     octlib::math::max(base - Eigen::Vector3i::Constant(1), 
-         Eigen::Vector3i::Constant(0));
-   Eigen::Vector3i lower_upper = octlib::math::max(base, Eigen::Vector3i::Constant(0));
-   Eigen::Vector3i upper_lower = octlib::math::min(base + Eigen::Vector3i::Constant(1),
+   Eigen::Vector3i lower_lower = (base - Eigen::Vector3i::Constant(1)).cwiseMax(Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i lower_upper = base.cwiseMax(Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i upper_lower = (base + Eigen::Vector3i::Constant(1)).cwiseMin(
       Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
-   Eigen::Vector3i upper_upper = octlib::math::min(base + Eigen::Vector3i::Constant(2),
+   Eigen::Vector3i upper_upper = (base + Eigen::Vector3i::Constant(2)).cwiseMin(
       Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
    Eigen::Vector3i & lower = lower_upper;
    Eigen::Vector3i & upper = upper_lower;
@@ -581,11 +579,11 @@ Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos, FieldSelector select)
 
    Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos).cast<int>());
    Eigen::Vector3f factor = octlib::math::fracf(pos);
-   Eigen::Vector3i lower_lower = octlib::math::max(base - Eigen::Vector3i::Constant(1), Eigen::Vector3i::Constant(0));
-   Eigen::Vector3i lower_upper = octlib::math::max(base, Eigen::Vector3i::Constant(0));
-   Eigen::Vector3i upper_lower = octlib::math::min(base + Eigen::Vector3i::Constant(1),
+   Eigen::Vector3i lower_lower = (base - Eigen::Vector3i::Constant(1)).cwiseMax(Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i lower_upper = base.cwiseMax(Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i upper_lower = (base + Eigen::Vector3i::Constant(1)).cwiseMin(
       Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
-   Eigen::Vector3i upper_upper = octlib::math::min(base + Eigen::Vector3i::Constant(2),
+   Eigen::Vector3i upper_upper = (base + Eigen::Vector3i::Constant(2)).cwiseMin(
       Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
    Eigen::Vector3i & lower = lower_upper;
    Eigen::Vector3i & upper = upper_lower;
