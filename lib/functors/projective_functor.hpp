@@ -9,7 +9,7 @@
 #include "node.hpp"
 #include "functors/data_handler.hpp"
 
-namespace iterators {
+namespace functor {
   template <typename FieldType, template <typename FieldT> class MapT, 
             typename UpdateF>
   class projective_functor {
@@ -132,5 +132,16 @@ namespace iterators {
       Eigen::Vector2i _frame_size;
       std::vector<VoxelBlock<FieldType>*> _active_list;
   };
+
+  template <typename FieldType, template <typename FieldT> class MapT, 
+            typename UpdateF>
+  void projective_map(MapT<FieldType>& map, const Sophus::SE3f& Tcw, 
+          const Eigen::Matrix4f& K, const Eigen::Vector2i framesize,
+          UpdateF funct) {
+
+    projective_functor<FieldType, MapT, UpdateF> 
+      it(map, funct, Tcw, K, framesize);
+    it.apply();
+  }
 }
 #endif
