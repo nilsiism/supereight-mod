@@ -29,8 +29,8 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
       ray.next();
       const float t_min = ray.tmin(); /* Get distance to the first intersected block */
       const float4 hit = t_min > 0.f ? 
-        raycast(volume, pos, view, t_min*volume._dim/volume._size, 
-          farPlane, mu, step, largestep) : make_float4(0.f);
+        raycast(volume, pos, view, t_min, farPlane, mu, step, largestep) : 
+        make_float4(0.f);
 			if(hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
         Eigen::Vector3f tmp = volume.grad(make_float3(hit), 
