@@ -45,6 +45,14 @@ float4 raycast(const Volume<SDF>& volume, const uint2 pos, const Matrix4 view,
           position += stepsize*direction;
           continue;
         }
+        if(pos.x == 202 && pos.y == 139) {
+          float3 discrete = position/step;
+          std::cout << "sampled discrete: " << discrete.x << " " << discrete.y << " " << discrete.z << std::endl;
+          VoxelBlock<SDF> * n = volume._map_index.fetch(discrete.x, discrete.y, discrete.z);
+          if(n) {
+            std::cout << "sampled voxel: \n" << n->coordinates() << std::endl;
+          }
+        }
         f_tt = data.x;
         if(f_tt <= 0.1 && f_tt >= -0.5f){
           f_tt = volume.interp(position, select_depth);
