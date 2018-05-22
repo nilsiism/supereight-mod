@@ -3,15 +3,11 @@
 
 #include <voxel_traits.hpp>
 #include <utils/memory_pool.hpp>
-#include <data.hpp>
 #include <type_traits>
 #include <cstring>
 
 template <typename T>
 class Void {};
-
-template <typename FieldType, typename StorageLayout, template<typename> class Indexer>
-class VolumeTemplate {};
 
 /**
  * Continuous volume abstraction
@@ -19,7 +15,7 @@ class VolumeTemplate {};
  * appropriate indexer (octree/hash table).
  * */ 
 template <typename FieldType, template<typename> class Indexer> 
-class VolumeTemplate<FieldType, DynamicStorage, Indexer> {
+class VolumeTemplate {
 
   public:
     typedef voxel_traits<FieldType> traits_type;
