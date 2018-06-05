@@ -59,35 +59,3 @@ TEST_F(RayIteratorTest, FetchAlongRay) {
   }
   ASSERT_EQ(i, alloc_list_.size());
 }
-
-TEST_F(RayIteratorTest, Debug) {
-  OctreeF tree;
-  tree.init(512, 5);
-  octlib::key_t keys[2];
-  keys[0]  = tree.hash(224, 224, 432);
-  keys[1]  = tree.hash(224, 232, 416);
-  tree.alloc_update(keys, 2);
-  const Eigen::Vector3f origin(1.68945, 2.50279, 1.20347);
-  const Eigen::Vector3f dir(0.784577, 0.605115, 0.135183);
-  octlib::ray_iterator<OctreeF::compute_type> it(tree, origin, dir, 0.4, 4.0f); 
-  VoxelBlock<testT> * current;
-  while(current = it.next()) {
-    std::cout << "Got block: \n" << current->coordinates() << std::endl;
-  }
-}
-
-TEST_F(RayIteratorTest, CheckTminTmax) {
-  // const float blocksize = OctreeF::blockSide * (oct_.dim()/oct_.size());
-  // const float diag = sqrtf((blocksize*blocksize) + (blocksize*blocksize));
-  // octlib::ray_iterator<OctreeF::compute_type> it(oct_, p_, dir_, 0.4, 4.0f); 
-
-  // int i = 0;
-  // VoxelBlock<testT> * current;
-  // while(current = it.next()) {
-  //   float diff = it.tcmax() - it.tcmin();
-  //   std::cout << diff << std::endl;
-  //   ASSERT_LT(diff, diag);
-  //   i++; 
-  // }
-  // ASSERT_EQ(i, alloc_list_.size());
-}

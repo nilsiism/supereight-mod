@@ -22,14 +22,14 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
 
 			uint2 pos = make_uint2(x, y);
       const Eigen::Vector3f dir = 
-        (to_sophus(view).so3() * Eigen::Vector3f(x, y, 1.f)).normalized();
+        (to_eigen(view).topLeftCorner<3, 3>() * Eigen::Vector3f(x, y, 1.f)).normalized();
       const float3 transl = get_translation(view);
       octlib::ray_iterator<typename Volume<T>::field_type> ray(volume._map_index,
           Eigen::Vector3f(transl.x, transl.y, transl.z), dir, nearPlane, farPlane);
       ray.next();
       const float t_min = ray.tcmin(); /* Get distance to the first intersected block */
       const float4 hit = t_min > 0.f ? 
-        raycast(volume, pos, view, t_min, farPlane, mu, step, largestep) : 
+        raycast(volume, pos, view, t_min, ray.tmax(), mu, step, largestep) : 
         make_float4(0.f);
 			if(hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
@@ -43,23 +43,6 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
 					normal[pos.x + pos.y * inputSize.x] = normalize(surfNorm);
 				}
 			} else {
-          if(pos.x == 202 && pos.y == 139) {
-            std::cout << "origin: \n" << Eigen::Vector3f(transl.x, transl.y, transl.z) << std::endl;
-            std::cout << "dir: \n" << dir << std::endl;
-            raycast(volume, pos, view, nearPlane, farPlane, mu, step, largestep); 
-            octlib::ray_iterator<typename Volume<T>::field_type> ray(volume._map_index,
-                Eigen::Vector3f(transl.x, transl.y, transl.z), dir, nearPlane, farPlane);
-            VoxelBlock<T> * n = ray.next();
-            if(n)
-              std::cout << "retrieved voxel: \n" << n->coordinates() << std::endl;
-            else
-              std::cout << "voxel not found" << std::endl;
-          }
-        // float4 temp = raycast(volume, pos, view, nearPlane, farPlane, mu, step, largestep);
-				// std::cerr<< "RAYCAST MISS "<<  pos.x << " " << pos.y <<"  " << hit.w << " " << t_min <<  " " << temp.w << "\n";
-        // jif(temp.w > 0.f && std::fabs(t_min - temp.w) > 0.8f) {
-				// std::cerr<< "RAYCAST MISS "<<  pos.x << " " << pos.y <<"  " << hit.w << " " << t_min <<  " " << temp.w << "\n";
-        //}
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(0);
 				normal[pos.x + pos.y * inputSize.x] = make_float3(INVALID, 0, 0);
 			}
