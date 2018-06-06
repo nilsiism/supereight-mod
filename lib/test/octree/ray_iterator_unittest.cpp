@@ -40,7 +40,7 @@ class RayIteratorTest : public ::testing::Test {
         alloc_list_.push_back(key);
       }
 
-      oct_.alloc_update(alloc_list_.data(), alloc_list_.size());
+      oct_.allocate(alloc_list_.data(), alloc_list_.size());
     }
   OctreeF oct_;
   Eigen::Vector3f p_;

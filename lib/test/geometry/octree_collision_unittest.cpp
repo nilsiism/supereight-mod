@@ -33,7 +33,7 @@ class OctreeCollisionTest : public ::testing::Test {
       const Eigen::Vector3i blocks[1] = {{56, 12, 254}};
       se::key_t alloc_list[1];
       alloc_list[0] = oct_.hash(blocks[0](0), blocks[0](1), blocks[0](2));
-      oct_.alloc_update(alloc_list, 1);
+      oct_.allocate(alloc_list, 1);
 
       auto set_to_ten = [](auto& handler, const Eigen::Vector3i& coords) {
         if((coords.array() >= Eigen::Vector3i(48, 0, 240).array()).all()){

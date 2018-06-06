@@ -39,7 +39,7 @@ class AxisAlignedTest : public ::testing::Test {
           }
         }
       }
-      oct_.alloc_update(alloc_list.data(), alloc_list.size());
+      oct_.allocate(alloc_list.data(), alloc_list.size());
     }
 
   typedef Octree<testT> OctreeF;

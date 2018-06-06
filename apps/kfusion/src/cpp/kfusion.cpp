@@ -263,7 +263,7 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
          compute_stepsize, step_to_depth, 6*mu);  
     }
 
-    volume._map_index.alloc_update(allocationList, allocated);
+    volume._map_index.allocate(allocationList, allocated);
 
     if(std::is_same<FieldType, SDF>::value) {
       struct sdf_update funct(floatDepth, 

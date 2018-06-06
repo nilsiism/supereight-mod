@@ -197,7 +197,6 @@ public:
    * \param number of keys in the keys array
    */
   bool allocate(se::key_t *keys, int num_elem);
-  bool alloc_update(se::key_t *keys, int num_elem);
 
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
@@ -241,8 +240,7 @@ private:
 
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
-  bool allocateLevel(se::key_t * keys, int num_tasks, int target_level);
-  bool updateLevel(se::key_t * keys, int num_tasks, int target_level);
+  bool allocate_level(se::key_t * keys, int num_tasks, int target_level);
 
   void reserveBuffers(const int n);
 
@@ -721,32 +719,6 @@ bool Octree<T>::allocate(se::key_t *keys, int num_elem){
 std::sort(keys, keys+num_elem);
 #endif
 
-  num_elem = algorithms::unique(keys, num_elem);
-  reserveBuffers(num_elem);
-
-  int last_elem = 0;
-  bool success = false;
-
-  const int leaf_level = max_level_ - log2(blockSide);
-  const unsigned int shift = MAX_BITS - max_level_ - 1;
-  for (int level = 1; level <= leaf_level; level++){
-    const se::key_t mask = MASK[level + shift];
-    compute_prefix(keys, keys_at_level_, num_elem, mask);
-    last_elem = algorithms::unique(keys_at_level_, num_elem);
-    success = allocateLevel(keys_at_level_, last_elem, level);
-  }
-  return success;
-}
-
-template <typename T>
-bool Octree<T>::alloc_update(se::key_t *keys, int num_elem){
-
-#ifdef _OPENMP
-  __gnu_parallel::sort(keys, keys+num_elem);
-#else
-std::sort(keys, keys+num_elem);
-#endif
-
   num_elem = algorithms::unique_multiscale(keys, num_elem, SCALE_MASK);
   reserveBuffers(num_elem);
 
@@ -760,51 +732,13 @@ std::sort(keys, keys+num_elem);
     compute_prefix(keys, keys_at_level_, num_elem, mask);
     last_elem = algorithms::unique_multiscale(keys_at_level_, num_elem, 
         SCALE_MASK, level);
-    success = updateLevel(keys_at_level_, last_elem, level);
+    success = allocate_level(keys_at_level_, last_elem, level);
   }
   return success;
 }
 
 template <typename T>
-bool Octree<T>::allocateLevel(se::key_t* keys, int num_tasks, int target_level){
-
-  int leaves_level = max_level_ - log2(blockSide);
-  nodes_buffer_.reserve(num_tasks);
-
-#pragma omp parallel for
-  for (int i = 0; i < num_tasks; i++){
-    Node<T> ** n = &root_;
-    se::key_t myKey = keys[i];
-    int edge = size_/2;
-
-    for (int level = 1; level <= target_level; ++level){
-      int index = child_id(myKey, level, max_level_); 
-      Node<T> * parent = *n;
-      n = &(*n)->child(index);
-
-      if(!(*n)){
-        if(level == leaves_level){
-          *n = block_memory_.acquire_block();
-          static_cast<VoxelBlock<T> *>(*n)->coordinates(Eigen::Vector3i(unpack_morton(myKey)));
-          static_cast<VoxelBlock<T> *>(*n)->active(true);
-          (*n)->code = myKey;
-          parent->children_mask_ = parent->children_mask_ | (1 << index);
-        }
-        else {
-          *n = nodes_buffer_.acquire_block();;
-          (*n)->code = myKey;
-          (*n)->side = edge;
-          parent->children_mask_ = parent->children_mask_ | (1 << index);
-        }
-      }
-      edge /= 2;
-    }
-  }
-  return true;
-}
-
-template <typename T>
-bool Octree<T>::updateLevel(se::key_t* keys, int num_tasks, int target_level){
+bool Octree<T>::allocate_level(se::key_t* keys, int num_tasks, int target_level){
 
   int leaves_level = max_level_ - log2(blockSide);
   nodes_buffer_.reserve(num_tasks);
