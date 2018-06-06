@@ -43,12 +43,11 @@ class Node {
 
 public:
   typedef voxel_traits<T> traits_type;
-  typedef typename traits_type::ComputeType compute_type;
-  typedef typename traits_type::StoredType stored_type;
-  compute_type empty() const { return traits_type::empty(); }
-  compute_type init_val() const { return traits_type::initValue(); }
+  typedef typename traits_type::value_type value_type;
+  value_type empty() const { return traits_type::empty(); }
+  value_type init_val() const { return traits_type::initValue(); }
 
-  compute_type value_[8];
+  value_type value_[8];
   se::key_t code;
   unsigned int side;
   unsigned char children_mask_;
@@ -86,22 +85,15 @@ class VoxelBlock: public Node<T> {
   public:
 
     typedef voxel_traits<T> traits_type;
-    typedef typename traits_type::ComputeType compute_type;
-    typedef typename traits_type::StoredType stored_type;
+    typedef typename traits_type::value_type value_type;
     static constexpr unsigned int side = BLOCK_SIDE;
     static constexpr unsigned int sideSq = side*side;
 
-    static constexpr compute_type empty() { 
+    static constexpr value_type empty() { 
       return traits_type::empty(); 
     }
-    static constexpr stored_type initValue() { 
+    static constexpr value_type initValue() { 
       return traits_type::initValue();
-    }
-    stored_type translate(const compute_type value) { 
-      return traits_type::translate(value); 
-    }
-    compute_type translate(const stored_type value) const {
-      return traits_type::translate(value);
     }
 
     VoxelBlock(){
@@ -116,8 +108,8 @@ class VoxelBlock: public Node<T> {
     Eigen::Vector3i coordinates() const { return coordinates_; }
     void coordinates(const Eigen::Vector3i c){ coordinates_ = c; }
 
-    compute_type data(const Eigen::Vector3i pos) const;
-    void data(const Eigen::Vector3i pos, const compute_type& value);
+    value_type data(const Eigen::Vector3i pos) const;
+    void data(const Eigen::Vector3i pos, const value_type& value);
 
     void timestamp(const time_t frame){ 
       timestamp_ = frame;
@@ -130,29 +122,29 @@ class VoxelBlock: public Node<T> {
     void active(const bool a){ active_ = a; }
     bool active() const { return active_; }
 
-    stored_type * getBlockRawPtr(){ return voxel_block_; }
+    value_type * getBlockRawPtr(){ return voxel_block_; }
     static constexpr int size(){ return sizeof(VoxelBlock<T>); }
 
   private:
     VoxelBlock(const VoxelBlock&) = delete;
     Eigen::Vector3i coordinates_;
-    stored_type voxel_block_[side*sideSq]; // Brick of data.
+    value_type voxel_block_[side*sideSq]; // Brick of data.
     time_t timestamp_;
     bool active_;
 };
 
 template <typename T>
-inline typename VoxelBlock<T>::compute_type VoxelBlock<T>::data(const Eigen::Vector3i pos) const {
+inline typename VoxelBlock<T>::value_type VoxelBlock<T>::data(const Eigen::Vector3i pos) const {
   Eigen::Vector3i offset = pos - coordinates_;
-  const stored_type& data = voxel_block_[offset(0) + offset(1)*side + 
+  const value_type& data = voxel_block_[offset(0) + offset(1)*side + 
                                          offset(2)*sideSq];
-  return translate(data);
+  return data;
 }
 
 template <typename T>
 inline void VoxelBlock<T>::data(const Eigen::Vector3i pos, 
-                                const compute_type &value){
+                                const value_type &value){
   Eigen::Vector3i offset = pos - coordinates_;
-  voxel_block_[offset(0) + offset(1)*side + offset(2)*sideSq] = translate(value);
+  voxel_block_[offset(0) + offset(1)*side + offset(2)*sideSq] = value;
 }
 #endif

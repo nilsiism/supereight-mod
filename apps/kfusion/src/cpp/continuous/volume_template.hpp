@@ -19,8 +19,7 @@ class VolumeTemplate {
 
   public:
     typedef voxel_traits<FieldType> traits_type;
-    typedef typename traits_type::ComputeType compute_type;
-    typedef typename traits_type::StoredType stored_type;
+    typedef typename traits_type::value_type value_type;
     typedef FieldType field_type;
 
     void init(uint s, float d) {
@@ -36,23 +35,23 @@ class VolumeTemplate {
       return make_float3(p.x * voxelSize, p.y * voxelSize, p.z * voxelSize);
     }
 
-    void set(const uint3 & , const compute_type& ) {}
+    void set(const uint3 & , const value_type& ) {}
 
-    compute_type operator[](const float3 & p) const {
+    value_type operator[](const float3 & p) const {
       const float inverseVoxelSize = _size/_dim;
       const int3 scaled_pos = make_int3(make_float3((p.x * inverseVoxelSize),
           (p.y * inverseVoxelSize), (p.z * inverseVoxelSize)));
       return _map_index.get(scaled_pos.x, scaled_pos.y, scaled_pos.z);
     }
 
-    compute_type get(const float3 & p) const {
+    value_type get(const float3 & p) const {
       const float inverseVoxelSize = _size/_dim;
       const int3 scaled_pos = make_int3(make_float3((p.x * inverseVoxelSize),
           (p.y * inverseVoxelSize), (p.z * inverseVoxelSize)));
       return _map_index.get_fine(scaled_pos.x, scaled_pos.y, scaled_pos.z);
     }
 
-    compute_type operator[](const uint3 p) const {
+    value_type operator[](const uint3 p) const {
       return _map_index.get(p.x, p.y, p.z);
     }
 

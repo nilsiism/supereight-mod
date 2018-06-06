@@ -55,7 +55,7 @@ collision_status collides_with(const VoxelBlock<FieldType>* block,
     for (y = blockCoord(1); y < ylast; ++y){
       for (x = blockCoord(0); x < xlast; ++x){
 
-        typename VoxelBlock<FieldType>::compute_type value;
+        typename VoxelBlock<FieldType>::value_type value;
         const Eigen::Vector3i vox{x, y, z};
         if(!geometry::aabb_aabb_collision(bbox, side, 
           vox, Eigen::Vector3i::Constant(1))) continue;
@@ -85,7 +85,7 @@ collision_status collides_with(const Octree<FieldType>& map,
     Node<FieldType>* node_ptr;
     Eigen::Vector3i coordinates;
     int side;
-    typename Node<FieldType>::compute_type parent_val;
+    typename Node<FieldType>::value_type parent_val;
   } stack_entry;
 
   stack_entry stack[Octree<FieldType>::max_depth*8 + 1];

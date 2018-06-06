@@ -86,10 +86,9 @@ class Octree
 public:
 
   typedef voxel_traits<T> traits_type;
-  typedef typename traits_type::ComputeType compute_type;
-  typedef typename traits_type::StoredType stored_type;
-  compute_type empty() const { return traits_type::empty(); }
-  compute_type init_val() const { return traits_type::initValue(); }
+  typedef typename traits_type::value_type value_type;
+  value_type empty() const { return traits_type::empty(); }
+  value_type init_val() const { return traits_type::initValue(); }
 
   // Compile-time constant expressions
   // # of voxels per side in a voxel block
@@ -122,15 +121,15 @@ public:
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
    */
-  void set(const int x, const int y, const int z, const compute_type val);
+  void set(const int x, const int y, const int z, const value_type val);
 
   /*! \brief Retrieves voxel value at coordinates (x,y,z)
    * \param x x coordinate in interval [0, size]
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
    */
-  compute_type get(const int x, const int y, const int z) const;
-  compute_type get_fine(const int x, const int y, const int z) const;
+  value_type get(const int x, const int y, const int z) const;
+  value_type get_fine(const int x, const int y, const int z) const;
 
   /*! \brief Fetch the voxel block at which contains voxel  (x,y,z)
    * \param x x coordinate in interval [0, size]
@@ -235,8 +234,8 @@ private:
   int reserved_;
 
   // Private implementation of cached methods
-  compute_type get(const int x, const int y, const int z, VoxelBlock<T>* cached) const;
-  compute_type get(const Eigen::Vector3f pos, VoxelBlock<T>* cached) const;
+  value_type get(const int x, const int y, const int z, VoxelBlock<T>* cached) const;
+  value_type get(const Eigen::Vector3f pos, VoxelBlock<T>* cached) const;
 
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
@@ -257,7 +256,7 @@ private:
 
 
 template <typename T>
-inline typename Octree<T>::compute_type Octree<T>::get(const Eigen::Vector3f p, 
+inline typename Octree<T>::value_type Octree<T>::get(const Eigen::Vector3f p, 
     VoxelBlock<T>* cached) const {
 
   const Eigen::Vector3i pos = Eigen::Vector3i{(p(0) * size_ / dim_),
@@ -295,7 +294,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const Eigen::Vector3f p,
 
 template <typename T>
 inline void  Octree<T>::set(const int x,
-    const int y, const int z, const compute_type val) {
+    const int y, const int z, const value_type val) {
 
   Node<T> * n = root_;
   if(!n) {
@@ -316,7 +315,7 @@ inline void  Octree<T>::set(const int x,
 
 
 template <typename T>
-inline typename Octree<T>::compute_type Octree<T>::get(const int x,
+inline typename Octree<T>::value_type Octree<T>::get(const int x,
     const int y, const int z) const {
 
   Node<T> * n = root_;
@@ -338,7 +337,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
 }
 
 template <typename T>
-inline typename Octree<T>::compute_type Octree<T>::get_fine(const int x,
+inline typename Octree<T>::value_type Octree<T>::get_fine(const int x,
     const int y, const int z) const {
 
   Node<T> * n = root_;
@@ -360,7 +359,7 @@ inline typename Octree<T>::compute_type Octree<T>::get_fine(const int x,
 }
 
 template <typename T>
-inline typename Octree<T>::compute_type Octree<T>::get(const int x,
+inline typename Octree<T>::value_type Octree<T>::get(const int x,
    const int y, const int z, VoxelBlock<T>* cached) const {
 
   if(cached != NULL){
@@ -827,7 +826,7 @@ class leaf_iterator {
     last = 0;
   };
 
-  std::tuple<Eigen::Vector3i, int, typename Octree<T>::compute_type> next() {
+  std::tuple<Eigen::Vector3i, int, typename Octree<T>::value_type> next() {
     switch(state_) {
       case BRANCH_NODES:
         if(last < map_.nodes_buffer_.size()) {

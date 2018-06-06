@@ -13,13 +13,9 @@
 class SDF {};
 template<>
 struct voxel_traits<SDF> {
-  typedef float2 ComputeType;
-  typedef float2 StoredType;
-  static inline ComputeType empty(){ return make_float2(1.f, -1.f); }
-  static inline StoredType initValue(){ return make_float2(1.f, 0.f); }
-  static inline ComputeType translate(const StoredType value){
-    return make_float2(value.x, value.y);
-  }
+  typedef float2 value_type;
+  static inline value_type empty(){ return make_float2(1.f, -1.f); }
+  static inline value_type initValue(){ return make_float2(1.f, 0.f); }
 };
 
 /******************************************************************************
@@ -31,16 +27,12 @@ struct voxel_traits<SDF> {
 class BFusion {};
 template<>
 struct voxel_traits<BFusion> {
-  typedef struct ComputeType {
+  typedef struct  {
     float x;
     double y;
-  } ComputeType;
-  typedef ComputeType StoredType;
-  static inline ComputeType empty(){ return {0.f, 0.f}; }
-  static inline StoredType initValue(){ return {0.f, 0.f}; }
-  static inline StoredType translate(const ComputeType value) {
-     return value;
-  }
+  } value_type;
+  static inline value_type empty(){ return {0.f, 0.f}; }
+  static inline value_type initValue(){ return {0.f, 0.f}; }
 };
 
 // Windowing parameters

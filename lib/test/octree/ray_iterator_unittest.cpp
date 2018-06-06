@@ -7,13 +7,9 @@ typedef float testT;
 
 template <>
 struct voxel_traits<testT> {
-  typedef float ComputeType;
-  typedef float StoredType;
-  static inline ComputeType empty(){ return 0.f; }
-  static inline ComputeType initValue(){ return 1.f; }
-  static inline StoredType translate(const ComputeType value) {
-     return value;
-  }
+  typedef float value_type;
+  static inline value_type empty(){ return 0.f; }
+  static inline value_type initValue(){ return 1.f; }
 };
 typedef Octree<testT> OctreeF;
 
@@ -49,7 +45,7 @@ class RayIteratorTest : public ::testing::Test {
 };
 
 TEST_F(RayIteratorTest, FetchAlongRay) {
-  se::ray_iterator<OctreeF::compute_type> it(oct_, p_, dir_, 0.4, 4.0f); 
+  se::ray_iterator<OctreeF::value_type> it(oct_, p_, dir_, 0.4, 4.0f); 
   int i = 0;
   VoxelBlock<testT> * current;
   while(current = it.next()) {

@@ -14,7 +14,7 @@ inline float4 raycast(const Volume<BFusion>& volume, const float3 origin,
     // if we are not already in it
     if (f_t <= SURF_BOUNDARY) { 
       for (; t < tfar; t += stepsize) {
-        Volume<BFusion>::compute_type data = volume.get(origin + direction * t);
+        Volume<BFusion>::value_type data = volume.get(origin + direction * t);
         if(data.x > -100.f && data.y > 0.f){
           f_tt = volume.interp(origin + direction * t, select_occupancy);
         }

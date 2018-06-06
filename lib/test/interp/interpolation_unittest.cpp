@@ -7,13 +7,9 @@
 typedef float testT;
 template <>
 struct voxel_traits<testT> {
-  typedef float1 ComputeType;
-  typedef float1 StoredType;
-  static inline ComputeType empty(){ return {0.f}; }
-  static inline ComputeType initValue(){ return {1.f}; }
-  static inline StoredType translate(const ComputeType value) {
-     return value;
-  }
+  typedef float1 value_type;
+  static inline value_type empty(){ return {0.f}; }
+  static inline value_type initValue(){ return {1.f}; }
 };
 
 float test_fun(float x, float y, float z) {

@@ -6,13 +6,9 @@
 typedef float testT;
 template <>
 struct voxel_traits<testT> {
-  typedef float ComputeType;
-  typedef float StoredType;
-  static inline ComputeType empty(){ return 0.f; }
-  static inline ComputeType initValue(){ return 0.f; }
-  static inline StoredType translate(const ComputeType value) {
-     return value;
-  }
+  typedef float value_type;
+  static inline value_type empty(){ return 0.f; }
+  static inline value_type initValue(){ return 0.f; }
 };
 
 class AxisAlignedTest : public ::testing::Test {

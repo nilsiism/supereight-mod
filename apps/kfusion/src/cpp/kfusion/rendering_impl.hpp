@@ -15,7 +15,7 @@ float4 raycast(const Volume<SDF>& volume, const float3 origin,
     float f_tt = 0;
     if (f_t > 0) { // ups, if we were already in it, then don't render anything here
       for (; t < tfar; t += stepsize) {
-        Volume<SDF>::compute_type data = volume.get(position);
+        Volume<SDF>::value_type data = volume.get(position);
         if(data.y == 0){
           stepsize = largestep;
           position += stepsize*direction;

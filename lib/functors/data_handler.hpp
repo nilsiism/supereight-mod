@@ -5,10 +5,10 @@
 
 template <typename SpecialisedHandlerT, typename NodeT>
 class DataHandlerBase {
-  typename NodeT::compute_type get() {
+  typename NodeT::value_type get() {
     return static_cast<SpecialisedHandlerT *>(this)->get();
   } 
-  void set(const typename NodeT::compute_type& val) {
+  void set(const typename NodeT::value_type& val) {
     static_cast<SpecialisedHandlerT *>(this)->set(val);
   }
 };
@@ -21,11 +21,11 @@ public:
   VoxelBlockHandler(VoxelBlock<FieldType>* ptr, Eigen::Vector3i v) : 
     _block(ptr), _voxel(v) {}
 
-  typename VoxelBlock<FieldType>::compute_type get() {
+  typename VoxelBlock<FieldType>::value_type get() {
     return _block->data(_voxel);
   }
 
-  void set(const typename VoxelBlock<FieldType>::compute_type& val) {
+  void set(const typename VoxelBlock<FieldType>::value_type& val) {
     _block->data(_voxel, val);
   }
 
@@ -39,11 +39,11 @@ class NodeHandler: DataHandlerBase<NodeHandler<FieldType>, Node<FieldType> > {
   public:
     NodeHandler(Node<FieldType>* ptr, int i) : _node(ptr), _idx(i) {}
 
-    typename Node<FieldType>::compute_type get() {
+    typename Node<FieldType>::value_type get() {
       return _node->value_[_idx];
     }
 
-    void set(const typename Node<FieldType>::compute_type& val) {
+    void set(const typename Node<FieldType>::value_type& val) {
       _node->value_[_idx] = val;
     }
 

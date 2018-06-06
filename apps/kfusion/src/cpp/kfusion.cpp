@@ -300,7 +300,7 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
     //       const int x, const int y, const int z) {
     //       const int3 bbox = make_int3(x, y, z);
     //       const int3 side = make_int3(1);
-    //       auto test = [](const Octree<FieldType>::compute_type & val) {
+    //       auto test = [](const Octree<FieldType>::value_type & val) {
     //       if(val.x == 0.f) return collision_status::unseen;
     //       if(val.x < 5) return collision_status::empty;
     //       return collision_status::occupied;
@@ -448,7 +448,7 @@ void Kfusion::renderDepth(uchar4 * out, uint2 outputSize) {
 void Kfusion::dump_mesh(const char* filename){
 
   std::vector<Triangle> mesh;
-  auto inside = [](const Volume<FieldType>::compute_type& val) {
+  auto inside = [](const Volume<FieldType>::value_type& val) {
     // meshing::status code;
     // if(val.y == 0.f) 
     //   code = meshing::status::UNKNOWN;
@@ -459,7 +459,7 @@ void Kfusion::dump_mesh(const char* filename){
     return val.x < 0.f;
   };
 
-  auto select = [](const Volume<FieldType>::compute_type& val) {
+  auto select = [](const Volume<FieldType>::value_type& val) {
     return val.x;
   };
 

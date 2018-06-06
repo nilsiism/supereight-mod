@@ -6,13 +6,9 @@ typedef float testT;
 
 template <>
 struct voxel_traits<testT> {
-  typedef float ComputeType;
-  typedef float StoredType;
-  static inline ComputeType empty(){ return 0.f; }
-  static inline ComputeType initValue(){ return 1.f; }
-  static inline StoredType translate(const ComputeType value) {
-     return value;
-  }
+  typedef float value_type;
+  static inline value_type empty(){ return 0.f; }
+  static inline value_type initValue(){ return 1.f; }
 };
 
 class MultiscaleTest : public ::testing::Test {
@@ -67,12 +63,12 @@ TEST_F(MultiscaleTest, Iterator) {
   oct_.allocate(alloc_list, 1);
   leaf_iterator<testT> it(oct_);
 
-  typedef std::tuple<Eigen::Vector3i, int, typename Octree<testT>::compute_type> it_result;
+  typedef std::tuple<Eigen::Vector3i, int, typename Octree<testT>::value_type> it_result;
   it_result node = it.next();
   for(int i = 256; std::get<1>(node) > 0; node = it.next(), i /= 2){
     const Eigen::Vector3i coords = std::get<0>(node);
     const int side = std::get<1>(node);
-    const Octree<testT>::compute_type val = std::get<2>(node);
+    const Octree<testT>::value_type val = std::get<2>(node);
     EXPECT_EQ(side, i);
   }
 }
