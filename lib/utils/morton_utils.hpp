@@ -41,8 +41,8 @@ inline uint64_t compute_morton(uint64_t x,
   return code;
 }
 
-static inline void compute_prefix(const octlib::key_t * in, octlib::key_t * out,
-    unsigned int num_keys, const octlib::key_t mask){
+static inline void compute_prefix(const se::key_t * in, se::key_t * out,
+    unsigned int num_keys, const se::key_t mask){
 
 #pragma omp parallel for
   for (unsigned int i = 0; i < num_keys; i++){

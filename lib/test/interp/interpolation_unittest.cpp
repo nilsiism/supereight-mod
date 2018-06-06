@@ -17,7 +17,7 @@ struct voxel_traits<testT> {
 };
 
 float test_fun(float x, float y, float z) {
-  return octlib::math::sq(z) + std::sin(2*x + y);
+  return se::math::sq(z) + std::sin(2*x + y);
 }
 
 class InterpolationTest : public ::testing::Test {
@@ -50,7 +50,7 @@ class InterpolationTest : public ::testing::Test {
 
   typedef Octree<testT> OctreeF;
   OctreeF oct_;
-  std::vector<octlib::key_t> alloc_list;
+  std::vector<se::key_t> alloc_list;
 };
 
 TEST_F(InterpolationTest, Init) {

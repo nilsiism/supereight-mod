@@ -23,7 +23,7 @@ class GatherTest : public ::testing::Test {
       const Eigen::Vector3i blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
       {136, 128, 128}, {128, 136, 128}, {136, 136, 128}, 
       {128, 128, 136}, {136, 128, 136}, {128, 136, 136}, {136, 136, 136}};
-      octlib::key_t alloc_list[10];
+      se::key_t alloc_list[10];
       for(int i = 0; i < 10; ++i) {
         alloc_list[i] = oct_.hash(blocks[i](0), blocks[i](1), blocks[i](2));
       }

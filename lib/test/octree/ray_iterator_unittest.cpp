@@ -36,7 +36,7 @@ class RayIteratorTest : public ::testing::Test {
         const Eigen::Vector3i vox = ((p_ + t * dir_)/voxelsize).cast<int> ();
 
         // hash to VoxelBlocks
-        octlib::key_t key = oct_.hash(vox(0), vox(1), vox(2)) ;
+        se::key_t key = oct_.hash(vox(0), vox(1), vox(2)) ;
         alloc_list_.push_back(key);
       }
 
@@ -45,11 +45,11 @@ class RayIteratorTest : public ::testing::Test {
   OctreeF oct_;
   Eigen::Vector3f p_;
   Eigen::Vector3f dir_;
-  std::vector<octlib::key_t> alloc_list_;
+  std::vector<se::key_t> alloc_list_;
 };
 
 TEST_F(RayIteratorTest, FetchAlongRay) {
-  octlib::ray_iterator<OctreeF::compute_type> it(oct_, p_, dir_, 0.4, 4.0f); 
+  se::ray_iterator<OctreeF::compute_type> it(oct_, p_, dir_, 0.4, 4.0f); 
   int i = 0;
   VoxelBlock<testT> * current;
   while(current = it.next()) {

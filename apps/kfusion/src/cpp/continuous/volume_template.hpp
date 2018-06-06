@@ -77,7 +77,7 @@ class VolumeTemplate {
 
     unsigned int _size;
     float _dim;
-    std::vector<octlib::key_t> _allocationList;
+    std::vector<se::key_t> _allocationList;
     Indexer<FieldType> _map_index; 
 
   private:

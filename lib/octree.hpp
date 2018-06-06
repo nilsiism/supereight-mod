@@ -71,7 +71,7 @@ inline float __int_as_float(int value){
   return u.f;
 }
 
-namespace octlib {
+namespace se {
   template <typename T>
     class ray_iterator;
 }
@@ -95,9 +95,9 @@ public:
   // # of voxels per side in a voxel block
   static constexpr unsigned int blockSide = BLOCK_SIDE;
   // maximum tree depth in bits
-  static constexpr unsigned int max_depth = ((sizeof(octlib::key_t)*8)/3);
+  static constexpr unsigned int max_depth = ((sizeof(se::key_t)*8)/3);
   // Tree depth at which blocks are found
-  static constexpr unsigned int block_depth = max_depth - octlib::math::log2_const(BLOCK_SIDE);
+  static constexpr unsigned int block_depth = max_depth - se::math::log2_const(BLOCK_SIDE);
 
 
   Octree(){
@@ -182,13 +182,13 @@ public:
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
    */
-  octlib::key_t hash(const int x, const int y, const int z) {
-    const int scale = max_level_ - octlib::math::log2_const(blockSide); // depth of blocks
-    return octlib::keyops::encode(x, y, z, scale, max_level_);   
+  se::key_t hash(const int x, const int y, const int z) {
+    const int scale = max_level_ - se::math::log2_const(blockSide); // depth of blocks
+    return se::keyops::encode(x, y, z, scale, max_level_);   
   }
 
-  octlib::key_t hash(const int x, const int y, const int z, octlib::key_t scale) {
-    return octlib::keyops::encode(x, y, z, scale, max_level_); 
+  se::key_t hash(const int x, const int y, const int z, se::key_t scale) {
+    return se::keyops::encode(x, y, z, scale, max_level_); 
   }
 
   /*! \brief allocate a set of voxel blocks via their positional key  
@@ -196,8 +196,8 @@ public:
    * morton number)
    * \param number of keys in the keys array
    */
-  bool allocate(octlib::key_t *keys, int num_elem);
-  bool alloc_update(octlib::key_t *keys, int num_elem);
+  bool allocate(se::key_t *keys, int num_elem);
+  bool alloc_update(se::key_t *keys, int num_elem);
 
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
@@ -228,11 +228,11 @@ private:
   MemoryPool<VoxelBlock<T> > block_memory_;
   MemoryPool<Node<T> > nodes_buffer_;
 
-  friend class octlib::ray_iterator<T>;
+  friend class se::ray_iterator<T>;
   friend class leaf_iterator<T>;
 
   // Allocation specific variables
-  octlib::key_t* keys_at_level_;
+  se::key_t* keys_at_level_;
   int reserved_;
 
   // Private implementation of cached methods
@@ -241,9 +241,9 @@ private:
 
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
-  bool allocateLevel(octlib::key_t * keys, int num_tasks, int target_level);
-  bool updateLevel(octlib::key_t * keys, int num_tasks, int target_level, 
-      const octlib::key_t scale_mask = 0x0);
+  bool allocateLevel(se::key_t * keys, int num_tasks, int target_level);
+  bool updateLevel(se::key_t * keys, int num_tasks, int target_level, 
+      const se::key_t scale_mask = 0x0);
 
   void reserveBuffers(const int n);
 
@@ -418,7 +418,7 @@ void Octree<T>::init(int size, float dim) {
   root_ = new Node<T>();
   root_->side = size;
   reserved_ = 1024;
-  keys_at_level_ = new octlib::key_t[reserved_];
+  keys_at_level_ = new se::key_t[reserved_];
   std::memset(keys_at_level_, 0, reserved_);
 }
 
@@ -466,8 +466,8 @@ template <typename T>
 template <typename FieldSelector>
 float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
   
-  const Eigen::Vector3i base = octlib::math::floorf(pos).cast<int>();
-  const Eigen::Vector3f factor = octlib::math::fracf(pos);
+  const Eigen::Vector3i base = se::math::floorf(pos).cast<int>();
+  const Eigen::Vector3f factor = se::math::fracf(pos);
   const Eigen::Vector3i lower = base.cwiseMax(Eigen::Vector3i::Constant(0));
 
   float points[8];
@@ -490,8 +490,8 @@ float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
 template <typename T>
 Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos) const {
 
-   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos).cast<int>());
-   Eigen::Vector3f factor = octlib::math::fracf(pos);
+   Eigen::Vector3i base = Eigen::Vector3i(se::math::floorf(pos).cast<int>());
+   Eigen::Vector3f factor = se::math::fracf(pos);
    Eigen::Vector3i lower_lower = (base - Eigen::Vector3i::Constant(1)).cwiseMax(Eigen::Vector3i::Constant(0));
    Eigen::Vector3i lower_upper = base.cwiseMax(Eigen::Vector3i::Constant(0));
    Eigen::Vector3i upper_lower = (base + Eigen::Vector3i::Constant(1)).cwiseMin(
@@ -577,8 +577,8 @@ template <typename T>
 template <typename FieldSelector>
 Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos, FieldSelector select) const {
 
-   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos).cast<int>());
-   Eigen::Vector3f factor = octlib::math::fracf(pos);
+   Eigen::Vector3i base = Eigen::Vector3i(se::math::floorf(pos).cast<int>());
+   Eigen::Vector3f factor = se::math::fracf(pos);
    Eigen::Vector3i lower_lower = (base - Eigen::Vector3i::Constant(1)).cwiseMax(Eigen::Vector3i::Constant(0));
    Eigen::Vector3i lower_upper = base.cwiseMax(Eigen::Vector3i::Constant(0));
    Eigen::Vector3i upper_lower = (base + Eigen::Vector3i::Constant(1)).cwiseMin(
@@ -707,14 +707,14 @@ void Octree<T>::reserveBuffers(const int n){
   if(n > reserved_){
     // std::cout << "Reserving " << n << " entries in allocation buffers" << std::endl;
     delete[] keys_at_level_;
-    keys_at_level_ = new octlib::key_t[n];
+    keys_at_level_ = new se::key_t[n];
     reserved_ = n;
   }
   block_memory_.reserve(n);
 }
 
 template <typename T>
-bool Octree<T>::allocate(octlib::key_t *keys, int num_elem){
+bool Octree<T>::allocate(se::key_t *keys, int num_elem){
 
 #ifdef _OPENMP
   __gnu_parallel::sort(keys, keys+num_elem);
@@ -731,7 +731,7 @@ std::sort(keys, keys+num_elem);
   const int leaf_level = max_level_ - log2(blockSide);
   const unsigned int shift = MAX_BITS - max_level_ - 1;
   for (int level = 1; level <= leaf_level; level++){
-    const octlib::key_t mask = MASK[level + shift];
+    const se::key_t mask = MASK[level + shift];
     compute_prefix(keys, keys_at_level_, num_elem, mask);
     last_elem = algorithms::unique(keys_at_level_, num_elem);
     success = allocateLevel(keys_at_level_, last_elem, level);
@@ -740,7 +740,7 @@ std::sort(keys, keys+num_elem);
 }
 
 template <typename T>
-bool Octree<T>::alloc_update(octlib::key_t *keys, int num_elem){
+bool Octree<T>::alloc_update(se::key_t *keys, int num_elem){
 
 #ifdef _OPENMP
   __gnu_parallel::sort(keys, keys+num_elem);
@@ -757,7 +757,7 @@ std::sort(keys, keys+num_elem);
   const int leaves_level = max_level_ - log2(blockSide);
   const unsigned int shift = MAX_BITS - max_level_ - 1;
   for (int level = 1; level <= leaves_level; level++){
-    const octlib::key_t mask = MASK[level + shift] | SCALE_MASK;
+    const se::key_t mask = MASK[level + shift] | SCALE_MASK;
     compute_prefix(keys, keys_at_level_, num_elem, mask);
     last_elem = algorithms::unique_multiscale(keys_at_level_, num_elem, 
         SCALE_MASK, level);
@@ -767,7 +767,7 @@ std::sort(keys, keys+num_elem);
 }
 
 template <typename T>
-bool Octree<T>::allocateLevel(octlib::key_t* keys, int num_tasks, int target_level){
+bool Octree<T>::allocateLevel(se::key_t* keys, int num_tasks, int target_level){
 
   int leaves_level = max_level_ - log2(blockSide);
   nodes_buffer_.reserve(num_tasks);
@@ -775,7 +775,7 @@ bool Octree<T>::allocateLevel(octlib::key_t* keys, int num_tasks, int target_lev
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
     Node<T> ** n = &root_;
-    octlib::key_t myKey = keys[i];
+    se::key_t myKey = keys[i];
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
@@ -805,8 +805,8 @@ bool Octree<T>::allocateLevel(octlib::key_t* keys, int num_tasks, int target_lev
 }
 
 template <typename T>
-bool Octree<T>::updateLevel(octlib::key_t* keys, int num_tasks, int target_level,
-    const octlib::key_t scale_mask){
+bool Octree<T>::updateLevel(se::key_t* keys, int num_tasks, int target_level,
+    const se::key_t scale_mask){
 
   int leaves_level = max_level_ - log2(blockSide);
   nodes_buffer_.reserve(num_tasks);
@@ -814,7 +814,7 @@ bool Octree<T>::updateLevel(octlib::key_t* keys, int num_tasks, int target_level
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
     Node<T> ** n = &root_;
-    octlib::key_t myKey = keys[i] & (~scale_mask);
+    se::key_t myKey = keys[i] & (~scale_mask);
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){

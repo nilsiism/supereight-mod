@@ -24,7 +24,7 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
       const Eigen::Vector3f dir = 
         (to_eigen(view).topLeftCorner<3, 3>() * Eigen::Vector3f(x, y, 1.f)).normalized();
       const float3 transl = get_translation(view);
-      octlib::ray_iterator<typename Volume<T>::field_type> ray(volume._map_index,
+      se::ray_iterator<typename Volume<T>::field_type> ray(volume._map_index,
           Eigen::Vector3f(transl.x, transl.y, transl.z), dir, nearPlane, farPlane);
       ray.next();
       const float t_min = ray.tcmin(); /* Get distance to the first intersected block */
@@ -154,7 +154,7 @@ void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthS
         const Eigen::Vector3f dir = 
           (to_eigen(view).topLeftCorner<3, 3>() * Eigen::Vector3f(x, y, 1.f)).normalized();
         const float3 transl = get_translation(view);
-        octlib::ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, 
+        se::ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, 
             Eigen::Vector3f(transl.x, transl.y, transl.z), dir, nearPlane, 
             farPlane);
         ray.next();

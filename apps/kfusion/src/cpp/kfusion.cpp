@@ -33,7 +33,7 @@ Volume<FieldType> volume;
 float3 * vertex;
 float3 * normal;
 
-octlib::key_t* allocationList;
+se::key_t* allocationList;
 size_t reserved;
 
 float3 bbox_min;
@@ -249,7 +249,7 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
     int num_vox_per_pix = volume._dim/((VoxelBlock<FieldType>::side)*voxelsize);
     size_t total = num_vox_per_pix * computationSize.x * computationSize.y;
     if(!reserved) {
-      allocationList = (octlib::key_t* ) calloc(sizeof(octlib::key_t) * total, 1);
+      allocationList = (se::key_t* ) calloc(sizeof(se::key_t) * total, 1);
       reserved = total;
     }
     unsigned int allocated = 0;

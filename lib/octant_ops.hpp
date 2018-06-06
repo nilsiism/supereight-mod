@@ -7,24 +7,24 @@
 #include <bitset>
 #include <Eigen/Dense>
 
-namespace octlib {
+namespace se {
   namespace keyops {
 
-    inline octlib::key_t code(const octlib::key_t key) {
+    inline se::key_t code(const se::key_t key) {
       return key & ~SCALE_MASK;
     }
 
-    inline int level(const octlib::key_t key) {
+    inline int level(const se::key_t key) {
       return key & SCALE_MASK;
 }
 
-    inline octlib::key_t encode(const int x, const int y, const int z, 
+    inline se::key_t encode(const int x, const int y, const int z, 
         const int level, const int max_depth) {
       const int offset = MAX_BITS - max_depth + level - 1;
       return (compute_morton(x, y, z) & MASK[offset]) | level;
     }
 
-    inline Eigen::Vector3i decode(const octlib::key_t key) {
+    inline Eigen::Vector3i decode(const se::key_t key) {
       return unpack_morton(key & ~SCALE_MASK);
     }
   }
@@ -33,10 +33,10 @@ namespace octlib {
 /*
  * Algorithm 5 of p4est paper: https://epubs.siam.org/doi/abs/10.1137/100791634
  */
-inline Eigen::Vector3i face_neighbour(const octlib::key_t o, 
+inline Eigen::Vector3i face_neighbour(const se::key_t o, 
     const unsigned int face, const unsigned int l, 
     const unsigned int max_depth) {
-  Eigen::Vector3i coords = octlib::keyops::decode(o);
+  Eigen::Vector3i coords = se::keyops::decode(o);
   const unsigned int side = 1 << (max_depth - l); 
   coords(0) = coords(0) + ((face == 0) ? -side : (face == 1) ? side : 0);
   coords(1) = coords(1) + ((face == 2) ? -side : (face == 3) ? side : 0);
@@ -49,12 +49,12 @@ inline Eigen::Vector3i face_neighbour(const octlib::key_t o,
  * \param octant 
  * \param ancestor 
  */
-inline bool descendant(octlib::key_t octant, 
-    octlib::key_t ancestor, const int max_depth) {
-  const int level = octlib::keyops::level(ancestor);
+inline bool descendant(se::key_t octant, 
+    se::key_t ancestor, const int max_depth) {
+  const int level = se::keyops::level(ancestor);
   const int idx = MAX_BITS - max_depth - 1 + level;
   octant = octant & MASK[idx];
-  ancestor = octlib::keyops::code(ancestor);
+  ancestor = se::keyops::code(ancestor);
   return (ancestor ^ octant) == 0;
 }
 
@@ -63,8 +63,8 @@ inline bool descendant(octlib::key_t octant,
  * \param octant
  * \param max_depth max depth of the tree on which the octant lives
  */
-inline octlib::key_t parent(const octlib::key_t& octant, const int max_depth) {
-  const int level = octlib::keyops::level(octant) - 1;
+inline se::key_t parent(const se::key_t& octant, const int max_depth) {
+  const int level = se::keyops::level(octant) - 1;
   const int idx = MAX_BITS - max_depth + level - 1;
   return (octant & MASK[idx]) | level;
 }
@@ -75,10 +75,10 @@ inline octlib::key_t parent(const octlib::key_t& octant, const int max_depth) {
  * \param level of octant 
  * \param max_depth max depth of the tree on which the octant lives
  */
-inline int child_id(octlib::key_t octant, const int level, 
+inline int child_id(se::key_t octant, const int level, 
     const int max_depth) {
   int shift = max_depth - level;
-  octant = octlib::keyops::code(octant) >> shift*3;
+  octant = se::keyops::code(octant) >> shift*3;
   int idx = (octant & 0x01) | (octant & 0x02) | (octant & 0x04);
   return idx;
 }
@@ -89,11 +89,11 @@ inline int child_id(octlib::key_t octant, const int level,
  * \param level of octant 
  * \param max_depth max depth of the tree on which the octant lives
  */
-inline Eigen::Vector3i far_corner(const octlib::key_t octant, const int level, 
+inline Eigen::Vector3i far_corner(const se::key_t octant, const int level, 
     const int max_depth) {
   const unsigned int side = 1 << (max_depth - level); 
   const int idx = child_id(octant, level, max_depth);
-  const Eigen::Vector3i coordinates = octlib::keyops::decode(octant);
+  const Eigen::Vector3i coordinates = se::keyops::decode(octant);
   return Eigen::Vector3i(coordinates(0) + (idx & 1) * side,
                    coordinates(1) + ((idx & 2) >> 1) * side,
                    coordinates(2) + ((idx & 4) >> 2) * side);
@@ -108,31 +108,31 @@ inline Eigen::Vector3i far_corner(const octlib::key_t octant, const int level,
  * \param level of octant 
  * \param max_depth max depth of the tree on which the octant lives
  */
-inline void exterior_neighbours(octlib::key_t result[7], 
-    const octlib::key_t octant, const int level, const int max_depth) {
+inline void exterior_neighbours(se::key_t result[7], 
+    const se::key_t octant, const int level, const int max_depth) {
 
   const int idx = child_id(octant, level, max_depth);
   Eigen::Vector3i dir = Eigen::Vector3i((idx & 1) ? 1 : -1,
                        (idx & 2) ? 1 : -1,
                        (idx & 4) ? 1 : -1);
   Eigen::Vector3i base = far_corner(octant, level, max_depth);
-  dir(0) = octlib::math::in(base(0) + dir(0) , 0, (1 << max_depth) - 1) ? dir(0) : 0;
-  dir(1) = octlib::math::in(base(1) + dir(1) , 0, (1 << max_depth) - 1) ? dir(1) : 0;
-  dir(2) = octlib::math::in(base(2) + dir(2) , 0, (1 << max_depth) - 1) ? dir(2) : 0;
+  dir(0) = se::math::in(base(0) + dir(0) , 0, (1 << max_depth) - 1) ? dir(0) : 0;
+  dir(1) = se::math::in(base(1) + dir(1) , 0, (1 << max_depth) - 1) ? dir(1) : 0;
+  dir(2) = se::math::in(base(2) + dir(2) , 0, (1 << max_depth) - 1) ? dir(2) : 0;
 
- result[0] = octlib::keyops::encode(base(0) + dir(0), base(1) + 0, base(2) + 0, 
+ result[0] = se::keyops::encode(base(0) + dir(0), base(1) + 0, base(2) + 0, 
      level, max_depth);
- result[1] = octlib::keyops::encode(base(0) + 0, base(1) + dir(1), base(2) + 0, 
+ result[1] = se::keyops::encode(base(0) + 0, base(1) + dir(1), base(2) + 0, 
      level, max_depth); 
- result[2] = octlib::keyops::encode(base(0) + dir(0), base(1) + dir(1), base(2) + 0, 
+ result[2] = se::keyops::encode(base(0) + dir(0), base(1) + dir(1), base(2) + 0, 
      level, max_depth); 
- result[3] = octlib::keyops::encode(base(0) + 0, base(1) + 0, base(2) + dir(2), 
+ result[3] = se::keyops::encode(base(0) + 0, base(1) + 0, base(2) + dir(2), 
      level, max_depth); 
- result[4] = octlib::keyops::encode(base(0) + dir(0), base(1) + 0, base(2) + dir(2), 
+ result[4] = se::keyops::encode(base(0) + dir(0), base(1) + 0, base(2) + dir(2), 
      level, max_depth); 
- result[5] = octlib::keyops::encode(base(0) + 0, base(1) + dir(1), base(2) + dir(2), 
+ result[5] = se::keyops::encode(base(0) + 0, base(1) + dir(1), base(2) + dir(2), 
      level, max_depth); 
- result[6] = octlib::keyops::encode(base(0) + dir(0), base(1) + dir(1), 
+ result[6] = se::keyops::encode(base(0) + dir(0), base(1) + dir(1), 
      base(2) + dir(2), level, max_depth); 
 }
 
@@ -143,11 +143,11 @@ inline void exterior_neighbours(octlib::key_t result[7],
  * \param octant
  * \param max_depth max depth of the tree on which the octant lives
  */
-inline void siblings(octlib::key_t result[8], 
-    const octlib::key_t octant, const int max_depth) {
+inline void siblings(se::key_t result[8], 
+    const se::key_t octant, const int max_depth) {
   const int level = (octant & SCALE_MASK);
   const int shift = 3*(max_depth - level);
-  const octlib::key_t p = parent(octant, max_depth) + 1; // set-up next level
+  const se::key_t p = parent(octant, max_depth) + 1; // set-up next level
   for(int i = 0; i < 8; ++i) {
     result[i] = p | (i << shift);
   }

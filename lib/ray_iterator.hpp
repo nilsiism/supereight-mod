@@ -14,7 +14,7 @@
  *
  * 
 *****************************************************************************/
-namespace octlib {
+namespace se {
   template <typename T>
     class ray_iterator {
 
@@ -45,7 +45,7 @@ namespace octlib {
             Eigen::Vector3f::Constant(1.f);
 
           /* Precomputing the ray coefficients */
-          t_coef_ = -1.f * octlib::math::fabs(direction_).cwiseInverse();
+          t_coef_ = -1.f * se::math::fabs(direction_).cwiseInverse();
           t_bias_ = t_coef_.cwiseProduct(scaled_origin);
 
 
@@ -253,5 +253,5 @@ namespace octlib {
         int scale_;
         STATE state_;
     };
-} // end namespace octlib
+} // end namespace se
 #endif

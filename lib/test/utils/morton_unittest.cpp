@@ -12,7 +12,7 @@ TEST(MortonCoding, RandomInts) {
 
   for(int i = 0; i < 1000; ++i) {
     const Eigen::Vector3i vox = {dis(gen), dis(gen), dis(gen)};
-    const octlib::key_t code = compute_morton(vox(0), vox(1), vox(2));
+    const se::key_t code = compute_morton(vox(0), vox(1), vox(2));
     const Eigen::Vector3i decoded = unpack_morton(code);
     ASSERT_EQ(decoded(0), vox(0));
     ASSERT_EQ(decoded(1), vox(1));
@@ -27,7 +27,7 @@ TEST(MortonCoding, ExhaustiveTest) {
     for(int y = 2048; y < 2050; ++y)
       for(int x = 0; x < 4096; ++x){
         const Eigen::Vector3i vox = {x, y, z};
-        const octlib::key_t code = compute_morton(vox(0), vox(1), vox(2));
+        const se::key_t code = compute_morton(vox(0), vox(1), vox(2));
         const Eigen::Vector3i decoded = unpack_morton(code);
         ASSERT_EQ(decoded(0), vox(0));
         ASSERT_EQ(decoded(1), vox(1));

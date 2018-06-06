@@ -20,8 +20,8 @@ TEST(AllocationTest, EmptySingleVoxel) {
   OctreeF oct;
   oct.init(256, 5);
   const Eigen::Vector3i vox = {25, 65, 127};
-  const octlib::key_t code = oct.hash(vox(0), vox(1), vox(2)); 
-  octlib::key_t allocList[1] = {code};
+  const se::key_t code = oct.hash(vox(0), vox(1), vox(2)); 
+  se::key_t allocList[1] = {code};
   const float val = oct.get(vox(0), vox(1), vox(2));
   EXPECT_EQ(val, voxel_traits<float>::empty());
 }
@@ -31,8 +31,8 @@ TEST(AllocationTest, SetSingleVoxel) {
   OctreeF oct;
   oct.init(256, 5);
   const Eigen::Vector3i vox = {25, 65, 127};
-  const octlib::key_t code = oct.hash(vox(0), vox(1), vox(2)); 
-  octlib::key_t allocList[1] = {code};
+  const se::key_t code = oct.hash(vox(0), vox(1), vox(2)); 
+  se::key_t allocList[1] = {code};
   oct.allocate(allocList, 1);
 
   VoxelBlock<float> * block = oct.fetch(vox(0), vox(1), vox(2));
@@ -49,7 +49,7 @@ TEST(AllocationTest, FetchOctant) {
   oct.init(256, 5);
   const Eigen::Vector3i vox = {25, 65, 127};
   const uint code = oct.hash(vox(0), vox(1), vox(2)); 
-  octlib::key_t allocList[1] = {code};
+  se::key_t allocList[1] = {code};
   oct.allocate(allocList, 1);
 
   const int depth = 3; /* 32 voxels per side */
@@ -68,14 +68,14 @@ TEST(AllocationTest, MortonPrefixMask) {
   std::uniform_int_distribution<int> dis(0, size);
 
   constexpr int num_samples = 10;
-  octlib::key_t keys[num_samples];
-  octlib::key_t tempkeys[num_samples];
+  se::key_t keys[num_samples];
+  se::key_t tempkeys[num_samples];
   Eigen::Vector3i coordinates[num_samples];
 
   for(int i = 0; i < num_samples; ++i) {
     const Eigen::Vector3i vox = {dis(gen), dis(gen), dis(gen)};
     coordinates[i] = Eigen::Vector3i(vox);
-    const octlib::key_t code = compute_morton(vox(0), vox(1), vox(2));
+    const se::key_t code = compute_morton(vox(0), vox(1), vox(2));
     keys[i] = code;
   }
 
@@ -84,7 +84,7 @@ TEST(AllocationTest, MortonPrefixMask) {
   const unsigned int shift = max_bits - max_level;
   int edge = size/2;
   for (int level = 0; level <= leaf_level; level++){
-    const octlib::key_t mask = MASK[level + shift];
+    const se::key_t mask = MASK[level + shift];
     compute_prefix(keys, tempkeys, num_samples, mask);
     for(int i = 0; i < num_samples; ++i) {
       const Eigen::Vector3i masked_vox = unpack_morton(tempkeys[i]);

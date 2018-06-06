@@ -49,9 +49,9 @@ namespace iterators {
         for(int i = 0; i < 8; ++i) {
           const Eigen::Vector3i dir =  Eigen::Vector3i((i & 1) > 0, (i & 2) > 0, (i & 4) > 0);
           voxel = voxel + (dir * (node->side/2));
-          if(!(octlib::math::in(voxel(0), _min(0), _max(0)) && 
-               octlib::math::in(voxel(1), _min(1), _max(1)) && 
-               octlib::math::in(voxel(2), _min(2), _max(2)))) continue;
+          if(!(se::math::in(voxel(0), _min(0), _max(0)) && 
+               se::math::in(voxel(1), _min(1), _max(1)) && 
+               se::math::in(voxel(2), _min(2), _max(2)))) continue;
           NodeHandler<FieldType> handler = {node, i};
           _function(handler, voxel);
         }

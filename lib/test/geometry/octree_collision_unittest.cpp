@@ -31,7 +31,7 @@ class OctreeCollisionTest : public ::testing::Test {
 
       oct_.init(256, 5);
       const Eigen::Vector3i blocks[1] = {{56, 12, 254}};
-      octlib::key_t alloc_list[1];
+      se::key_t alloc_list[1];
       alloc_list[0] = oct_.hash(blocks[0](0), blocks[0](1), blocks[0](2));
       oct_.alloc_update(alloc_list, 1);
 

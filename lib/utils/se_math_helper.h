@@ -3,7 +3,7 @@
 
 #include "se_common.h"
 
-namespace octlib {
+namespace se {
   namespace math {
     template <typename T>
       T fracf(const T& v) {

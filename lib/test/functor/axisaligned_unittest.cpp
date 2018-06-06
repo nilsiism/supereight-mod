@@ -44,7 +44,7 @@ class AxisAlignedTest : public ::testing::Test {
 
   typedef Octree<testT> OctreeF;
   OctreeF oct_;
-  std::vector<octlib::key_t> alloc_list;
+  std::vector<se::key_t> alloc_list;
 };
 
 TEST_F(AxisAlignedTest, Init) {
@@ -83,9 +83,9 @@ TEST_F(AxisAlignedTest, BBoxTest) {
       for(int x = 50; x < 200; ++x) {
         auto * block = oct_.fetch(x, y, z);
         if(block && 
-           octlib::math::in(x, 100, 150) && 
-           octlib::math::in(y, 100, 150) && 
-           octlib::math::in(z, 100, 150)){
+           se::math::in(x, 100, 150) && 
+           se::math::in(y, 100, 150) && 
+           se::math::in(z, 100, 150)){
           ASSERT_EQ(block->data(Eigen::Vector3i(x, y, z)), 10.f);
         }
         else if(block) { 
