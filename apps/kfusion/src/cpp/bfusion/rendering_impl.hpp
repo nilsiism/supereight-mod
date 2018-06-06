@@ -1,9 +1,39 @@
 #include <math_utils.h>
 #include <type_traits>
 
+inline float4 raycast(const Volume<BFusion>& volume, const float3 origin, 
+    const float3 direction, const float tnear, const float tfar, const float, 
+    const float step, const float) { 
+  auto select_occupancy = [](const auto& val){ return val.x; };
+  if (tnear < tfar) {
+    float t = tnear;
+    float stepsize = step;
+    float f_t = volume.interp(origin + direction * t, select_occupancy);
+    float f_tt = 0;
+
+    // if we are not already in it
+    if (f_t <= SURF_BOUNDARY) { 
+      for (; t < tfar; t += stepsize) {
+        Volume<BFusion>::compute_type data = volume.get(origin + direction * t);
+        if(data.x > -100.f && data.y > 0.f){
+          f_tt = volume.interp(origin + direction * t, select_occupancy);
+        }
+        if (f_tt > SURF_BOUNDARY) break;
+        f_t = f_tt;
+      }            
+      if (f_tt > SURF_BOUNDARY) {
+        // got it, calculate accurate intersection
+        t = t - stepsize * (f_tt - SURF_BOUNDARY) / (f_tt - f_t);
+        return make_float4(origin + direction * t, t);
+      }
+    }
+  }
+  return make_float4(0);
+}
+
 float4 raycast(const Volume<BFusion>& volume, const uint2 pos, const Matrix4 view,
-    const float nearPlane, const float farPlane, const float, 
-    const float step, const float)
+    const float nearPlane, const float farPlane, const float mu, 
+    const float step, const float, const float largestep)
 {
   const float3 origin = get_translation(view);
   const float3 direction = normalize(rotate(view, make_float3(pos.x, pos.y, 1.f)));
@@ -28,34 +58,6 @@ float4 raycast(const Volume<BFusion>& volume, const uint2 pos, const Matrix4 vie
   // check against near and far plane
   const float tnear = fmaxf(largest_tmin, nearPlane);
   const float tfar = fminf(smallest_tmax, farPlane);
-  auto select_occupancy = [](const auto& val){ return val.x; };
-
-  if (tnear < tfar) {
-    float t = tnear;
-    float stepsize = step;
-    float f_t = volume.interp(origin + direction * t, select_occupancy);
-    float f_tt = 0;
-
-    // if we are not already in it
-    if (f_t <= SURF_BOUNDARY) { 
-      for (; t < tfar; t += stepsize) {
-        Volume<BFusion>::compute_type data = volume.get(origin + direction * t);
-        if(data.y == 0){
-          t += stepsize * 6.0f;
-          continue;
-        }
-        if(data.x > -100.f && data.y > 0.f){
-          f_tt = volume.interp(origin + direction * t, select_occupancy);
-        }
-        if (f_tt > SURF_BOUNDARY) break;
-        f_t = f_tt;
-      }            
-      if (f_tt > SURF_BOUNDARY) {
-        // got it, calculate accurate intersection
-        t = t - stepsize * (f_tt - SURF_BOUNDARY) / (f_tt - f_t);
-        return make_float4(origin + direction * t, t);
-      }
-    }
-  }
-  return make_float4(0);
+  return raycast(volume, origin, direction, tnear, tfar, mu, step,  largestep);
 }
+

@@ -29,7 +29,7 @@ void raycastKernel(const Volume<T>& volume, float3* vertex, float3* normal, uint
       ray.next();
       const float t_min = ray.tcmin(); /* Get distance to the first intersected block */
       const float4 hit = t_min > 0.f ? 
-        raycast(volume, pos, view, t_min, ray.tmax(), mu, step, largestep) : 
+        raycast(volume, transl, make_float3(dir(0), dir(1), dir(2)), t_min, ray.tmax(), mu, step, largestep) : 
         make_float4(0.f);
 			if(hit.w > 0.0) {
 				vertex[pos.x + pos.y * inputSize.x] = make_float3(hit);
@@ -147,13 +147,12 @@ void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthS
 #pragma omp parallel for shared(out), private(y)
 	for (y = 0; y < depthSize.y; y++) {
 		for (unsigned int x = 0; x < depthSize.x; x++) {
-			const uint2 pos = make_uint2(x, y);
       float4 hit;
       float3 test, surfNorm;
 
       if(render) {
         const Eigen::Vector3f dir = 
-          (to_sophus(view).so3() * Eigen::Vector3f(x, y, 1.f)).normalized();
+          (to_eigen(view).topLeftCorner<3, 3>() * Eigen::Vector3f(x, y, 1.f)).normalized();
         const float3 transl = get_translation(view);
         octlib::ray_iterator<typename Volume<T>::field_type> ray(volume._map_index, 
             Eigen::Vector3f(transl.x, transl.y, transl.z), dir, nearPlane, 
@@ -161,8 +160,8 @@ void renderVolumeKernel(const Volume<T>& volume, uchar4* out, const uint2 depthS
         ray.next();
         const float t_min = ray.tmin(); /* Get distance to the first intersected block */
         hit = t_min > 0.f ? 
-          raycast(volume, pos, view, t_min*volume._dim/volume._size, 
-              farPlane, mu, step, largestep) : make_float4(0.f);
+        raycast(volume, transl, make_float3(dir(0), dir(1), dir(2)), t_min, ray.tmax(), mu, step, largestep) : 
+        make_float4(0.f);
         if (hit.w > 0) {
           test = make_float3(hit);
           Eigen::Vector3f tmp = volume.grad(make_float3(hit), 
