@@ -242,8 +242,7 @@ private:
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
   bool allocateLevel(se::key_t * keys, int num_tasks, int target_level);
-  bool updateLevel(se::key_t * keys, int num_tasks, int target_level, 
-      const se::key_t scale_mask = 0x0);
+  bool updateLevel(se::key_t * keys, int num_tasks, int target_level);
 
   void reserveBuffers(const int n);
 
@@ -761,7 +760,7 @@ std::sort(keys, keys+num_elem);
     compute_prefix(keys, keys_at_level_, num_elem, mask);
     last_elem = algorithms::unique_multiscale(keys_at_level_, num_elem, 
         SCALE_MASK, level);
-    success = updateLevel(keys_at_level_, last_elem, level, SCALE_MASK);
+    success = updateLevel(keys_at_level_, last_elem, level);
   }
   return success;
 }
@@ -805,8 +804,7 @@ bool Octree<T>::allocateLevel(se::key_t* keys, int num_tasks, int target_level){
 }
 
 template <typename T>
-bool Octree<T>::updateLevel(se::key_t* keys, int num_tasks, int target_level,
-    const se::key_t scale_mask){
+bool Octree<T>::updateLevel(se::key_t* keys, int num_tasks, int target_level){
 
   int leaves_level = max_level_ - log2(blockSide);
   nodes_buffer_.reserve(num_tasks);
@@ -814,7 +812,7 @@ bool Octree<T>::updateLevel(se::key_t* keys, int num_tasks, int target_level,
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
     Node<T> ** n = &root_;
-    se::key_t myKey = keys[i] & (~scale_mask);
+    se::key_t myKey = se::keyops::code(keys[i]);
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
