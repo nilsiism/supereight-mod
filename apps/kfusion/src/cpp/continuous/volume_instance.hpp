@@ -10,18 +10,13 @@
  * 
 ******************************************************************************/
 
-
-#ifndef STORAGE_LAYOUT
-#define STORAGE_LAYOUT DynamicStorage
-#endif
-
 #ifndef INDEX_STRUCTURE
 #define INDEX_STRUCTURE Octree
 #endif
 
-typedef BFusion FieldType;
+typedef SDF FieldType;
 
 template <typename T>
-using Volume = VolumeTemplate<T, STORAGE_LAYOUT, INDEX_STRUCTURE>;
+using Volume = VolumeTemplate<T, INDEX_STRUCTURE>;
 
 #endif

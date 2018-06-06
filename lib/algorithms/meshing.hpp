@@ -42,60 +42,60 @@ namespace meshing {
   };
 
   template <typename Map, typename FieldSelector>
-    inline float3 compute_intersection(const Map& volume, FieldSelector select,
-        const uint3& source, const uint3& dest){
+    inline Eigen::Vector3f compute_intersection(const Map& volume, FieldSelector select,
+        const Eigen::Vector3i& source, const Eigen::Vector3i& dest){
       const float voxelSize = volume.dim()/volume.size(); 
-      float3 s = make_float3(source.x * voxelSize, source.y * voxelSize, source.z * voxelSize);
-      float3 d = make_float3(dest.x * voxelSize, dest.y * voxelSize, dest.z * voxelSize);
-      float v1 = select(volume.get_fine(source.x, source.y, source.z));
-      float v2 = select(volume.get_fine(dest.x, dest.y, dest.z)); 
+      Eigen::Vector3f s = Eigen::Vector3f(source(0) * voxelSize, source(1) * voxelSize, source(2) * voxelSize);
+      Eigen::Vector3f d = Eigen::Vector3f(dest(0) * voxelSize, dest(1) * voxelSize, dest(2) * voxelSize);
+      float v1 = select(volume.get_fine(source(0), source(1), source(2)));
+      float v2 = select(volume.get_fine(dest(0), dest(1), dest(2))); 
       return s + (0.0 - v1)*(d - s)/(v2-v1);
     }
 
   template <typename Map, typename FieldSelector>
-    inline float3 interp_vertexes(const Map& volume, FieldSelector select, 
+    inline Eigen::Vector3f interp_vertexes(const Map& volume, FieldSelector select, 
         const uint x, const uint y, const uint z, const int edge){
       switch(edge){
-        case 0:  return compute_intersection(volume, select, make_uint3(x,   y, z),     
-                     make_uint3(x+1, y, z));
-        case 1:  return compute_intersection(volume, select, make_uint3(x+1, y, z),     
-                     make_uint3(x+1, y, z+1));
-        case 2:  return compute_intersection(volume, select, make_uint3(x+1, y, z+1),   
-                     make_uint3(x, y, z+1));
-        case 3:  return compute_intersection(volume, select, make_uint3(x,   y, z),     
-                     make_uint3(x, y, z+1));
-        case 4:  return compute_intersection(volume, select, make_uint3(x,   y+1, z),   
-                     make_uint3(x+1, y+1, z));
-        case 5:  return compute_intersection(volume, select, make_uint3(x+1, y+1, z),   
-                     make_uint3(x+1, y+1, z+1));
-        case 6:  return compute_intersection(volume, select, make_uint3(x+1, y+1, z+1), 
-                     make_uint3(x, y+1, z+1));
-        case 7:  return compute_intersection(volume, select, make_uint3(x,   y+1, z),   
-                     make_uint3(x,   y+1, z+1));
+        case 0:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z),     
+                     Eigen::Vector3i(x+1, y, z));
+        case 1:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y, z),     
+                     Eigen::Vector3i(x+1, y, z+1));
+        case 2:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y, z+1),   
+                     Eigen::Vector3i(x, y, z+1));
+        case 3:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z),     
+                     Eigen::Vector3i(x, y, z+1));
+        case 4:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y+1, z),   
+                     Eigen::Vector3i(x+1, y+1, z));
+        case 5:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y+1, z),   
+                     Eigen::Vector3i(x+1, y+1, z+1));
+        case 6:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y+1, z+1), 
+                     Eigen::Vector3i(x, y+1, z+1));
+        case 7:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y+1, z),   
+                     Eigen::Vector3i(x,   y+1, z+1));
 
-        case 8:  return compute_intersection(volume, select, make_uint3(x,   y, z),     
-                     make_uint3(x,   y+1, z));
-        case 9:  return compute_intersection(volume, select, make_uint3(x+1, y, z),     
-                     make_uint3(x+1, y+1, z));
-        case 10: return compute_intersection(volume, select, make_uint3(x+1, y, z+1),   
-                     make_uint3(x+1, y+1, z+1));
-        case 11: return compute_intersection(volume, select, make_uint3(x,   y, z+1),   
-                     make_uint3(x,   y+1, z+1));
+        case 8:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z),     
+                     Eigen::Vector3i(x,   y+1, z));
+        case 9:  return compute_intersection(volume, select, Eigen::Vector3i(x+1, y, z),     
+                     Eigen::Vector3i(x+1, y+1, z));
+        case 10: return compute_intersection(volume, select, Eigen::Vector3i(x+1, y, z+1),   
+                     Eigen::Vector3i(x+1, y+1, z+1));
+        case 11: return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z+1),   
+                     Eigen::Vector3i(x,   y+1, z+1));
       }
-      return make_float3(0);
+      return Eigen::Vector3f(0);
     }
 
   template <typename FieldType, typename PointT>
     inline void gather_points( const VoxelBlock<FieldType>* cached, PointT points[8], 
         const int x, const int y, const int z) {
-      points[0] = cached->data(make_int3(x, y, z)); 
-      points[1] = cached->data(make_int3(x+1, y, z));
-      points[2] = cached->data(make_int3(x+1, y, z+1));
-      points[3] = cached->data(make_int3(x, y, z+1));
-      points[4] = cached->data(make_int3(x, y+1, z));
-      points[5] = cached->data(make_int3(x+1, y+1, z));
-      points[6] = cached->data(make_int3(x+1, y+1, z+1));
-      points[7] = cached->data(make_int3(x, y+1, z+1));
+      points[0] = cached->data(Eigen::Vector3i(x, y, z)); 
+      points[1] = cached->data(Eigen::Vector3i(x+1, y, z));
+      points[2] = cached->data(Eigen::Vector3i(x+1, y, z+1));
+      points[3] = cached->data(Eigen::Vector3i(x, y, z+1));
+      points[4] = cached->data(Eigen::Vector3i(x, y+1, z));
+      points[5] = cached->data(Eigen::Vector3i(x+1, y+1, z));
+      points[6] = cached->data(Eigen::Vector3i(x+1, y+1, z+1));
+      points[7] = cached->data(Eigen::Vector3i(x, y+1, z+1));
     }
 
   template <typename FieldType, template <typename FieldT> class MapT, typename PointT>
@@ -149,8 +149,8 @@ namespace meshing {
     return index;
   }
 
-  inline bool checkVertex(const float3 v, const int dim){
-    return (v.x <= 0 || v.y <=0 || v.z <= 0 || v.x > dim || v.y > dim || v.z > dim);
+  inline bool checkVertex(const Eigen::Vector3f v, const int dim){
+    return (v(0) <= 0 || v(1) <=0 || v(2) <= 0 || v(0) > dim || v(1) > dim || v(2) > dim);
   }
 
 }
@@ -176,20 +176,21 @@ namespace algorithms {
         VoxelBlock<FieldType> * leaf = static_cast<VoxelBlock<FieldType> *>(blocklist[i]);  
         int edge = VoxelBlock<FieldType>::side;
         int x, y, z ; 
-        int xbound = clamp(leaf->coordinates().x + edge, 0, size-1);
-        int ybound = clamp(leaf->coordinates().y + edge, 0, size-1);
-        int zbound = clamp(leaf->coordinates().z + edge, 0, size-1);
-        for(x = leaf->coordinates().x; x < xbound; x++){
-          for(y = leaf->coordinates().y; y < ybound; y++){
-            for(z = leaf->coordinates().z; z < zbound; z++){
+        const Eigen::Vector3i& start = leaf->coordinates();
+        const Eigen::Vector3i top = 
+          (leaf->coordinates() + Eigen::Vector3i::Constant(edge)).cwiseMin(
+              Eigen::Vector3i::Constant(size-1));
+        for(x = start(0); x < top(0); x++){
+          for(y = start(1); y < top(1); y++){
+            for(z = start(2); z < top(2); z++){
 
               uint8_t index = meshing::compute_index(volume, leaf, inside, x, y, z);
 
                 int * edges = triTable[index]; 
               for(unsigned int e = 0; edges[e] != -1 && e < 16; e += 3){
-                float3 v1 = interp_vertexes(volume, select, x, y, z, edges[e]);
-                float3 v2 = interp_vertexes(volume, select, x, y, z, edges[e+1]);
-                float3 v3 = interp_vertexes(volume, select, x, y, z, edges[e+2]);
+                Eigen::Vector3f v1 = interp_vertexes(volume, select, x, y, z, edges[e]);
+                Eigen::Vector3f v2 = interp_vertexes(volume, select, x, y, z, edges[e+1]);
+                Eigen::Vector3f v3 = interp_vertexes(volume, select, x, y, z, edges[e+2]);
                 if(checkVertex(v1, dim) || checkVertex(v2, dim) || checkVertex(v3, dim)) continue;
                 Triangle temp = Triangle();
                 temp.vertexes[0] = v1;

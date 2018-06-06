@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OCTREE_H
 
 #include <cstring>
-#include <math_utils.h>
+#include <utils/se_common.h>
 #include <octree_defines.h>
 #include <utils/morton_utils.hpp>
 #include "octant_ops.hpp"
@@ -71,8 +71,11 @@ inline float __int_as_float(int value){
   return u.f;
 }
 
-template <typename T>
-class ray_iterator;
+namespace octlib {
+  template <typename T>
+    class ray_iterator;
+}
+
 template <typename T>
 class leaf_iterator;
 
@@ -94,7 +97,7 @@ public:
   // maximum tree depth in bits
   static constexpr unsigned int max_depth = ((sizeof(octlib::key_t)*8)/3);
   // Tree depth at which blocks are found
-  static constexpr unsigned int block_depth = max_depth - log2_const(BLOCK_SIDE);
+  static constexpr unsigned int block_depth = max_depth - octlib::math::log2_const(BLOCK_SIDE);
 
 
   Octree(){
@@ -152,37 +155,17 @@ public:
    */
 
   template <typename FieldSelect>
-  float interp(const float3 pos, FieldSelect f) const;
+  float interp(const Eigen::Vector3f pos, FieldSelect f) const;
 
   /*! \brief Compute the gradient at voxel position  (x,y,z)
    * \param pos three-dimensional coordinates in which each component belongs 
    * to the interval [0, size]
    * \return gradient at voxel position pos
    */
-  float3 grad(const float3 pos) const;
+  Eigen::Vector3f grad(const Eigen::Vector3f pos) const;
 
   template <typename FieldSelect>
-  float3 grad(const float3 pos, FieldSelect selector) const;
-
-  /*! \brief Cast a ray to find the closest signed distance function 
-   * intersection.
-   * \param pos camera pixel from which the ray is originating 
-   * \param view camera SE3 pose 
-   * \param nearPlane search range (in meters) 
-   * \param farPlane maximum search range (in meters) 
-   * \param mu signed distance function truncation value (in meters) 
-   * \param step ray-casting step size (usually proportional to 
-   * the voxel spacing 
-   * \param largeStep larger step size (usually a fraction of mu)
-   * \return float4 with the first three coordinates indicating the 
-   * intersection position and the last one the distance travelled 
-   * (in metric units). If no intersection is found the last coordinate is set
-   * to 0.
-   */
-
-  float4 raycast(const uint2 pos, const Matrix4 view,
-      const float nearPlane, const float farPlane, const float mu,
-      const float step, const float largeStep) const;
+  Eigen::Vector3f grad(const Eigen::Vector3f pos, FieldSelect selector) const;
 
   /*! \brief Get the list of allocated block. If the active switch is set to
    * true then only the visible blocks are retrieved.
@@ -200,7 +183,7 @@ public:
    * \param z z coordinate in interval [0, size]
    */
   octlib::key_t hash(const int x, const int y, const int z) {
-    const int scale = max_level_ - log2_const(blockSide); // depth of blocks
+    const int scale = max_level_ - octlib::math::log2_const(blockSide); // depth of blocks
     return octlib::keyops::encode(x, y, z, scale, max_level_);   
   }
 
@@ -245,7 +228,7 @@ private:
   MemoryPool<VoxelBlock<T> > block_memory_;
   MemoryPool<Node<T> > nodes_buffer_;
 
-  friend class ray_iterator<T>;
+  friend class octlib::ray_iterator<T>;
   friend class leaf_iterator<T>;
 
   // Allocation specific variables
@@ -254,7 +237,7 @@ private:
 
   // Private implementation of cached methods
   compute_type get(const int x, const int y, const int z, VoxelBlock<T>* cached) const;
-  compute_type get(const float3 pos, VoxelBlock<T>* cached) const;
+  compute_type get(const Eigen::Vector3f pos, VoxelBlock<T>* cached) const;
 
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
@@ -277,18 +260,19 @@ private:
 
 
 template <typename T>
-inline typename Octree<T>::compute_type Octree<T>::get(const float3 p, 
+inline typename Octree<T>::compute_type Octree<T>::get(const Eigen::Vector3f p, 
     VoxelBlock<T>* cached) const {
 
-  const int3 pos = make_int3((p.x * size_ / dim_),
-      (p.y * size_ / dim_),
-      (p.z * size_ / dim_));
+  const Eigen::Vector3i pos = Eigen::Vector3i{(p(0) * size_ / dim_),
+                                              (p(1) * size_ / dim_),
+                                              (p(2) * size_ / dim_)};
 
   if(cached != NULL){
-    int3 lower = cached->coordinates();
-    int3 upper = lower + (blockSide-1);
-    if(in(pos.x, lower.x, upper.x) && in(pos.y, lower.y, upper.y) &&
-       in(pos.z, lower.z, upper.z)){
+    Eigen::Vector3i lower = cached->coordinates();
+    Eigen::Vector3i upper = lower + Eigen::Vector3i::Constant(blockSide-1);
+    const int contained = 
+      ((pos.array() >= lower.array()) * (pos.array() <= upper.array())).all();
+    if(contained){
       return cached->data(pos);
     }
   }
@@ -302,7 +286,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const float3 p,
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    n = n->child((pos.x & edge) > 0, (pos.y & edge) > 0, (pos.z & edge) > 0);
+    n = n->child((pos(0) & edge) > 0, (pos(1) & edge) > 0, (pos(2) & edge) > 0);
     if(!n){
     return empty();
     }
@@ -330,7 +314,7 @@ inline void  Octree<T>::set(const int x,
     n = tmp;
   }
 
-  static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z), val);
+  static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z), val);
 }
 
 
@@ -353,7 +337,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     n = tmp;
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z));
+  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
 }
 
 template <typename T>
@@ -375,7 +359,7 @@ inline typename Octree<T>::compute_type Octree<T>::get_fine(const int x,
     n = tmp;
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z));
+  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
 }
 
 template <typename T>
@@ -383,11 +367,13 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
    const int y, const int z, VoxelBlock<T>* cached) const {
 
   if(cached != NULL){
-    const int3 lower = cached->coordinates();
-    const int3 upper = lower + (blockSide-1);
-    if(in(x, lower.x, upper.x) && in(y, lower.y, upper.y) &&
-       in(z, lower.z, upper.z)){
-      return cached->data(make_int3(x, y, z));
+    const Eigen::Vector3i pos = Eigen::Vector3i(x, y, z);
+    const Eigen::Vector3i lower = cached->coordinates();
+    const Eigen::Vector3i upper = lower + Eigen::Vector3i::Constant(blockSide-1);
+    const int contained = 
+      ((pos.array() >= lower.array()) * (pos.array() <= upper.array())).all();
+    if(contained){
+      return cached->data(Eigen::Vector3i(x, y, z));
     }
   }
 
@@ -404,7 +390,7 @@ inline typename Octree<T>::compute_type Octree<T>::get(const int x,
     }
   }
 
-  return static_cast<VoxelBlock<T> *>(n)->data(make_int3(x, y, z));
+  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
 }
 
 template <typename T>
@@ -478,205 +464,200 @@ inline Node<T> * Octree<T>::fetch_octant(const int x, const int y,
 
 template <typename T>
 template <typename FieldSelector>
-float Octree<T>::interp(float3 pos, FieldSelector select) const {
+float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
   
-  const int3 base = make_int3(floorf(pos));
-  const float3 factor = fracf(pos);
-  const int3 lower = max(base, make_int3(0));
+  const Eigen::Vector3i base = octlib::math::floorf(pos).cast<int>();
+  const Eigen::Vector3f factor = octlib::math::fracf(pos);
+  const Eigen::Vector3i lower = base.cwiseMax(Eigen::Vector3i::Constant(0));
 
   float points[8];
   gather_points(*this, lower, select, points);
 
-  return (((points[0] * (1 - factor.x)
-          + points[1] * factor.x) * (1 - factor.y)
-          + (points[2] * (1 - factor.x)
-          + points[3] * factor.x) * factor.y)
-          * (1 - factor.z)
-          + ((points[4] * (1 - factor.x)
-          + points[5] * factor.x)
-          * (1 - factor.y)
-          + (points[6] * (1 - factor.x)
-          + points[7] * factor.x)
-          * factor.y) * factor.z);
+  return (((points[0] * (1 - factor(0))
+          + points[1] * factor(0)) * (1 - factor(1))
+          + (points[2] * (1 - factor(0))
+          + points[3] * factor(0)) * factor(1))
+          * (1 - factor(2))
+          + ((points[4] * (1 - factor(0))
+          + points[5] * factor(0))
+          * (1 - factor(1))
+          + (points[6] * (1 - factor(0))
+          + points[7] * factor(0))
+          * factor(1)) * factor(2));
 }
 
 
 template <typename T>
-float3 Octree<T>::grad(const float3 pos) const {
+Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos) const {
 
-   int3 base = make_int3(floorf(pos));
-   float3 factor = fracf(pos);
-   int3 lower_lower = max(base - make_int3(1), make_int3(0));
-   int3 lower_upper = max(base, make_int3(0));
-   int3 upper_lower = min(base + make_int3(1),
-      make_int3(size_) - make_int3(1));
-   int3 upper_upper = min(base + make_int3(2),
-      make_int3(size_) - make_int3(1));
-   int3 & lower = lower_upper;
-   int3 & upper = upper_lower;
+   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos).cast<int>());
+   Eigen::Vector3f factor = octlib::math::fracf(pos);
+   Eigen::Vector3i lower_lower = (base - Eigen::Vector3i::Constant(1)).cwiseMax(Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i lower_upper = base.cwiseMax(Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i upper_lower = (base + Eigen::Vector3i::Constant(1)).cwiseMin(
+      Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
+   Eigen::Vector3i upper_upper = (base + Eigen::Vector3i::Constant(2)).cwiseMin(
+      Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
+   Eigen::Vector3i & lower = lower_upper;
+   Eigen::Vector3i & upper = upper_lower;
 
-  float3 gradient;
+  Eigen::Vector3f gradient;
 
-  VoxelBlock<T> * n = fetch(base.x, base.y, base.z);
-  gradient.x = (((get(upper_lower.x, lower.y, lower.z, n).x
-          - get(lower_lower.x, lower.y, lower.z, n).x) * (1 - factor.x)
-        + (get(upper_upper.x, lower.y, lower.z, n).x
-          - get(lower_upper.x, lower.y, lower.z, n).x) * factor.x)
-      * (1 - factor.y)
-      + ((get(upper_lower.x, upper.y, lower.z, n).x
-          - get(lower_lower.x, upper.y, lower.z, n).x) * (1 - factor.x)
-        + (get(upper_upper.x, upper.y, lower.z, n).x
-          - get(lower_upper.x, upper.y, lower.z, n).x)
-        * factor.x) * factor.y) * (1 - factor.z)
-    + (((get(upper_lower.x, lower.y, upper.z, n).x
-            - get(lower_lower.x, lower.y, upper.z, n).x) * (1 - factor.x)
-          + (get(upper_upper.x, lower.y, upper.z, n).x
-            - get(lower_upper.x, lower.y, upper.z, n).x)
-          * factor.x) * (1 - factor.y)
-        + ((get(upper_lower.x, upper.y, upper.z, n).x
-            - get(lower_lower.x, upper.y, upper.z, n).x)
-          * (1 - factor.x)
-          + (get(upper_upper.x, upper.y, upper.z, n).x
-            - get(lower_upper.x, upper.y, upper.z, n).x)
-          * factor.x) * factor.y) * factor.z;
+  VoxelBlock<T> * n = fetch(base(0), base(1), base(2));
+  gradient(0) = (((get(upper_lower(0), lower(1), lower(2), n)(0)
+          - get(lower_lower(0), lower(1), lower(2), n)(0)) * (1 - factor(0))
+        + (get(upper_upper(0), lower(1), lower(2), n)(0)
+          - get(lower_upper(0), lower(1), lower(2), n)(0)) * factor(0))
+      * (1 - factor(1))
+      + ((get(upper_lower(0), upper(1), lower(2), n)(0)
+          - get(lower_lower(0), upper(1), lower(2), n)(0)) * (1 - factor(0))
+        + (get(upper_upper(0), upper(1), lower(2), n)(0)
+          - get(lower_upper(0), upper(1), lower(2), n)(0))
+        * factor(0)) * factor(1)) * (1 - factor(2))
+    + (((get(upper_lower(0), lower(1), upper(2), n)(0)
+            - get(lower_lower(0), lower(1), upper(2), n)(0)) * (1 - factor(0))
+          + (get(upper_upper(0), lower(1), upper(2), n)(0)
+            - get(lower_upper(0), lower(1), upper(2), n)(0))
+          * factor(0)) * (1 - factor(1))
+        + ((get(upper_lower(0), upper(1), upper(2), n)(0)
+            - get(lower_lower(0), upper(1), upper(2), n)(0))
+          * (1 - factor(0))
+          + (get(upper_upper(0), upper(1), upper(2), n)(0)
+            - get(lower_upper(0), upper(1), upper(2), n)(0))
+          * factor(0)) * factor(1)) * factor(2);
 
-  gradient.y = (((get(lower.x, upper_lower.y, lower.z, n).x
-          - get(lower.x, lower_lower.y, lower.z, n).x) * (1 - factor.x)
-        + (get(upper.x, upper_lower.y, lower.z, n).x
-          - get(upper.x, lower_lower.y, lower.z, n).x) * factor.x)
-      * (1 - factor.y)
-      + ((get(lower.x, upper_upper.y, lower.z, n).x
-          - get(lower.x, lower_upper.y, lower.z, n).x) * (1 - factor.x)
-        + (get(upper.x, upper_upper.y, lower.z, n).x
-          - get(upper.x, lower_upper.y, lower.z, n).x)
-        * factor.x) * factor.y) * (1 - factor.z)
-    + (((get(lower.x, upper_lower.y, upper.z, n).x
-            - get(lower.x, lower_lower.y, upper.z, n).x) * (1 - factor.x)
-          + (get(upper.x, upper_lower.y, upper.z, n).x
-            - get(upper.x, lower_lower.y, upper.z, n).x)
-          * factor.x) * (1 - factor.y)
-        + ((get(lower.x, upper_upper.y, upper.z, n).x
-            - get(lower.x, lower_upper.y, upper.z, n).x)
-          * (1 - factor.x)
-          + (get(upper.x, upper_upper.y, upper.z, n).x
-            - get(upper.x, lower_upper.y, upper.z, n).x)
-          * factor.x) * factor.y) * factor.z;
+  gradient(1) = (((get(lower(0), upper_lower(1), lower(2), n)(0)
+          - get(lower(0), lower_lower(1), lower(2), n)(0)) * (1 - factor(0))
+        + (get(upper(0), upper_lower(1), lower(2), n)(0)
+          - get(upper(0), lower_lower(1), lower(2), n)(0)) * factor(0))
+      * (1 - factor(1))
+      + ((get(lower(0), upper_upper(1), lower(2), n)(0)
+          - get(lower(0), lower_upper(1), lower(2), n)(0)) * (1 - factor(0))
+        + (get(upper(0), upper_upper(1), lower(2), n)(0)
+          - get(upper(0), lower_upper(1), lower(2), n)(0))
+        * factor(0)) * factor(1)) * (1 - factor(2))
+    + (((get(lower(0), upper_lower(1), upper(2), n)(0)
+            - get(lower(0), lower_lower(1), upper(2), n)(0)) * (1 - factor(0))
+          + (get(upper(0), upper_lower(1), upper(2), n)(0)
+            - get(upper(0), lower_lower(1), upper(2), n)(0))
+          * factor(0)) * (1 - factor(1))
+        + ((get(lower(0), upper_upper(1), upper(2), n)(0)
+            - get(lower(0), lower_upper(1), upper(2), n)(0))
+          * (1 - factor(0))
+          + (get(upper(0), upper_upper(1), upper(2), n)(0)
+            - get(upper(0), lower_upper(1), upper(2), n)(0))
+          * factor(0)) * factor(1)) * factor(2);
 
-  gradient.z = (((get(lower.x, lower.y, upper_lower.z, n).x
-          - get(lower.x, lower.y, lower_lower.z, n).x) * (1 - factor.x)
-        + (get(upper.x, lower.y, upper_lower.z, n).x
-          - get(upper.x, lower.y, lower_lower.z, n).x) * factor.x)
-      * (1 - factor.y)
-      + ((get(lower.x, upper.y, upper_lower.z, n).x
-          - get(lower.x, upper.y, lower_lower.z, n).x) * (1 - factor.x)
-        + (get(upper.x, upper.y, upper_lower.z, n).x
-          - get(upper.x, upper.y, lower_lower.z, n).x)
-        * factor.x) * factor.y) * (1 - factor.z)
-    + (((get(lower.x, lower.y, upper_upper.z, n).x
-            - get(lower.x, lower.y, lower_upper.z, n).x) * (1 - factor.x)
-          + (get(upper.x, lower.y, upper_upper.z, n).x
-            - get(upper.x, lower.y, lower_upper.z, n).x)
-          * factor.x) * (1 - factor.y)
-        + ((get(lower.x, upper.y, upper_upper.z, n).x
-            - get(lower.x, upper.y, lower_upper.z, n).x)
-          * (1 - factor.x)
-          + (get(upper.x, upper.y, upper_upper.z, n).x
-            - get(upper.x, upper.y, lower_upper.z, n).x)
-          * factor.x) * factor.y) * factor.z;
+  gradient(2) = (((get(lower(0), lower(1), upper_lower(2), n)(0)
+          - get(lower(0), lower(1), lower_lower(2), n)(0)) * (1 - factor(0))
+        + (get(upper(0), lower(1), upper_lower(2), n)(0)
+          - get(upper(0), lower(1), lower_lower(2), n)(0)) * factor(0))
+      * (1 - factor(1))
+      + ((get(lower(0), upper(1), upper_lower(2), n)(0)
+          - get(lower(0), upper(1), lower_lower(2), n)(0)) * (1 - factor(0))
+        + (get(upper(0), upper(1), upper_lower(2), n)(0)
+          - get(upper(0), upper(1), lower_lower(2), n)(0))
+        * factor(0)) * factor(1)) * (1 - factor(2))
+    + (((get(lower(0), lower(1), upper_upper(2), n)(0)
+            - get(lower(0), lower(1), lower_upper(2), n)(0)) * (1 - factor(0))
+          + (get(upper(0), lower(1), upper_upper(2), n)(0)
+            - get(upper(0), lower(1), lower_upper(2), n)(0))
+          * factor(0)) * (1 - factor(1))
+        + ((get(lower(0), upper(1), upper_upper(2), n)(0)
+            - get(lower(0), upper(1), lower_upper(2), n)(0))
+          * (1 - factor(0))
+          + (get(upper(0), upper(1), upper_upper(2), n)(0)
+            - get(upper(0), upper(1), lower_upper(2), n)(0))
+          * factor(0)) * factor(1)) * factor(2);
 
-  return gradient
-    * make_float3(dim_ / size_, dim_ / size_, dim_ / size_)
-    * (0.5f);
-
+  return (0.5f * dim_ / size_) * gradient;
 }
 
 template <typename T>
 template <typename FieldSelector>
-float3 Octree<T>::grad(const float3 pos, FieldSelector select) const {
+Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos, FieldSelector select) const {
 
-   int3 base = make_int3(floorf(pos));
-   float3 factor = fracf(pos);
-   int3 lower_lower = max(base - make_int3(1), make_int3(0));
-   int3 lower_upper = max(base, make_int3(0));
-   int3 upper_lower = min(base + make_int3(1),
-      make_int3(size_) - make_int3(1));
-   int3 upper_upper = min(base + make_int3(2),
-      make_int3(size_) - make_int3(1));
-   int3 & lower = lower_upper;
-   int3 & upper = upper_lower;
+   Eigen::Vector3i base = Eigen::Vector3i(octlib::math::floorf(pos).cast<int>());
+   Eigen::Vector3f factor = octlib::math::fracf(pos);
+   Eigen::Vector3i lower_lower = (base - Eigen::Vector3i::Constant(1)).cwiseMax(Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i lower_upper = base.cwiseMax(Eigen::Vector3i::Constant(0));
+   Eigen::Vector3i upper_lower = (base + Eigen::Vector3i::Constant(1)).cwiseMin(
+      Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
+   Eigen::Vector3i upper_upper = (base + Eigen::Vector3i::Constant(2)).cwiseMin(
+      Eigen::Vector3i::Constant(size_) - Eigen::Vector3i::Constant(1));
+   Eigen::Vector3i & lower = lower_upper;
+   Eigen::Vector3i & upper = upper_lower;
 
-  float3 gradient;
+  Eigen::Vector3f gradient;
 
-  VoxelBlock<T> * n = fetch(base.x, base.y, base.z);
-  gradient.x = (((select(get(upper_lower.x, lower.y, lower.z, n))
-          - select(get(lower_lower.x, lower.y, lower.z, n))) * (1 - factor.x)
-        + (select(get(upper_upper.x, lower.y, lower.z, n))
-          - select(get(lower_upper.x, lower.y, lower.z, n))) * factor.x)
-      * (1 - factor.y)
-      + ((select(get(upper_lower.x, upper.y, lower.z, n))
-          - select(get(lower_lower.x, upper.y, lower.z, n))) * (1 - factor.x)
-        + (select(get(upper_upper.x, upper.y, lower.z, n))
-          - select(get(lower_upper.x, upper.y, lower.z, n)))
-        * factor.x) * factor.y) * (1 - factor.z)
-    + (((select(get(upper_lower.x, lower.y, upper.z, n))
-            - select(get(lower_lower.x, lower.y, upper.z, n))) * (1 - factor.x)
-          + (select(get(upper_upper.x, lower.y, upper.z, n))
-            - select(get(lower_upper.x, lower.y, upper.z, n)))
-          * factor.x) * (1 - factor.y)
-        + ((select(get(upper_lower.x, upper.y, upper.z, n))
-            - select(get(lower_lower.x, upper.y, upper.z, n)))
-          * (1 - factor.x)
-          + (select(get(upper_upper.x, upper.y, upper.z, n))
-            - select(get(lower_upper.x, upper.y, upper.z, n)))
-          * factor.x) * factor.y) * factor.z;
+  VoxelBlock<T> * n = fetch(base(0), base(1), base(2));
+  gradient(0) = (((select(get(upper_lower(0), lower(1), lower(2), n))
+          - select(get(lower_lower(0), lower(1), lower(2), n))) * (1 - factor(0))
+        + (select(get(upper_upper(0), lower(1), lower(2), n))
+          - select(get(lower_upper(0), lower(1), lower(2), n))) * factor(0))
+      * (1 - factor(1))
+      + ((select(get(upper_lower(0), upper(1), lower(2), n))
+          - select(get(lower_lower(0), upper(1), lower(2), n))) * (1 - factor(0))
+        + (select(get(upper_upper(0), upper(1), lower(2), n))
+          - select(get(lower_upper(0), upper(1), lower(2), n)))
+        * factor(0)) * factor(1)) * (1 - factor(2))
+    + (((select(get(upper_lower(0), lower(1), upper(2), n))
+            - select(get(lower_lower(0), lower(1), upper(2), n))) * (1 - factor(0))
+          + (select(get(upper_upper(0), lower(1), upper(2), n))
+            - select(get(lower_upper(0), lower(1), upper(2), n)))
+          * factor(0)) * (1 - factor(1))
+        + ((select(get(upper_lower(0), upper(1), upper(2), n))
+            - select(get(lower_lower(0), upper(1), upper(2), n)))
+          * (1 - factor(0))
+          + (select(get(upper_upper(0), upper(1), upper(2), n))
+            - select(get(lower_upper(0), upper(1), upper(2), n)))
+          * factor(0)) * factor(1)) * factor(2);
 
-  gradient.y = (((select(get(lower.x, upper_lower.y, lower.z, n))
-          - select(get(lower.x, lower_lower.y, lower.z, n))) * (1 - factor.x)
-        + (select(get(upper.x, upper_lower.y, lower.z, n))
-          - select(get(upper.x, lower_lower.y, lower.z, n))) * factor.x)
-      * (1 - factor.y)
-      + ((select(get(lower.x, upper_upper.y, lower.z, n))
-          - select(get(lower.x, lower_upper.y, lower.z, n))) * (1 - factor.x)
-        + (select(get(upper.x, upper_upper.y, lower.z, n))
-          - select(get(upper.x, lower_upper.y, lower.z, n)))
-        * factor.x) * factor.y) * (1 - factor.z)
-    + (((select(get(lower.x, upper_lower.y, upper.z, n))
-            - select(get(lower.x, lower_lower.y, upper.z, n))) * (1 - factor.x)
-          + (select(get(upper.x, upper_lower.y, upper.z, n))
-            - select(get(upper.x, lower_lower.y, upper.z, n)))
-          * factor.x) * (1 - factor.y)
-        + ((select(get(lower.x, upper_upper.y, upper.z, n))
-            - select(get(lower.x, lower_upper.y, upper.z, n)))
-          * (1 - factor.x)
-          + (select(get(upper.x, upper_upper.y, upper.z, n))
-            - select(get(upper.x, lower_upper.y, upper.z, n)))
-          * factor.x) * factor.y) * factor.z;
+  gradient(1) = (((select(get(lower(0), upper_lower(1), lower(2), n))
+          - select(get(lower(0), lower_lower(1), lower(2), n))) * (1 - factor(0))
+        + (select(get(upper(0), upper_lower(1), lower(2), n))
+          - select(get(upper(0), lower_lower(1), lower(2), n))) * factor(0))
+      * (1 - factor(1))
+      + ((select(get(lower(0), upper_upper(1), lower(2), n))
+          - select(get(lower(0), lower_upper(1), lower(2), n))) * (1 - factor(0))
+        + (select(get(upper(0), upper_upper(1), lower(2), n))
+          - select(get(upper(0), lower_upper(1), lower(2), n)))
+        * factor(0)) * factor(1)) * (1 - factor(2))
+    + (((select(get(lower(0), upper_lower(1), upper(2), n))
+            - select(get(lower(0), lower_lower(1), upper(2), n))) * (1 - factor(0))
+          + (select(get(upper(0), upper_lower(1), upper(2), n))
+            - select(get(upper(0), lower_lower(1), upper(2), n)))
+          * factor(0)) * (1 - factor(1))
+        + ((select(get(lower(0), upper_upper(1), upper(2), n))
+            - select(get(lower(0), lower_upper(1), upper(2), n)))
+          * (1 - factor(0))
+          + (select(get(upper(0), upper_upper(1), upper(2), n))
+            - select(get(upper(0), lower_upper(1), upper(2), n)))
+          * factor(0)) * factor(1)) * factor(2);
 
-  gradient.z = (((select(get(lower.x, lower.y, upper_lower.z, n))
-          - select(get(lower.x, lower.y, lower_lower.z, n))) * (1 - factor.x)
-        + (select(get(upper.x, lower.y, upper_lower.z, n))
-          - select(get(upper.x, lower.y, lower_lower.z, n))) * factor.x)
-      * (1 - factor.y)
-      + ((select(get(lower.x, upper.y, upper_lower.z, n))
-          - select(get(lower.x, upper.y, lower_lower.z, n))) * (1 - factor.x)
-        + (select(get(upper.x, upper.y, upper_lower.z, n))
-          - select(get(upper.x, upper.y, lower_lower.z, n)))
-        * factor.x) * factor.y) * (1 - factor.z)
-    + (((select(get(lower.x, lower.y, upper_upper.z, n))
-            - select(get(lower.x, lower.y, lower_upper.z, n))) * (1 - factor.x)
-          + (select(get(upper.x, lower.y, upper_upper.z, n))
-            - select(get(upper.x, lower.y, lower_upper.z, n)))
-          * factor.x) * (1 - factor.y)
-        + ((select(get(lower.x, upper.y, upper_upper.z, n))
-            - select(get(lower.x, upper.y, lower_upper.z, n)))
-          * (1 - factor.x)
-          + (select(get(upper.x, upper.y, upper_upper.z, n))
-            - select(get(upper.x, upper.y, lower_upper.z, n)))
-          * factor.x) * factor.y) * factor.z;
+  gradient(2) = (((select(get(lower(0), lower(1), upper_lower(2), n))
+          - select(get(lower(0), lower(1), lower_lower(2), n))) * (1 - factor(0))
+        + (select(get(upper(0), lower(1), upper_lower(2), n))
+          - select(get(upper(0), lower(1), lower_lower(2), n))) * factor(0))
+      * (1 - factor(1))
+      + ((select(get(lower(0), upper(1), upper_lower(2), n))
+          - select(get(lower(0), upper(1), lower_lower(2), n))) * (1 - factor(0))
+        + (select(get(upper(0), upper(1), upper_lower(2), n))
+          - select(get(upper(0), upper(1), lower_lower(2), n)))
+        * factor(0)) * factor(1)) * (1 - factor(2))
+    + (((select(get(lower(0), lower(1), upper_upper(2), n))
+            - select(get(lower(0), lower(1), lower_upper(2), n))) * (1 - factor(0))
+          + (select(get(upper(0), lower(1), upper_upper(2), n))
+            - select(get(upper(0), lower(1), lower_upper(2), n)))
+          * factor(0)) * (1 - factor(1))
+        + ((select(get(lower(0), upper(1), upper_upper(2), n))
+            - select(get(lower(0), upper(1), lower_upper(2), n)))
+          * (1 - factor(0))
+          + (select(get(upper(0), upper(1), upper_upper(2), n))
+            - select(get(upper(0), upper(1), lower_upper(2), n)))
+          * factor(0)) * factor(1)) * factor(2);
 
-  return gradient
-    * make_float3(dim_ / size_, dim_ / size_, dim_ / size_)
-    * (0.5f);
+  return (0.5f * dim_ / size_) * gradient;
 }
 
 template <typename T>
@@ -805,7 +786,7 @@ bool Octree<T>::allocateLevel(octlib::key_t* keys, int num_tasks, int target_lev
       if(!(*n)){
         if(level == leaves_level){
           *n = block_memory_.acquire_block();
-          static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
+          static_cast<VoxelBlock<T> *>(*n)->coordinates(Eigen::Vector3i(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
           (*n)->code = myKey;
           parent->children_mask_ = parent->children_mask_ | (1 << index);
@@ -844,7 +825,7 @@ bool Octree<T>::updateLevel(octlib::key_t* keys, int num_tasks, int target_level
       if(!(*n)){
         if(level == leaves_level){
           *n = block_memory_.acquire_block();
-          static_cast<VoxelBlock<T> *>(*n)->coordinates(make_int3(unpack_morton(myKey)));
+          static_cast<VoxelBlock<T> *>(*n)->coordinates(Eigen::Vector3i(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
           static_cast<VoxelBlock<T> *>(*n)->code = myKey | level;
           parent->children_mask_ = parent->children_mask_ | (1 << index);
@@ -901,233 +882,8 @@ void Octree<T>::getAllocatedBlockList(Node<T> *,
     }
   }
 
+#include "ray_iterator.hpp"
 
-/*****************************************************************************
- *
- *
- * Ray iterator definition
- *
- * A modified version of the ray-caster introduced in the paper:
- * https://research.nvidia.com/publication/efficient-sparse-voxel-octrees
- *
- * Original code available at:
- * https://code.google.com/p/efficient-sparse-voxel-octrees/
- *
- * 
-*****************************************************************************/
-
-template <typename T>
-class ray_iterator {
-
-  public:
-    ray_iterator(const Octree<T>& m, const float3 origin, 
-        const float3 direction, float nearPlane, float farPlane) : map_(m) {
-
-      pos_ = make_float3(1.0f, 1.0f, 1.0f);
-      idx_ = 0;
-      parent_ = map_.root_;
-      child_ = NULL;
-      scale_exp2_ = 0.5f;
-      scale_ = CAST_STACK_DEPTH-1;
-      min_scale_ = CAST_STACK_DEPTH - log2(m.size_/Octree<T>::blockSide);
-      static const float epsilon = exp2f(-log2(map_.size_));
-      voxelSize_ = map_.dim_/map_.size_;
-      state_ = INIT; 
-
-      direction_.x = fabsf(direction.x) < epsilon ? 
-        copysignf(epsilon, direction.x) : direction.x;
-      direction_.y = fabsf(direction.y) < epsilon ? 
-        copysignf(epsilon, direction.y) : direction.y;
-      direction_.z = fabsf(direction.z) < epsilon ? 
-        copysignf(epsilon, direction.z) : direction.z;
-
-      /* Scaling the origin to resides between coordinates [1,2] */
-      const float3 scaled_origin = origin/map_.dim_ + 1.f;
-
-      /* Precomputing the ray coefficients */
-      t_coef_ = -1.f/fabs(direction_);
-      t_bias_ = t_coef_ * scaled_origin;
-
-
-      /* Build the octrant mask to to mirror the coordinate system such that
-       * each ray component points in negative coordinates. The octree is 
-       * assumed to reside at coordinates [1, 2]
-       * 
-       */
-      octant_mask_ = 7;
-      if(direction_.x > 0.0f) octant_mask_ ^=1, t_bias_.x = 3.0f * t_coef_.x - t_bias_.x;
-      if(direction_.y > 0.0f) octant_mask_ ^=2, t_bias_.y = 3.0f * t_coef_.y - t_bias_.y;
-      if(direction_.z > 0.0f) octant_mask_ ^=4, t_bias_.z = 3.0f * t_coef_.z - t_bias_.z;
-
-      /* Find the min-max t ranges. */
-      t_min_ = fmaxf(
-          fmaxf(2.0f * t_coef_.x - t_bias_.x, 2.0f * t_coef_.y - t_bias_.y), 2.0f * t_coef_.z - t_bias_.z);
-      t_max_ = fminf(fminf(t_coef_.x - t_bias_.x, t_coef_.y - t_bias_.y), t_coef_.z - t_bias_.z);
-      h_ = t_max_;
-      t_min_ = fmaxf(t_min_, nearPlane/map_.dim_);
-      t_max_ = fminf(t_max_, farPlane/map_.dim_);
-
-      /*
-       * Initialise the ray position
-       */
-      if (1.5f * t_coef_.x - t_bias_.x > t_min_) idx_^= 1, pos_.x = 1.5f;
-      if (1.5f * t_coef_.y - t_bias_.y > t_min_) idx_^= 2, pos_.y = 1.5f;
-      if (1.5f * t_coef_.z - t_bias_.z > t_min_) idx_^= 4, pos_.z = 1.5f;
-
-    };
-
-    /* 
-     * Advance the ray.
-     */
-    inline void advance_ray() {
-
-      int step_mask = 0;
-      
-      step_mask = (t_corner_.x <= tc_max_) | 
-          ((t_corner_.y <= tc_max_) << 1) | ((t_corner_.z <= tc_max_) << 2);
-      pos_.x -= scale_exp2_ * bool(step_mask & 1);
-      pos_.y -= scale_exp2_ * bool(step_mask & 2);
-      pos_.z -= scale_exp2_ * bool(step_mask & 4);
-
-      t_min_ = tc_max_;
-      idx_ ^= step_mask;
-
-      // POP if bits flips disagree with ray direction
-
-      if ((idx_ & step_mask) != 0) {
-
-        // Get the different bits for each component.
-        // This is done by xoring the bit patterns of the new and old pos
-        // (float_as_int reinterprets a floating point number as int,
-        // it is a sort of reinterpret_cast). This work because the volume has
-        // been scaled between [1, 2]. Still digging why this is the case. 
-
-        unsigned int differing_bits = 0;
-        if ((step_mask & 1) != 0) differing_bits |= __float_as_int(pos_.x) ^ __float_as_int(pos_.x + scale_exp2_);
-        if ((step_mask & 2) != 0) differing_bits |= __float_as_int(pos_.y) ^ __float_as_int(pos_.y + scale_exp2_);
-        if ((step_mask & 4) != 0) differing_bits |= __float_as_int(pos_.z) ^ __float_as_int(pos_.z + scale_exp2_);
-
-        // Get the scale at which the two differs. Here's there are different subtlelties related to how fp are stored.
-        // MIND BLOWN: differing bit (i.e. the MSB) extracted using the 
-        // exponent part of the fp representation. 
-        scale_ = (__float_as_int((float)differing_bits) >> 23) - 127; // position of the highest bit
-        scale_exp2_ = __int_as_float((scale_ - CAST_STACK_DEPTH + 127) << 23); // exp2f(scale - s_max)
-        struct stack_entry&  e = stack[scale_];
-        parent_ = e.parent;
-        t_max_ = e.t_max;
-
-        // Round cube position and extract child slot index.
-
-        int shx = __float_as_int(pos_.x) >> scale_;
-        int shy = __float_as_int(pos_.y) >> scale_;
-        int shz = __float_as_int(pos_.z) >> scale_;
-        pos_.x = __int_as_float(shx << scale_);
-        pos_.y = __int_as_float(shy << scale_);
-        pos_.z = __int_as_float(shz << scale_);
-        idx_  = (shx & 1) | ((shy & 1) << 1) | ((shz & 1) << 2);
-
-        h_ = 0.0f;
-        child_ = NULL;
-
-      }
-    }
-
-    /* 
-     * Descend the hiararchy and compute the next child position.
-     */
-    inline void descend() {
-      float tv_max = fminf(t_max_, tc_max_);
-      float half = scale_exp2_ * 0.5f;
-      float3 t_center = half * t_coef_ + t_corner_;
-
-      // Descend to the first child if the resulting t-span is non-empty.
-
-      if (tc_max_ < h_) {
-        stack[scale_] = {scale_, parent_, t_max_};
-      }
-
-      h_ = tc_max_;
-      parent_ = child_;
-
-      idx_ = 0;
-      scale_--;
-      scale_exp2_ = half;
-      idx_ = (t_center.x > t_min_) | 
-          ((t_center.y > t_min_) << 1) | ((t_center.z > t_min_) << 2);
-
-      pos_.x += scale_exp2_ * bool(idx_ & 1);
-      pos_.y += scale_exp2_ * bool(idx_ & 2);
-      pos_.z += scale_exp2_ * bool(idx_ & 4);
-
-      t_max_ = tv_max;
-      child_ = NULL;
-    }
-
-    /*
-     * Returns the next leaf along the ray direction.
-     */
-
-    std::tuple<float, float, float> next() {
-
-      if(state_ == ADVANCE) advance_ray();
-      else if (state_ == FINISHED) return std::make_tuple(-1.f, -1.f, -1.f);
-
-      while (scale_ < CAST_STACK_DEPTH) {
-        t_corner_ = pos_ * t_coef_ - t_bias_;
-        tc_max_ = fminf(fminf(t_corner_.x, t_corner_.y), t_corner_.z);
-
-        child_ = parent_->child(idx_ ^ octant_mask_ ^ 7);
-
-        if (scale_ == min_scale_ && child_ != NULL){
-          state_ = ADVANCE;
-          return std::make_tuple(t_min_ * map_.dim_ /voxelSize_, 
-              t_min_ * map_.dim_ /voxelSize_,
-              stack[CAST_STACK_DEPTH-1].t_max * map_.dim_ /voxelSize_);
-        } else if (child_ != NULL && t_min_ <= t_max_){  // If the child is valid, descend the tree hierarchy.
-          descend();
-          continue;
-        }
-        advance_ray();
-      }
-      return std::make_tuple(-1.f, -1.f, -1.f);
-    }
-
-  private:
-    struct stack_entry {
-      int scale;
-      Node<T> * parent;
-      float t_max;
-    };
-    
-    typedef enum STATE {
-      INIT,
-      ADVANCE,
-      FINISHED
-    } STATE;
-
-    const Octree<T>& map_;
-    float voxelSize_; 
-    float3 origin_;
-    float3 direction_;
-    float3 t_coef_;
-    float3 t_bias_;
-    struct stack_entry stack[CAST_STACK_DEPTH];
-    Node<T> * parent_;
-    Node<T> * child_;
-    int idx_;
-    float3 pos_;
-    int scale;
-    int min_scale_;
-    float scale_exp2_;
-    float t_min_;
-    float t_max_;
-    float tc_max_;
-    float3 t_corner_;
-    float h_;
-    int octant_mask_;
-    int scale_;
-    STATE state_;
-};
 
 template <typename T>
 class leaf_iterator {
@@ -1139,12 +895,12 @@ class leaf_iterator {
     last = 0;
   };
 
-  std::tuple<int3, int, typename Octree<T>::compute_type> next() {
+  std::tuple<Eigen::Vector3i, int, typename Octree<T>::compute_type> next() {
     switch(state_) {
       case BRANCH_NODES:
         if(last < map_.nodes_buffer_.size()) {
           Node<T>* n = map_.nodes_buffer_[last++];
-          return std::make_tuple(make_int3(unpack_morton(n->code)), 
+          return std::make_tuple(unpack_morton(n->code), 
                                  n->side, n->value_[0]);
         } else {
           last = 0;
@@ -1155,13 +911,14 @@ class leaf_iterator {
       case LEAF_NODES:
         if(last < map_.block_memory_.size()) {
           VoxelBlock<T>* n = map_.block_memory_[last++];
-          return std::make_tuple(make_int3(unpack_morton(n->code)), 
+          return std::make_tuple(unpack_morton(n->code), 
               int(VoxelBlock<T>::side), n->value_[0]); 
               /* the above int init required due to odr-use of static member */
         } else {
           last = 0;
           state_ = FINISHED; 
-          return std::make_tuple(make_int3(-1), -1, Octree<T>::traits_type::empty());
+          return std::make_tuple(Eigen::Vector3i::Constant(-1), 
+              -1, Octree<T>::traits_type::empty());
         }
         break;
       case FINISHED:

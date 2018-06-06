@@ -1,9 +1,8 @@
 #include <cmath>
 #include "octree.hpp"
-#include "math_utils.h"
+#include "utils/se_common.h"
 #include "gtest/gtest.h"
 #include "functors/axis_aligned_functor.hpp"
-#include "../../../apps/kfusion/include/vtk-io.h"
 
 typedef float testT;
 template <>
@@ -18,7 +17,7 @@ struct voxel_traits<testT> {
 };
 
 float test_fun(float x, float y, float z) {
-  return sq(z) + std::sin(2*x + y);
+  return octlib::math::sq(z) + std::sin(2*x + y);
 }
 
 class InterpolationTest : public ::testing::Test {
@@ -34,13 +33,15 @@ class InterpolationTest : public ::testing::Test {
       const float voxelsize = oct_.dim()/oct_.size();
       const float inverse_voxelsize = 1.f/voxelsize;
       const int band = 1 * inverse_voxelsize;
-      const int3 offset = make_int3(oct_.size()/2 - band/2);
+      const Eigen::Vector3i offset = 
+        Eigen::Vector3i::Constant(oct_.size()/2 - band/2);
       unsigned leaf_level = log2(size) - log2(Octree<testT>::blockSide);
       for(int z = 0; z < band; ++z) {
         for(int y = 0; y < band; ++y) {
           for(int x = 0; x < band; ++x) {
-            const int3 vox =  make_int3(x + offset.x, y + offset.y, z + offset.z);
-            alloc_list.push_back(oct_.hash(vox.x, vox.y, vox.z, leaf_level));
+            const Eigen::Vector3i vox =  Eigen::Vector3i(x + offset(0), 
+                y + offset(1), z + offset(2));
+            alloc_list.push_back(oct_.hash(vox(0), vox(1), vox(2), leaf_level));
           }
         }
       }
@@ -54,9 +55,9 @@ class InterpolationTest : public ::testing::Test {
 
 TEST_F(InterpolationTest, Init) {
 
-  auto initialise = [](auto& handler, const int3& v) {
+  auto initialise = [](auto& handler, const Eigen::Vector3i& v) {
     float1 data;
-    data.x = test_fun(v.x, v.y, v.z);
+    data.x = test_fun(v(0), v(1), v(2));
     handler.set(data);
   }; 
 
@@ -64,28 +65,29 @@ TEST_F(InterpolationTest, Init) {
     funct(oct_, initialise);
   funct.apply();
 
-  auto test = [](auto& handler, const int3& v) {
+  auto test = [](auto& handler, const Eigen::Vector3i& v) {
     auto data = handler.get();
-    ASSERT_EQ(data.x, test_fun(v.x, v.y, v.z));
+    ASSERT_EQ(data.x, test_fun(v(0), v(1), v(2)));
   }; 
   iterators::functor::axis_aligned<testT, Octree, decltype(test)> 
     funct_test(oct_, test);
   funct_test.apply();
 
-  std::stringstream f;
-  f << "./analytical_function.vtk";
-  save3DSlice(oct_, make_int3(0, oct_.size()/2, 0),
-      make_int3(oct_.size(), oct_.size()/2 + 1, oct_.size()), make_int3(oct_.size()), f.str().c_str());
-  f.str("");
-  f.clear();
+  // std::stringstream f;
+  // f << "./analytical_function.vtk";
+  // save3DSlice(oct_, Eigen::Vector3i(0, oct_.size()/2, 0),
+  //     Eigen::Vector3i(oct_.size(), oct_.size()/2 + 1, oct_.size()), 
+  //     Eigen::Vector3i(oct_.size()), f.str().c_str());
+  // f.str("");
+  // f.clear();
 }
 
 // TEST_F(InterpolationTest, InterpAtPoints) {
 // 
-//   auto test = [this](auto& handler, const int3& v) {
+//   auto test = [this](auto& handler, const Eigen::Vector3i& v) {
 //     auto data = handler.get();
-//     float interpolated = oct_.interp(make_float3(v.x, v.y, v.z), [](const auto& val){ return val.x; });
-//     ASSERT_EQ(data.x, interpolated);
+//     float interpolated = oct_.interp(make_float3(v(0), v(1), v(2)), [](const auto& val){ return val(0); });
+//     ASSERT_EQ(data(0), interpolated);
 //   }; 
 // 
 //   iterators::functor::axis_aligned<testT, Octree, decltype(test)> 

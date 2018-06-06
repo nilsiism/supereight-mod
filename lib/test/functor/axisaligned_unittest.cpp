@@ -1,5 +1,5 @@
 #include "octree.hpp"
-#include "math_utils.h"
+#include "utils/se_common.h"
 #include "gtest/gtest.h"
 #include "functors/axis_aligned_functor.hpp"
 
@@ -27,13 +27,15 @@ class AxisAlignedTest : public ::testing::Test {
       const float voxelsize = oct_.dim()/oct_.size();
       const float inverse_voxelsize = 1.f/voxelsize;
       const int band = 1 * inverse_voxelsize;
-      const int3 offset = make_int3(oct_.size()/2 - band/2);
+      const Eigen::Vector3i offset = 
+        Eigen::Vector3i::Constant(oct_.size()/2 - band/2);
       unsigned leaf_level = log2(size) - log2(Octree<testT>::blockSide);
       for(int z = 0; z < band; ++z) {
         for(int y = 0; y < band; ++y) {
           for(int x = 0; x < band; ++x) {
-            const int3 vox =  make_int3(x + offset.x, y + offset.y, z + offset.z);
-            alloc_list.push_back(oct_.hash(vox.x, vox.y, vox.z, leaf_level));
+            const Eigen::Vector3i vox =  Eigen::Vector3i(x + offset(0), 
+                y + offset(1), z + offset(2));
+            alloc_list.push_back(oct_.hash(vox(0), vox(1), vox(2), leaf_level));
           }
         }
       }
@@ -47,11 +49,11 @@ class AxisAlignedTest : public ::testing::Test {
 
 TEST_F(AxisAlignedTest, Init) {
 
-  auto initialise = [](auto& handler, const int3&) {
+  auto initialise = [](auto& handler, const Eigen::Vector3i&) {
     handler.set(voxel_traits<testT>::initValue());
   }; 
 
-  auto test = [](auto& handler, const int3&) {
+  auto test = [](auto& handler, const Eigen::Vector3i&) {
     auto data = handler.get();
     ASSERT_EQ(data, voxel_traits<testT>::initValue());
   }; 
@@ -67,23 +69,28 @@ TEST_F(AxisAlignedTest, Init) {
 
 TEST_F(AxisAlignedTest, BBoxTest) {
 
-  auto set_to_ten = [](auto& handler, const int3&) {
+  auto set_to_ten = [](auto& handler, const Eigen::Vector3i&) {
           handler.set(10.f);
     };
 
   iterators::functor::axis_aligned<testT, Octree, decltype(set_to_ten)> 
-    funct(oct_, set_to_ten, make_int3(100), make_int3(151));
+    funct(oct_, set_to_ten, Eigen::Vector3i::Constant(100), 
+        Eigen::Vector3i::Constant(151));
   funct.apply();
 
   for(int z = 50; z < 200; ++z)
     for(int y = 50; y < 200; ++y)
       for(int x = 50; x < 200; ++x) {
         auto * block = oct_.fetch(x, y, z);
-        if(block && in(x, 100, 150) && in(y, 100, 150) && in(z, 100, 150)){
-          ASSERT_EQ(block->data(make_int3(x, y, z)), 10.f);
+        if(block && 
+           octlib::math::in(x, 100, 150) && 
+           octlib::math::in(y, 100, 150) && 
+           octlib::math::in(z, 100, 150)){
+          ASSERT_EQ(block->data(Eigen::Vector3i(x, y, z)), 10.f);
         }
         else if(block) { 
-          ASSERT_EQ(block->data(make_int3(x, y, z)), voxel_traits<testT>::initValue());
+          ASSERT_EQ(block->data(Eigen::Vector3i(x, y, z)), 
+                    voxel_traits<testT>::initValue());
         }
       }
 }

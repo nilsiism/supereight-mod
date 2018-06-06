@@ -1,9 +1,11 @@
 #ifndef OCTANT_OPS_HPP
 #define OCTANT_OPS_HPP
 #include "utils/morton_utils.hpp"
+#include "utils/se_common.h"
 #include "octree_defines.h"
 #include <iostream>
 #include <bitset>
+#include <Eigen/Dense>
 
 namespace octlib {
   namespace keyops {
@@ -22,7 +24,7 @@ namespace octlib {
       return (compute_morton(x, y, z) & MASK[offset]) | level;
     }
 
-    inline uint3 decode(const octlib::key_t key) {
+    inline Eigen::Vector3i decode(const octlib::key_t key) {
       return unpack_morton(key & ~SCALE_MASK);
     }
   }
@@ -31,15 +33,15 @@ namespace octlib {
 /*
  * Algorithm 5 of p4est paper: https://epubs.siam.org/doi/abs/10.1137/100791634
  */
-inline uint3 face_neighbour(const octlib::key_t o, 
+inline Eigen::Vector3i face_neighbour(const octlib::key_t o, 
     const unsigned int face, const unsigned int l, 
     const unsigned int max_depth) {
-  uint3 coords = octlib::keyops::decode(o);
+  Eigen::Vector3i coords = octlib::keyops::decode(o);
   const unsigned int side = 1 << (max_depth - l); 
-  coords.x = coords.x + ((face == 0) ? -side : (face == 1) ? side : 0);
-  coords.y = coords.y + ((face == 2) ? -side : (face == 3) ? side : 0);
-  coords.z = coords.z + ((face == 4) ? -side : (face == 5) ? side : 0);
-  return {coords.x, coords.y, coords.z};
+  coords(0) = coords(0) + ((face == 0) ? -side : (face == 1) ? side : 0);
+  coords(1) = coords(1) + ((face == 2) ? -side : (face == 3) ? side : 0);
+  coords(2) = coords(2) + ((face == 4) ? -side : (face == 5) ? side : 0);
+  return {coords(0), coords(1), coords(2)};
 }
 
 /*
@@ -87,14 +89,14 @@ inline int child_id(octlib::key_t octant, const int level,
  * \param level of octant 
  * \param max_depth max depth of the tree on which the octant lives
  */
-inline int3 far_corner(const octlib::key_t octant, const int level, 
+inline Eigen::Vector3i far_corner(const octlib::key_t octant, const int level, 
     const int max_depth) {
   const unsigned int side = 1 << (max_depth - level); 
   const int idx = child_id(octant, level, max_depth);
-  const uint3 coordinates = octlib::keyops::decode(octant);
-  return make_int3(coordinates.x + (idx & 1) * side,
-                   coordinates.y + ((idx & 2) >> 1) * side,
-                   coordinates.z + ((idx & 4) >> 2) * side);
+  const Eigen::Vector3i coordinates = octlib::keyops::decode(octant);
+  return Eigen::Vector3i(coordinates(0) + (idx & 1) * side,
+                   coordinates(1) + ((idx & 2) >> 1) * side,
+                   coordinates(2) + ((idx & 4) >> 2) * side);
 }
 
 /*
@@ -110,28 +112,28 @@ inline void exterior_neighbours(octlib::key_t result[7],
     const octlib::key_t octant, const int level, const int max_depth) {
 
   const int idx = child_id(octant, level, max_depth);
-  int3 dir = make_int3((idx & 1) ? 1 : -1,
+  Eigen::Vector3i dir = Eigen::Vector3i((idx & 1) ? 1 : -1,
                        (idx & 2) ? 1 : -1,
                        (idx & 4) ? 1 : -1);
-  int3 base = far_corner(octant, level, max_depth);
-  dir.x = in(base.x + dir.x , 0, std::pow(2, max_depth) - 1) ? dir.x : 0;
-  dir.y = in(base.y + dir.y , 0, std::pow(2, max_depth) - 1) ? dir.y : 0;
-  dir.z = in(base.z + dir.z , 0, std::pow(2, max_depth) - 1) ? dir.z : 0;
+  Eigen::Vector3i base = far_corner(octant, level, max_depth);
+  dir(0) = octlib::math::in(base(0) + dir(0) , 0, (1 << max_depth) - 1) ? dir(0) : 0;
+  dir(1) = octlib::math::in(base(1) + dir(1) , 0, (1 << max_depth) - 1) ? dir(1) : 0;
+  dir(2) = octlib::math::in(base(2) + dir(2) , 0, (1 << max_depth) - 1) ? dir(2) : 0;
 
- result[0] = octlib::keyops::encode(base.x + dir.x, base.y + 0, base.z + 0, 
+ result[0] = octlib::keyops::encode(base(0) + dir(0), base(1) + 0, base(2) + 0, 
      level, max_depth);
- result[1] = octlib::keyops::encode(base.x + 0, base.y + dir.y, base.z + 0, 
+ result[1] = octlib::keyops::encode(base(0) + 0, base(1) + dir(1), base(2) + 0, 
      level, max_depth); 
- result[2] = octlib::keyops::encode(base.x + dir.x, base.y + dir.y, base.z + 0, 
+ result[2] = octlib::keyops::encode(base(0) + dir(0), base(1) + dir(1), base(2) + 0, 
      level, max_depth); 
- result[3] = octlib::keyops::encode(base.x + 0, base.y + 0, base.z + dir.z, 
+ result[3] = octlib::keyops::encode(base(0) + 0, base(1) + 0, base(2) + dir(2), 
      level, max_depth); 
- result[4] = octlib::keyops::encode(base.x + dir.x, base.y + 0, base.z + dir.z, 
+ result[4] = octlib::keyops::encode(base(0) + dir(0), base(1) + 0, base(2) + dir(2), 
      level, max_depth); 
- result[5] = octlib::keyops::encode(base.x + 0, base.y + dir.y, base.z + dir.z, 
+ result[5] = octlib::keyops::encode(base(0) + 0, base(1) + dir(1), base(2) + dir(2), 
      level, max_depth); 
- result[6] = octlib::keyops::encode(base.x + dir.x, base.y + dir.y, 
-     base.z + dir.z, level, max_depth); 
+ result[6] = octlib::keyops::encode(base(0) + dir(0), base(1) + dir(1), 
+     base(2) + dir(2), level, max_depth); 
 }
 
 /*

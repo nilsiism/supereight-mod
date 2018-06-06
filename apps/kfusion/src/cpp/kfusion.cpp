@@ -266,17 +266,24 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
     volume._map_index.alloc_update(allocationList, allocated);
 
     if(std::is_same<FieldType, SDF>::value) {
-      struct sdf_update funct(floatDepth, computationSize, mu, 100);
-      iterators::projective_functor<FieldType, INDEX_STRUCTURE, struct sdf_update> 
-        it(volume._map_index, funct, inverse(pose), getCameraMatrix(k), 
-            make_int2(computationSize));
-      it.apply();
+      struct sdf_update funct(floatDepth, 
+          Eigen::Vector2i(computationSize.x, computationSize.y), mu, 100);
+      functor::projective_map(volume._map_index, 
+          to_sophus(pose).inverse(), 
+          to_eigen(getCameraMatrix(k)), 
+          Eigen::Vector2i(computationSize.x, computationSize.y), 
+          funct);
     } else if(std::is_same<FieldType, BFusion>::value) {
+
       float timestamp = (1.f/30.f)*frame; 
-      struct bfusion_update funct(floatDepth, computationSize, mu, timestamp);
-      iterators::projective_functor<FieldType, INDEX_STRUCTURE, struct bfusion_update> 
-        it(volume._map_index, funct, inverse(pose), getCameraMatrix(k), make_int2(computationSize));
-      it.apply();
+      struct bfusion_update funct(floatDepth, 
+          Eigen::Vector2i(computationSize.x, computationSize.y), mu, timestamp);
+
+      functor::projective_map(volume._map_index, 
+          to_sophus(pose).inverse(), 
+          to_eigen(getCameraMatrix(k)), 
+          Eigen::Vector2i(computationSize.x, computationSize.y), 
+          funct);
     }
 
     // if(frame % 15 == 0) {

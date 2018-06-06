@@ -1,5 +1,5 @@
 #include "octree.hpp"
-#include "math_utils.h"
+#include "utils/se_common.h"
 #include "utils/morton_utils.hpp"
 #include "algorithms/unique.hpp"
 #include "gtest/gtest.h"
@@ -22,7 +22,7 @@ struct voxel_traits<testT> {
 class UniqueTest : public ::testing::Test {
   protected:
     virtual void SetUp() {
-      const int3 blocks[10] = {
+      const Eigen::Vector3i blocks[10] = {
         {56, 12, 12}, {56, 12, 15}, 
         {128, 128, 128},
         {128, 128, 125}, {128, 128, 127}, 
@@ -31,7 +31,7 @@ class UniqueTest : public ::testing::Test {
         {136, 128, 136}, 
         {128, 240, 136}, {128, 241, 136}};
       for(int i = 0; i < 10; ++i) { 
-        keys[i] = oct.hash(blocks[i].x, blocks[i].y, blocks[i].z);
+        keys[i] = oct.hash(blocks[i](0), blocks[i](1), blocks[i](2));
       }
     }
     
@@ -46,7 +46,7 @@ class UniqueMultiscaleTest : public ::testing::Test {
 
       oct.init(256, 10);
 
-      const int3 blocks[10] = {
+      const Eigen::Vector3i blocks[10] = {
         {56, 12, 12}, 
         {56, 12, 15}, 
         {128, 128, 128},
@@ -57,12 +57,12 @@ class UniqueMultiscaleTest : public ::testing::Test {
         {136, 128, 136}, 
         {128, 240, 136}, {128, 241, 136}};
       for(int i = 0; i < 10; ++i) { 
-        keys[i] = oct.hash(blocks[i].x, blocks[i].y, blocks[i].z, 7);
+        keys[i] = oct.hash(blocks[i](0), blocks[i](1), blocks[i](2), 7);
       }
 
-      keys[2] = oct.hash(blocks[2].x, blocks[2].y, blocks[2].z, 3);
-      keys[3] = oct.hash(blocks[3].x, blocks[3].y, blocks[3].z, 5);
-      keys[4] = oct.hash(blocks[4].x, blocks[4].y, blocks[4].z, 6);
+      keys[2] = oct.hash(blocks[2](0), blocks[2](1), blocks[2](2), 3);
+      keys[3] = oct.hash(blocks[3](0), blocks[3](1), blocks[3](2), 5);
+      keys[4] = oct.hash(blocks[4](0), blocks[4](1), blocks[4](2), 6);
       std::sort(keys, keys + 10); 
     }
    

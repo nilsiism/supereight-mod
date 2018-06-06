@@ -144,22 +144,22 @@ inline uchar4 gs2rgb(double h) {
 }
 
 typedef struct Triangle {
-  float3 vertexes[3];
-  float3 vnormals[3];
-  float3 normal;
+  Eigen::Vector3f vertexes[3];
+  Eigen::Vector3f vnormals[3];
+  Eigen::Vector3f normal;
   float color;
   float surface_area;
   
   Triangle(){ 
-    vertexes[0] = make_float3(0);
-    vertexes[1] = make_float3(0);
-    vertexes[2] = make_float3(0);
-    normal = make_float3(0);
+    vertexes[0] = Eigen::Vector3f::Constant(0);
+    vertexes[1] = Eigen::Vector3f::Constant(0);
+    vertexes[2] = Eigen::Vector3f::Constant(0);
+    normal = Eigen::Vector3f(0);
     surface_area = -1.f;
   }
   
-  inline bool iszero(const float3& v){ 
-    return (v.x == 0) && (v.y == 0) && (v.z == 0);
+  inline bool iszero(const Eigen::Vector3f& v){ 
+    return !(v.array() == 0).all();
   }
 
   inline bool valid(){
@@ -167,33 +167,33 @@ typedef struct Triangle {
   }
 
   inline void compute_normal(){
-    normal = cross(vertexes[1] - vertexes[0], vertexes[2] - vertexes[1]);
+    normal = (vertexes[1] - vertexes[0]).cross(vertexes[2] - vertexes[1]);
   }
 
-  inline void compute_boundingbox(float3& minV, float3& maxV) const {
+  inline void compute_boundingbox(Eigen::Vector3f& minV, Eigen::Vector3f& maxV) const {
     minV = vertexes[0];
     maxV = vertexes[0];
-    minV = fminf(minV, vertexes[0]);
-    minV = fminf(minV, vertexes[1]);
-    minV = fminf(minV, vertexes[2]);
-    maxV = fmaxf(maxV, vertexes[0]);
-    maxV = fmaxf(maxV, vertexes[1]);
-    maxV = fmaxf(maxV, vertexes[2]);
+    minV = minV.cwiseMin(vertexes[0]);
+    minV = minV.cwiseMin(vertexes[1]);
+    minV = minV.cwiseMin(vertexes[2]);
+    maxV = maxV.cwiseMax(vertexes[0]);
+    maxV = maxV.cwiseMax(vertexes[1]);
+    maxV = maxV.cwiseMax(vertexes[2]);
   }
 
   inline float area() {
     // Use the cached value if available
     if(surface_area > 0) return surface_area;
-    float3 a = vertexes[1] - vertexes[0];
-    float3 b = vertexes[2] - vertexes[1];
-    float3 v = cross(a,b);
-    surface_area = (sqrtf(dot(v,v)))/2;
+    Eigen::Vector3f a = vertexes[1] - vertexes[0];
+    Eigen::Vector3f b = vertexes[2] - vertexes[1];
+    Eigen::Vector3f v = a.cross(b);
+    surface_area = v.norm()/2;
     return surface_area; 
   }
 
-  float3 * uniform_sample(int num){
+  Eigen::Vector3f * uniform_sample(int num){
 
-    float3 * points = new float3[num];
+    Eigen::Vector3f * points = new Eigen::Vector3f[num];
     for(int i = 0; i < num; ++i){
       float u = ((float)rand())/(float)RAND_MAX; 
       float v = ((float)rand())/(float)RAND_MAX;
@@ -208,9 +208,9 @@ typedef struct Triangle {
     return points;
   }
 
-  float3 * uniform_sample(int num, unsigned int& seed) const {
+  Eigen::Vector3f * uniform_sample(int num, unsigned int& seed) const {
 
-    float3 * points = new float3[num];
+    Eigen::Vector3f * points = new Eigen::Vector3f[num];
     for(int i = 0; i < num; ++i){
       float u = ((float)rand_r(&seed))/(float)RAND_MAX; 
       float v = ((float)rand_r(&seed))/(float)RAND_MAX;
@@ -223,314 +223,6 @@ typedef struct Triangle {
     } 
     return points;
   }
-
-
-// Triangle-box intersection first test: triangle's plane-bbox intersection
-// Reference: Fast Parallel Surface and Solid Voxelization on GPUs
-// http://research.michael-schwarz.com/publ/files/vox-siga10.pdf
-inline bool planeOverlap(const float3& voxel, const float delta = 1.f) const {
-
-  float3 c = make_float3(normal.x > 0 ? delta : 0,
-                         normal.y > 0 ? delta : 0,
-                         normal.z > 0 ? delta : 0);
-  float d1 = dot(normal, c - vertexes[0]);
-  float d2 = dot(normal, (delta - c) - vertexes[0]);
-  
-  return (dot(normal, voxel) + d1) * (dot(normal, voxel) + d2) <= 0;
-
-}
-
-// As in https://developer.nvidia.com/content/basics-gpu-voxelization
-inline bool projectionOverlap(const float3& voxel, 
-                               const float delta) const {
-
-  float3 e0 = vertexes[1] - vertexes[0];
-  float3 e1 = vertexes[2] - vertexes[1];
-  float3 e2 = vertexes[0] - vertexes[2];
-  float3 planeNormal = cross(e0, e1);
-
-  // XY Plane
-  
-  {
-    float isFront = std::signbit(planeNormal.z) ? 1 : -1;
-    float2 eNrm[3];
-    eNrm[0] = make_float2(e0.y, -e0.x) * isFront;
-    eNrm[1] = make_float2(e1.y, -e1.x) * isFront;
-    eNrm[2] = make_float2(e2.y, -e2.x) * isFront;
-
-    float2 an[3];
-    an[0] = fabs(eNrm[0]);
-    an[1] = fabs(eNrm[1]);
-    an[2] = fabs(eNrm[2]);
-
-    float3 e0fs;
-    e0fs.x = (an[0].x + an[0].y) * delta;
-    e0fs.y = (an[1].x + an[1].y) * delta;
-    e0fs.z = (an[2].x + an[2].y) * delta;
-
-    float3 ef;
-    float3 voxelCenter = voxel + delta/2;
-    float2 voxelProj = make_float2(voxelCenter.x, voxelCenter.y);
-    float2 v0 = make_float2(vertexes[0].x, vertexes[0].y);
-    float2 v1 = make_float2(vertexes[1].x, vertexes[1].y);
-    float2 v2 = make_float2(vertexes[2].x, vertexes[2].y);
-
-    ef.x = e0fs.x - dot(v0 - voxelProj, eNrm[0]);
-    ef.y = e0fs.y - dot(v1 - voxelProj, eNrm[1]);
-    ef.z = e0fs.z - dot(v2 - voxelProj, eNrm[2]);
-
-    if(ef.x < 0 || ef.y < 0 || ef.z < 0)
-      return false;
-  }
-
-  // XZ Plane
-  
-  {
-    float isFront = std::signbit(planeNormal.y) ? -1 : 1;
-    float2 eNrm[3];
-    eNrm[0] = make_float2(e0.z, -e0.x) * isFront;
-    eNrm[1] = make_float2(e1.z, -e1.x) * isFront;
-    eNrm[2] = make_float2(e2.z, -e2.x) * isFront;
-
-    float2 an[3];
-    an[0] = fabs(eNrm[0]);
-    an[1] = fabs(eNrm[1]);
-    an[2] = fabs(eNrm[2]);
-
-    float3 e0fs;
-    e0fs.x = (an[0].x + an[0].y) * delta;
-    e0fs.y = (an[1].x + an[1].y) * delta;
-    e0fs.z = (an[2].x + an[2].y) * delta;
-
-    float3 ef;
-    float3 voxelCenter = voxel + delta/2;
-    float2 voxelProj = make_float2(voxelCenter.x, voxelCenter.z);
-    float2 v0 = make_float2(vertexes[0].x, vertexes[0].z);
-    float2 v1 = make_float2(vertexes[1].x, vertexes[1].z);
-    float2 v2 = make_float2(vertexes[2].x, vertexes[2].z);
-
-    ef.x = e0fs.x - dot(v0 - voxelProj, eNrm[0]);
-    ef.y = e0fs.y - dot(v1 - voxelProj, eNrm[1]);
-    ef.z = e0fs.z - dot(v2 - voxelProj, eNrm[2]);
-
-    if(ef.x < 0 || ef.y < 0 || ef.z < 0)
-      return false;
-  }
-
-  // PLANE YZ
-  {
-    float isFront = std::signbit(planeNormal.x) ? 1 : -1;
-    float2 eNrm[3];
-    eNrm[0] = make_float2(e0.z, -e0.y) * isFront;
-    eNrm[1] = make_float2(e1.z, -e1.y) * isFront;
-    eNrm[2] = make_float2(e2.z, -e2.y) * isFront;
-
-    float2 an[3];
-    an[0] = fabs(eNrm[0]);
-    an[1] = fabs(eNrm[1]);
-    an[2] = fabs(eNrm[2]);
-
-    float3 e0fs;
-    e0fs.x = (an[0].x + an[0].y) * delta;
-    e0fs.y = (an[1].x + an[1].y) * delta;
-    e0fs.z = (an[2].x + an[2].y) * delta;
-
-    float3 ef;
-    float3 voxelCenter = voxel + delta/2;
-    float2 voxelProj = make_float2(voxelCenter.y, voxelCenter.z);
-    float2 v0 = make_float2(vertexes[0].y, vertexes[0].z);
-    float2 v1 = make_float2(vertexes[1].y, vertexes[1].z);
-    float2 v2 = make_float2(vertexes[2].y, vertexes[2].z);
-
-    ef.x = e0fs.x - dot(v0 - voxelProj, eNrm[0]);
-    ef.y = e0fs.y - dot(v1 - voxelProj, eNrm[1]);
-    ef.z = e0fs.z - dot(v2 - voxelProj, eNrm[2]);
-
-    if(ef.x < 0 || ef.y < 0 || ef.z < 0)
-      return false;
-  }
-  return true;  
-}
-
-// Implementation of http://www.geometrictools.com/Documentation/DistancePoint3Triangle3.pdf
-// Reference source-code:
-// http://www.mathworks.com/matlabcentral/fileexchange/22857-distance-between-a-point-and-a-triangle-in-3d
-// and http://www.geometrictools.com/GTEngine/Include/Mathematics/GteDistPointTriangle.h
-// Note: this method works but is rather ugly, there are alternatives.
-// One might be the 2D method proposed in here: http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.477.6798&rep=rep1&type=pdf
-
-inline float distance(const float3& point) const {
-
-  const float3 B = vertexes[0];
-  const float3 e0 = vertexes[1] - B;
-  const float3 e1 = vertexes[2] - B;
-
-  const float3 D = B - point;
-  const float a = dot(e0, e0);
-  const float b = dot(e0, e1);
-  const float c = dot(e1, e1);
-  const float d = dot(e0, D);
-  const float e = dot(e1, D);
-  // const float f = dot(D, D); Not sure why this is here and unused
-
-  const float det = a*c - b*b;
-  float s = b*e - c*d;
-  float t = b*d - a*e;
- 
-  if(s+t <= det){
-    if(s < 0){
-      if(t < 0){
-        // region 4
-        if(d < 0){
-          t = 0;
-          if(-d >= a){
-            s = 1;
-          } 
-          else{
-            s = -d/a;
-          }
-        } 
-        else{
-          s = 0;
-          if(e >= 0){
-            t = 0;
-          }
-          else{
-            if(-e >= c){
-              t = 1;
-            }
-            else{
-              t = -e/c;
-            }
-          }
-        } 
-      } // end of region 4
-      else{
-        // region 3
-        s = 0;
-        if(e >= 0){
-          t = 0;
-        }
-        else{
-          if(-e >= c){
-            t = 1;
-          }
-          else{
-            t = -e/c;
-          }
-        }
-      } // end of region 3
-    }
-    else{
-      if(t < 0){
-        // region 5
-        t = 0;
-        if(d >= 0){
-          s = 0;
-        }
-        else{
-          if(-d >= a){
-            s = 1;
-          }        
-          else{
-            s = -d/a;
-          }
-        }
-      }
-      else{
-        // region 0
-        float invDet = 1/det;
-        s = s*invDet;
-        t = t*invDet;
-      }
-    }
-  }
-  else{ 
-    if(s < 0){
-      float tmp0 = b + d;
-      float tmp1 = c + e;
-      if(tmp1 > tmp0){
-        float num = tmp1 - tmp0;
-        float denom = a - 2*b +c;
-        if(num >= denom){
-          s = 1;
-          t = 0;
-         }
-        else{
-          s = num/denom;
-          t = 1-s;
-        }
-      }
-      else{
-        s = 0;
-        if(tmp1 <= 0){
-          t = 1;
-        }
-        else{
-          if(e >= 0){
-            t = 0;
-          }
-          else{
-            t = -e/c;
-          }
-        }
-      }
-    }
-    else{
-      if(t < 0){
-        float tmp0 = b + e;
-        float tmp1 = a + d;
-        if(tmp1 > tmp0){
-          float num = tmp1 - tmp0;
-          float denom = a - 2*b + c;
-          if(num >= denom){
-            t = 1;
-            s = 0;
-          }
-          else{
-            t = num/denom;
-            s = 1 - t;
-          }
-        }
-        else{
-          t = 0;
-          if(tmp1 <= 0){
-            s = 1;
-          }
-          else{
-            if(d >= 0){
-              s = 0;
-            }
-            else{
-              s = -d/a;
-            }
-          }
-        }
-      }
-      else{
-        float num = c + e - b - d;
-        if(num <= 0){
-          s = 0;
-          t = 1;
-        }
-        else{
-          float denom = a - 2*b + c;
-          if(num >= denom){
-            s = 1;
-            t = 0;
-          }
-          else{
-            s = num/denom;
-            t = 1-s;
-          }
-        }
-      }
-    }
-  }
-  const float3 closest = vertexes[0] + (s*e0) + (t*e1);
-  float3 diff = point - closest;
-  return sqrt(dot(diff, diff));
-}
 
 } Triangle;
 
@@ -905,18 +597,18 @@ inline void objToTriangles(const std::vector<tinyobj::shape_t>& shapes,
       Triangle t;
       uint index = (indices[it*3]);
       
-      t.vertexes[0] = make_float3(shape.mesh.positions.at(3*index+0),
-                                  shape.mesh.positions.at(3*index+1),
-                                  shape.mesh.positions.at(3*index+2));
+      t.vertexes[0] = Eigen::Vector3f(shape.mesh.positions.at(3*index+0),
+                                      shape.mesh.positions.at(3*index+1),
+                                      shape.mesh.positions.at(3*index+2));
 
       index = indices[it*3+1];
-      t.vertexes[1] = make_float3(shape.mesh.positions.at(3*index+0),
-                                  shape.mesh.positions.at(3*index+1),
-                                  shape.mesh.positions.at(3*index+2));
+      t.vertexes[1] = Eigen::Vector3f(shape.mesh.positions.at(3*index+0),
+                                      shape.mesh.positions.at(3*index+1),
+                                      shape.mesh.positions.at(3*index+2));
       index = indices[it*3+2];
-      t.vertexes[2] = make_float3(shape.mesh.positions.at(3*index+0),
-                                  shape.mesh.positions.at(3*index+1),
-                                  shape.mesh.positions.at(3*index+2));
+      t.vertexes[2] = Eigen::Vector3f(shape.mesh.positions.at(3*index+0),
+                                      shape.mesh.positions.at(3*index+1),
+                                      shape.mesh.positions.at(3*index+2));
      
       t.compute_normal(); 
       t.area();
@@ -941,12 +633,12 @@ inline void writeVtkMesh(const char * filename,
   for(unsigned int i = 0; i < mesh.size(); ++i ){
     const Triangle& t = mesh[i];
 
-    points << t.vertexes[0].x << " " << t.vertexes[0].y << " " 
-      << t.vertexes[0].z << std::endl; 
-    points << t.vertexes[1].x << " " << t.vertexes[1].y << " " 
-      << t.vertexes[1].z << std::endl; 
-    points << t.vertexes[2].x << " " << t.vertexes[2].y << " " 
-      << t.vertexes[2].z << std::endl; 
+    points << t.vertexes[0](0) << " " << t.vertexes[0](1) << " " 
+      << t.vertexes[0](2) << std::endl; 
+    points << t.vertexes[1](0) << " " << t.vertexes[1](1) << " " 
+      << t.vertexes[1](2) << std::endl; 
+    points << t.vertexes[2](0) << " " << t.vertexes[2](1) << " " 
+      << t.vertexes[2](2) << std::endl; 
 
     polygons << "3 " << point_count << " " << point_count+1 << 
       " " << point_count+2 << std::endl;
@@ -1002,12 +694,12 @@ inline void writeObjMesh(const char * filename,
 
   for(unsigned int i = 0; i < mesh.size(); i++){
     const Triangle& t = mesh[i];  
-    points << "v " << t.vertexes[0].x << " " << t.vertexes[0].y
-           << " "  << t.vertexes[0].z << std::endl;
-    points << "v " << t.vertexes[1].x << " " << t.vertexes[1].y 
-           << " "  << t.vertexes[1].z << std::endl;
-    points << "v " << t.vertexes[2].x << " " << t.vertexes[2].y 
-           << " "  << t.vertexes[2].z << std::endl;
+    points << "v " << t.vertexes[0](0) << " " << t.vertexes[0](1)
+           << " "  << t.vertexes[0](2) << std::endl;
+    points << "v " << t.vertexes[1](0) << " " << t.vertexes[1](1) 
+           << " "  << t.vertexes[1](2) << std::endl;
+    points << "v " << t.vertexes[2](0) << " " << t.vertexes[2](1) 
+           << " "  << t.vertexes[2](2) << std::endl;
 
     faces  << "f " << (face_count*3)+1 << " " << (face_count*3)+2 
            << " " << (face_count*3)+3 << std::endl;
@@ -1027,4 +719,11 @@ inline void writeObjMesh(const char * filename,
             << " points" << std::endl;
 }
 
+static inline Sophus::SE3f to_sophus(const Matrix4& m) {
+  return Sophus::SE3f(Eigen::Matrix<float, 4, 4, Eigen::RowMajor>(&m.data[0].x));
+}
+
+static inline Eigen::Matrix4f to_eigen(const Matrix4& m) {
+  return Eigen::Matrix<float, 4, 4, Eigen::RowMajor>(&m.data[0].x);
+}
 #endif

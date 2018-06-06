@@ -1,31 +1,31 @@
-#include "math_utils.h"
+#include "utils/se_common.h"
 #include "gtest/gtest.h"
 #include "octant_ops.hpp"
 #include <bitset>
 
 TEST(Octree, OctantFaceNeighbours) {
-  const uint3 octant = {112, 80, 160};
+  const Eigen::Vector3i octant = {112, 80, 160};
   const unsigned int max_depth = 8;
   const unsigned int leaves_depth = 5;
   const octlib::key_t code = 
-    octlib::keyops::encode(octant.x, octant.y, octant.z, leaves_depth, max_depth);
+    octlib::keyops::encode(octant(0), octant(1), octant(2), leaves_depth, max_depth);
   const unsigned int side = 8;
-  const int3 faces[6] = {{-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, 
+  const Eigen::Vector3i faces[6] = {{-1, 0, 0}, {1, 0, 0}, {0, -1, 0}, {0, 1, 0}, 
     {0, 0, -1}, {0, 0, 1}};
   for(int i = 0; i < 6; ++i) {
-    const int3 neighbour = make_int3(octant) + side * faces[i];
-    const uint3 computed = face_neighbour(code, i, leaves_depth, max_depth); 
-    ASSERT_EQ(neighbour.x, computed.x); 
-    ASSERT_EQ(neighbour.y, computed.y); 
-    ASSERT_EQ(neighbour.z, computed.z); 
+    const Eigen::Vector3i neighbour = octant + side * faces[i];
+    const Eigen::Vector3i computed = face_neighbour(code, i, leaves_depth, max_depth); 
+    ASSERT_EQ(neighbour(0), computed(0)); 
+    ASSERT_EQ(neighbour(1), computed(1)); 
+    ASSERT_EQ(neighbour(2), computed(2)); 
   }
 }
 
 TEST(Octree, OctantDescendant) {
   const unsigned max_depth = 8;
-  uint3 octant = {110, 80, 159};
+  Eigen::Vector3i octant = {110, 80, 159};
   octlib::key_t code = 
-    octlib::keyops::encode(octant.x, octant.y, octant.z, 5, max_depth);
+    octlib::keyops::encode(octant(0), octant(1), octant(2), 5, max_depth);
   octlib::key_t ancestor = 
     octlib::keyops::encode(96, 64, 128, 3, max_depth);
   ASSERT_EQ(true , descendant(code, ancestor, max_depth)); 
@@ -36,9 +36,9 @@ TEST(Octree, OctantDescendant) {
 
 TEST(Octree, OctantParent) {
   const int max_depth = 8;
-  uint3 octant = {112, 80, 160};
+  Eigen::Vector3i octant = {112, 80, 160};
   octlib::key_t code = 
-    octlib::keyops::encode(octant.x, octant.y, octant.z, 5, max_depth);
+    octlib::keyops::encode(octant(0), octant(1), octant(2), 5, max_depth);
   octlib::key_t p = parent(code, max_depth);
   ASSERT_EQ(octlib::keyops::code(code), octlib::keyops::code(p));
   ASSERT_EQ(4, p & SCALE_MASK);
@@ -69,59 +69,59 @@ TEST(Octree, FarCorner) {
   /* First child */
   const octlib::key_t cell0 = 
     octlib::keyops::encode(16, 16, 16, level, max_depth);
-  const int3 fc0 = far_corner(cell0, level, max_depth);
-  ASSERT_EQ(fc0.x, 16);
-  ASSERT_EQ(fc0.y, 16);
-  ASSERT_EQ(fc0.z, 16);
+  const Eigen::Vector3i fc0 = far_corner(cell0, level, max_depth);
+  ASSERT_EQ(fc0(0), 16);
+  ASSERT_EQ(fc0(1), 16);
+  ASSERT_EQ(fc0(2), 16);
 
   /* Second child */
   const octlib::key_t cell1 = octlib::keyops::encode(24, 16, 16, level, max_depth);
-  const int3 fc1 = far_corner(cell1, level, max_depth);
-  ASSERT_EQ(fc1.x, 32);
-  ASSERT_EQ(fc1.y, 16);
-  ASSERT_EQ(fc1.z, 16);
+  const Eigen::Vector3i fc1 = far_corner(cell1, level, max_depth);
+  ASSERT_EQ(fc1(0), 32);
+  ASSERT_EQ(fc1(1), 16);
+  ASSERT_EQ(fc1(2), 16);
 
   /* Third child */
   const octlib::key_t cell2 = octlib::keyops::encode(16, 24, 16, level, max_depth);
-  const int3 fc2 = far_corner(cell2, level, max_depth);
-  ASSERT_EQ(fc2.x, 16);
-  ASSERT_EQ(fc2.y, 32);
-  ASSERT_EQ(fc2.z, 16);
+  const Eigen::Vector3i fc2 = far_corner(cell2, level, max_depth);
+  ASSERT_EQ(fc2(0), 16);
+  ASSERT_EQ(fc2(1), 32);
+  ASSERT_EQ(fc2(2), 16);
 
   /* Fourth child */
   const octlib::key_t cell3 = octlib::keyops::encode(24, 24, 16, level, max_depth);
-  const int3 fc3 = far_corner(cell3, level, max_depth);
-  ASSERT_EQ(fc3.x, 32);
-  ASSERT_EQ(fc3.y, 32);
-  ASSERT_EQ(fc3.z, 16);
+  const Eigen::Vector3i fc3 = far_corner(cell3, level, max_depth);
+  ASSERT_EQ(fc3(0), 32);
+  ASSERT_EQ(fc3(1), 32);
+  ASSERT_EQ(fc3(2), 16);
 
   /* Fifth child */
   const octlib::key_t cell4 = octlib::keyops::encode(24, 24, 16, level, max_depth);
-  const int3 fc4 = far_corner(cell4, level, max_depth);
-  ASSERT_EQ(fc4.x, 32);
-  ASSERT_EQ(fc4.y, 32);
-  ASSERT_EQ(fc4.z, 16);
+  const Eigen::Vector3i fc4 = far_corner(cell4, level, max_depth);
+  ASSERT_EQ(fc4(0), 32);
+  ASSERT_EQ(fc4(1), 32);
+  ASSERT_EQ(fc4(2), 16);
 
   /* sixth child */
   const octlib::key_t cell5 = octlib::keyops::encode(16, 16, 24, level, max_depth);
-  const int3 fc5 = far_corner(cell5, level, max_depth);
-  ASSERT_EQ(fc5.x, 16);
-  ASSERT_EQ(fc5.y, 16);
-  ASSERT_EQ(fc5.z, 32);
+  const Eigen::Vector3i fc5 = far_corner(cell5, level, max_depth);
+  ASSERT_EQ(fc5(0), 16);
+  ASSERT_EQ(fc5(1), 16);
+  ASSERT_EQ(fc5(2), 32);
 
   /* seventh child */
   const octlib::key_t cell6 = octlib::keyops::encode(24, 16, 24, level, max_depth);
-  const int3 fc6 = far_corner(cell6, level, max_depth);
-  ASSERT_EQ(fc6.x, 32);
-  ASSERT_EQ(fc6.y, 16);
-  ASSERT_EQ(fc6.z, 32);
+  const Eigen::Vector3i fc6 = far_corner(cell6, level, max_depth);
+  ASSERT_EQ(fc6(0), 32);
+  ASSERT_EQ(fc6(1), 16);
+  ASSERT_EQ(fc6(2), 32);
 
   /* eight child */
   const octlib::key_t cell7 = octlib::keyops::encode(24, 24, 24, level, max_depth);
-  const int3 fc7 = far_corner(cell7, level, max_depth);
-  ASSERT_EQ(fc7.x, 32);
-  ASSERT_EQ(fc7.y, 32);
-  ASSERT_EQ(fc7.z, 32);
+  const Eigen::Vector3i fc7 = far_corner(cell7, level, max_depth);
+  ASSERT_EQ(fc7(0), 32);
+  ASSERT_EQ(fc7(1), 32);
+  ASSERT_EQ(fc7(2), 32);
 }
 
 TEST(Octree, InnerOctantExteriorNeighbours) {
@@ -154,7 +154,7 @@ TEST(Octree, InnerOctantExteriorNeighbours) {
 
 TEST(Octree, EdgeOctantExteriorNeighbours) {
   const int max_depth = 5;
-  const uint size = std::pow(2, 5);
+  const int size = 1 << max_depth;
   const int level = 2;
   const octlib::key_t cell = octlib::keyops::encode(0, 16, 16, level, max_depth);
   octlib::key_t N[7];
@@ -162,10 +162,10 @@ TEST(Octree, EdgeOctantExteriorNeighbours) {
   const octlib::key_t p = parent(cell, max_depth);
   
   for(int i = 0; i < 7; ++i) {
-    const uint3 corner = unpack_morton(N[i] & ~SCALE_MASK);
-    ASSERT_TRUE(in(corner.x, 0u, size - 1) && 
-                in(corner.y, 0u, size - 1) &&
-                in(corner.z, 0u, size - 1));
+    const Eigen::Vector3i corner = unpack_morton(N[i] & ~SCALE_MASK);
+    const int res = ((corner.array() >= Eigen::Vector3i::Constant(0).array()) 
+     && (corner.array() <= Eigen::Vector3i::Constant(size - 1).array())).all();
+    ASSERT_TRUE(res);
   }
 }
 

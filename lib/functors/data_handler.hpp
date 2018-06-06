@@ -1,6 +1,6 @@
 #ifndef DATA_HANDLER_HPP
 #define DATA_HANDLER_HPP
-#include "math_utils.h"
+#include "utils/se_common.h"
 #include "node.hpp"
 
 template <typename SpecialisedHandlerT, typename NodeT>
@@ -18,7 +18,7 @@ class VoxelBlockHandler :
   DataHandlerBase<VoxelBlockHandler<FieldType>, VoxelBlock<FieldType> > {
 
 public:
-  VoxelBlockHandler(VoxelBlock<FieldType>* ptr, int3 v) : 
+  VoxelBlockHandler(VoxelBlock<FieldType>* ptr, Eigen::Vector3i v) : 
     _block(ptr), _voxel(v) {}
 
   typename VoxelBlock<FieldType>::compute_type get() {
@@ -31,7 +31,7 @@ public:
 
   private:
     VoxelBlock<FieldType> * _block;  
-    int3 _voxel;
+    Eigen::Vector3i _voxel;
 };
 
 template<typename FieldType>

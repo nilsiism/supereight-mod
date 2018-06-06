@@ -1,7 +1,7 @@
 #ifndef AABB_COLLISION_HPP
 #define AABB_COLLISION_HPP
 #include <cmath>
-#include <math_utils.h> 
+#include <utils/se_common.h> 
 
 namespace geometry {
   inline int axis_overlap(int a, const int a_edge, 
@@ -23,22 +23,24 @@ namespace geometry {
   inline int axis_contained(float a, const float a_edge, 
        float b, const float b_edge) {
     /* Segment a includes segment b */
-    return a < b && a + a_edge > b + b_edge; 
+    return (a < b) && ((a + a_edge) > (b + b_edge)); 
   }
 
-  inline int aabb_aabb_collision(const int3 a, const int3 a_edge, 
-      const int3 b, const int3 b_edge){
-    return axis_overlap(a.x, a_edge.x, b.x, b_edge.x) && 
-           axis_overlap(a.y, a_edge.y, b.y, b_edge.y) && 
-           axis_overlap(a.z, a_edge.z, b.z, b_edge.z);
+
+  inline int aabb_aabb_collision(const Eigen::Vector3i a, const Eigen::Vector3i a_edge, 
+      const Eigen::Vector3i b, const Eigen::Vector3i b_edge){
+
+    return axis_overlap(a(0), a_edge(0), b(0), b_edge(0)) && 
+           axis_overlap(a(1), a_edge(1), b(1), b_edge(1)) && 
+           axis_overlap(a(2), a_edge(2), b(2), b_edge(2));
   }
 
-  inline int aabb_aabb_inclusion(const int3 a, const int3 a_edge, 
-      const int3 b, const int3 b_edge){
+  inline int aabb_aabb_inclusion(const Eigen::Vector3i a, const Eigen::Vector3i a_edge, 
+      const Eigen::Vector3i b, const Eigen::Vector3i b_edge){
     /* Box a contains box b */
-    return axis_contained(a.x, a_edge.x, b.x, b_edge.x) && 
-           axis_contained(a.y, a_edge.y, b.y, b_edge.y) && 
-           axis_contained(a.z, a_edge.z, b.z, b_edge.z);
+    return axis_contained(a(0), a_edge(0), b(0), b_edge(0)) && 
+           axis_contained(a(1), a_edge(1), b(1), b_edge(1)) && 
+           axis_contained(a(2), a_edge(2), b(2), b_edge(2));
   }
 }
 #endif

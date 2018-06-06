@@ -17,14 +17,20 @@ TOON_INCLUDE_DIR=${TOON_DIR}/include/
 
 all : TooN
 	mkdir -p build/
-	cd build/ && cmake -DCMAKE_BUILD_TYPE=Release -DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR} $(CMAKE_ARGUMENTS) ..
+	cd build/ && cmake -DCMAKE_BUILD_TYPE=Release \
+	 	-DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR} \
+	 	-DSOPHUS_INCLUDE_PATH=${SOPHUS_ROOT} \
+		$(CMAKE_ARGUMENTS) ..
 	$(MAKE) -C build  $(MFLAGS) $(SPECIFIC_TARGET)
 
 
 debug: TooN
 	mkdir -p build/
 	mkdir -p build/logs/
-	cd build/ && cmake -DCMAKE_BUILD_TYPE=Debug -DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR} $(CMAKE_ARGUMENTS) ..
+	cd build/ && cmake -DCMAKE_BUILD_TYPE=Debug \
+	 	-DTOON_INCLUDE_PATH=${TOON_INCLUDE_DIR} \
+	 	-DSOPHUS_INCLUDE_PATH=${SOPHUS_ROOT} \
+		$(CMAKE_ARGUMENTS) ..
 	$(MAKE) -C build $(MFLAGS)
 
 stats: 
@@ -77,6 +83,12 @@ fr2desk.openmp.log : fr2_desk.raw fr2desk.gt
 
 live.log : 
 	./build/kfusion-qt-openmp $(live)
+
+demo-ofusion:
+	./build/kfusion-main-openmp --compute-size-ratio 2 --fps 0 --block-read False --input-file /data/ev314/data/living_room_traj2_frei_png/scene.raw --icp-threshold 1e-05 --mu 0.008 --init-pose 0.34,0.5,0.24 --integration-rate 1 --volume-size 5 -B 8 --tracking-rate 1 --volume-resolution 512 --pyramid-levels 10,5,4 --rendering-rate 1 -k 481.2,-480,320,240
+
+demo-kfusion:
+	./build/kfusion-main-openmp --compute-size-ratio 2 --fps 0 --block-read False --input-file /data/ev314/data/living_room_traj2_frei_png/scene.raw --icp-threshold 1e-05 --mu 0.1 --init-pose 0.34,0.5,0.24 --integration-rate 1 --volume-size 5 -B 8 --tracking-rate 1 --volume-resolution 512 --pyramid-levels 10,5,4 --rendering-rate 1 -k 481.2,-480,320,240
 
 
 #### GENERAL GENERATION ####

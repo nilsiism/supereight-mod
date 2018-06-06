@@ -1,9 +1,9 @@
-#include "math_utils.h"
+#include "utils/se_common.h"
 #include "geometry/octree_collision.hpp"
 #include "geometry/aabb_collision.hpp"
-#include "algorithms/mapping.hpp"
 #include "utils/morton_utils.hpp"
 #include "octree.hpp"
+#include "functors/axis_aligned_functor.hpp"
 #include "gtest/gtest.h"
 
 typedef float testT;
@@ -28,23 +28,21 @@ collision_status test_voxel(const voxel_traits<testT>::ComputeType & val) {
 class OctreeCollisionTest : public ::testing::Test {
   protected:
     virtual void SetUp() {
-      oct_.init(256, 5);
-      const int3 blocks[1] = {{56, 12, 254}};
-      octlib::key_t alloc_list[1];
-      alloc_list[0] = oct_.hash(blocks[0].x, blocks[0].y, blocks[0].z);
 
-      auto update = [](Node<testT> * n){
-        uint3 coords = unpack_morton(n->code);
-        /* Empty for coords above the below values, 
-         * except where leaves are allocated.
-         */
-        if(coords.x >= 48 && coords.y >= 0 && coords.z >= 240) {
-          n->value_[0] = 10.f;
+      oct_.init(256, 5);
+      const Eigen::Vector3i blocks[1] = {{56, 12, 254}};
+      octlib::key_t alloc_list[1];
+      alloc_list[0] = oct_.hash(blocks[0](0), blocks[0](1), blocks[0](2));
+      oct_.alloc_update(alloc_list, 1);
+
+      auto set_to_ten = [](auto& handler, const Eigen::Vector3i& coords) {
+        if((coords.array() >= Eigen::Vector3i(48, 0, 240).array()).all()){
+          handler.set(10.f);
         }
       };
-      oct_.alloc_update(alloc_list, 1);
-      algorithms::integratePass(oct_.getNodesBuffer(), oct_.getNodesBuffer().size(),
-          update);
+      iterators::functor::axis_aligned<testT, Octree, decltype(set_to_ten)> 
+        funct(oct_, set_to_ten);
+      funct.apply();
     }
 
   typedef Octree<testT> OctreeF;
@@ -54,19 +52,19 @@ class OctreeCollisionTest : public ::testing::Test {
 TEST_F(OctreeCollisionTest, TotallyUnseen) {
 
   leaf_iterator<testT> it(oct_);
-  typedef std::tuple<int3, int, typename Octree<testT>::compute_type> it_result;
+  typedef std::tuple<Eigen::Vector3i, int, typename Octree<testT>::compute_type> it_result;
   it_result node = it.next();
   for(int i = 128; std::get<1>(node) > 0; node = it.next(), i /= 2){
-    const int3 coords = std::get<0>(node);
+    const Eigen::Vector3i coords = std::get<0>(node);
     const int side = std::get<1>(node);
     const Octree<testT>::compute_type val = std::get<2>(node);
     printf("Node's coordinates: (%d, %d, %d), side %d, value %.2f\n", 
-        coords.x, coords.y, coords.z, side, val);
+        coords(0), coords(1), coords(2), side, val);
     EXPECT_EQ(side, i);
   }
 
-  const int3 test_bbox = {23, 0, 100};
-  const int3 width = {2, 2, 2};
+  const Eigen::Vector3i test_bbox = {23, 0, 100};
+  const Eigen::Vector3i width = {2, 2, 2};
 
   const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
@@ -74,53 +72,32 @@ TEST_F(OctreeCollisionTest, TotallyUnseen) {
 }
 
 TEST_F(OctreeCollisionTest, PartiallyUnseen) {
-  const int3 test_bbox = {47, 0, 239};
-  const int3 width = {6, 6, 6};
+  const Eigen::Vector3i test_bbox = {47, 0, 239};
+  const Eigen::Vector3i width = {6, 6, 6};
   const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
   ASSERT_EQ(collides, collision_status::unseen);
 }
 
 TEST_F(OctreeCollisionTest, Empty) {
-  const int3 test_bbox = {49, 1, 242};
-  const int3 width = {1, 1, 1};
+  const Eigen::Vector3i test_bbox = {49, 1, 242};
+  const Eigen::Vector3i width = {1, 1, 1};
   const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
   ASSERT_EQ(collides, collision_status::empty);
 }
 
-TEST_F(OctreeCollisionTest, CollisionPlausible){
-  const int3 test_bbox = {54, 10, 249};
-  const int3 width = {5, 5, 3};
-
-  const collision_status collides = collides_with(oct_, test_bbox, width, 
-      test_voxel);
-  ASSERT_EQ(collides, collision_status::unseen);
-}
-
 TEST_F(OctreeCollisionTest, Collision){
-  const int3 test_bbox = {54, 10, 249};
-  const int3 width = {5, 5, 3};
-  /* Update leaves as occupied node */
-  auto update = [](VoxelBlock<testT> * block){
-    const int3 blockCoord = block->coordinates();
-    int x, y, z, blockSide; 
-    blockSide = (int) VoxelBlock<testT>::side;
-    int xlast = blockCoord.x + blockSide;
-    int ylast = blockCoord.y + blockSide;
-    int zlast = blockCoord.z + blockSide;
-    for(z = blockCoord.z; z < zlast; ++z){
-      for (y = blockCoord.y; y < ylast; ++y){
-        for (x = blockCoord.x; x < xlast; ++x){
-          block->data(make_int3(x, y, z), 2.f);
-        }
-      }
-    }
-  };
- 
-  algorithms::integratePass(oct_.getBlockBuffer(), oct_.getBlockBuffer().size(),
-      update);
+  const Eigen::Vector3i test_bbox = {54, 10, 249};
+  const Eigen::Vector3i width = {5, 5, 3};
 
+  auto update = [](auto& handler, const Eigen::Vector3i& coords) {
+      handler.set(2.f);
+  };
+  iterators::functor::axis_aligned<testT, Octree, decltype(update)> 
+    funct(oct_, update);
+  funct.apply();
+ 
   const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
   ASSERT_EQ(collides, collision_status::occupied);
@@ -128,39 +105,30 @@ TEST_F(OctreeCollisionTest, Collision){
 
 TEST_F(OctreeCollisionTest, CollisionFreeLeaf){
   // Allocated block: {56, 8, 248};
-  const int3 test_bbox = {61, 13, 253};
-  const int3 width = {2, 2, 2};
+  const Eigen::Vector3i test_bbox = {61, 13, 253};
+  const Eigen::Vector3i width = {2, 2, 2};
+
   /* Update leaves as occupied node */
-  auto update = [](VoxelBlock<testT> * block){
-    const int3 blockCoord = block->coordinates();
-    int x, y, z, blockSide; 
-    blockSide = (int) VoxelBlock<testT>::side;
-    int xlast = blockCoord.x + blockSide/2;
-    int ylast = blockCoord.y + blockSide/2;
-    int zlast = blockCoord.z + blockSide/2;
-    for(z = blockCoord.z; z < zlast; ++z){
-      for (y = blockCoord.y; y < ylast; ++y){
-        for (x = blockCoord.x; x < xlast; ++x){
-          block->data(make_int3(x, y, z), 2.f);
-        }
+  VoxelBlock<testT> * block = oct_.fetch(56, 12, 254);
+  const Eigen::Vector3i blockCoord = block->coordinates();
+  int x, y, z, blockSide; 
+  blockSide = (int) VoxelBlock<testT>::side;
+  int xlast = blockCoord(0) + blockSide;
+  int ylast = blockCoord(1) + blockSide;
+  int zlast = blockCoord(2) + blockSide;
+  for(z = blockCoord(2); z < zlast; ++z){
+    for (y = blockCoord(1); y < ylast; ++y){
+      for (x = blockCoord(0); x < xlast; ++x){
+        if(x < xlast/2 && y < ylast/2 && z < zlast/2)
+          block->data(Eigen::Vector3i(x, y, z), 2.f);
+        else
+          block->data(Eigen::Vector3i(x, y, z), 10.f);
+
       }
     }
-    for(z = zlast; z < zlast + blockSide/2; ++z){
-      for (y = ylast; y < ylast + blockSide/2; ++y){
-        for (x = xlast; x < xlast + blockSide/2; ++x){
-          block->data(make_int3(x, y, z), 10.f);
-        }
-      }
-    }
-  };
- 
-  algorithms::integratePass(oct_.getBlockBuffer(), oct_.getBlockBuffer().size(),
-      update);
+  }
 
   const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
   ASSERT_EQ(collides, collision_status::empty);
 }
-
-
-

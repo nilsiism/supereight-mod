@@ -1,6 +1,46 @@
 #include <math_utils.h> 
 #include <type_traits>
 
+float4 raycast(const Volume<SDF>& volume, const float3 origin, 
+    const float3 direction, const float tnear, const float tfar, const float mu, 
+    const float step, const float largestep) { 
+
+  auto select_depth = [](const auto& val){ return val.x; };
+  if (tnear < tfar) {
+    // first walk with largesteps until we found a hit
+    float t = tnear;
+    float stepsize = largestep;
+    float3 position = origin + direction * t;
+    float f_t = volume.interp(position, select_depth);
+    float f_tt = 0;
+    if (f_t > 0) { // ups, if we were already in it, then don't render anything here
+      for (; t < tfar; t += stepsize) {
+        Volume<SDF>::compute_type data = volume.get(position);
+        if(data.y == 0){
+          stepsize = largestep;
+          position += stepsize*direction;
+          continue;
+        }
+        f_tt = data.x;
+        if(f_tt <= 0.1 && f_tt >= -0.5f){
+          f_tt = volume.interp(position, select_depth);
+        }
+        if (f_tt < 0)                  // got it, jump out of inner loop
+          break;
+        stepsize = fmaxf(f_tt * mu, step);
+        position += stepsize*direction;
+        //stepsize = step;
+        f_t = f_tt;
+      }
+      if (f_tt < 0) {           // got it, calculate accurate intersection
+        t = t + stepsize * f_tt / (f_t - f_tt);
+        return make_float4(origin + direction * t, t);
+      }
+    }
+  }
+  return make_float4(0);
+}
+
 float4 raycast(const Volume<SDF>& volume, const uint2 pos, const Matrix4 view,
     const float nearPlane, const float farPlane, const float mu, 
     const float step, const float largestep) { 
@@ -28,40 +68,5 @@ float4 raycast(const Volume<SDF>& volume, const uint2 pos, const Matrix4 view,
   // check against near and far plane
   const float tnear = fmaxf(largest_tmin, nearPlane);
   const float tfar = fminf(smallest_tmax, farPlane);
-  auto select_depth = [](const auto& val){ return val.x; };
-
-  if (tnear < tfar) {
-    // first walk with largesteps until we found a hit
-    float t = tnear;
-    float stepsize = largestep;
-    float3 position = origin + direction * t;
-    float f_t = volume.interp(position, select_depth);
-    float f_tt = 0;
-    if (f_t > 0) { // ups, if we were already in it, then don't render anything here
-      for (; t < tfar; t += stepsize) {
-        Volume<SDF>::compute_type data = volume.get(position);
-        if(data.y < 0){
-          stepsize = largestep;
-          position += stepsize*direction;
-          continue;
-        }
-        f_tt = data.x;
-        if(f_tt <= 0.1 && f_tt >= -0.5f){
-          f_tt = volume.interp(position, select_depth);
-        }
-        if (f_tt < 0)                  // got it, jump out of inner loop
-          break;
-        stepsize = fmaxf(f_tt * mu, step);
-        position += stepsize*direction;
-        //stepsize = step;
-        f_t = f_tt;
-      }
-      if (f_tt < 0) {           // got it, calculate accurate intersection
-        t = t + stepsize * f_tt / (f_t - f_tt);
-        return make_float4(origin + direction * t, t);
-      }
-    }
-  }
-  return make_float4(0);
+  return raycast(volume, origin, direction, tnear, tfar, mu, step,  largestep);
 }
-

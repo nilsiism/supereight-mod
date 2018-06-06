@@ -43,23 +43,23 @@ inline collision_status update_status(const collision_status previous_status,
  */
 template <typename FieldType, typename TestVoxelF>
 collision_status collides_with(const VoxelBlock<FieldType>* block, 
-    const int3 bbox, const int3 side, TestVoxelF test) {
+    const Eigen::Vector3i bbox, const Eigen::Vector3i side, TestVoxelF test) {
   collision_status status = collision_status::empty;
-  const int3 blockCoord = block->coordinates();
+  const Eigen::Vector3i blockCoord = block->coordinates();
   int x, y, z, blockSide; 
   blockSide = (int) VoxelBlock<FieldType>::side;
-  int xlast = blockCoord.x + blockSide;
-  int ylast = blockCoord.y + blockSide;
-  int zlast = blockCoord.z + blockSide;
-  for(z = blockCoord.z; z < zlast; ++z){
-    for (y = blockCoord.y; y < ylast; ++y){
-      for (x = blockCoord.x; x < xlast; ++x){
+  int xlast = blockCoord(0) + blockSide;
+  int ylast = blockCoord(1) + blockSide;
+  int zlast = blockCoord(2) + blockSide;
+  for(z = blockCoord(2); z < zlast; ++z){
+    for (y = blockCoord(1); y < ylast; ++y){
+      for (x = blockCoord(0); x < xlast; ++x){
 
         typename VoxelBlock<FieldType>::compute_type value;
-        const int3 vox = make_int3(x, y, z);
+        const Eigen::Vector3i vox{x, y, z};
         if(!geometry::aabb_aabb_collision(bbox, side, 
-          vox, make_int3(1))) continue;
-        value = block->data(make_int3(x, y, z));
+          vox, Eigen::Vector3i::Constant(1))) continue;
+        value = block->data(Eigen::Vector3i(x, y, z));
         status = update_status(status, test(value));
       }
     }
@@ -79,11 +79,11 @@ collision_status collides_with(const VoxelBlock<FieldType>* block,
 
 template <typename FieldType, typename TestVoxelF>
 collision_status collides_with(const Octree<FieldType>& map, 
-    const int3 bbox, const int3 side, TestVoxelF test) {
+    const Eigen::Vector3i bbox, const Eigen::Vector3i side, TestVoxelF test) {
 
   typedef struct stack_entry { 
     Node<FieldType>* node_ptr;
-    int3 coordinates;
+    Eigen::Vector3i coordinates;
     int side;
     typename Node<FieldType>::compute_type parent_val;
   } stack_entry;
@@ -120,12 +120,12 @@ collision_status collides_with(const Octree<FieldType>& map,
       child_descr.node_ptr = NULL;
       child_descr.side = current.side / 2;
       child_descr.coordinates = 
-          make_int3(current.coordinates.x + child_descr.side*((i & 1) > 0),
-                    current.coordinates.y + child_descr.side*((i & 2) > 0),
-                    current.coordinates.z + child_descr.side*((i & 4) > 0));
+        Eigen::Vector3i(current.coordinates(0) + child_descr.side*((i & 1) > 0),
+            current.coordinates(1) + child_descr.side*((i & 2) > 0),
+            current.coordinates(2) + child_descr.side*((i & 4) > 0));
+
       const bool overlaps = geometry::aabb_aabb_collision(bbox, side, 
-          child_descr.coordinates, 
-              make_int3(child_descr.side));
+          child_descr.coordinates, Eigen::Vector3i::Constant(child_descr.side));
 
       if(overlaps && child != NULL) {
         child_descr.node_ptr = child;

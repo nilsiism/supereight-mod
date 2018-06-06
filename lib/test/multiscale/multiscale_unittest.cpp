@@ -1,5 +1,5 @@
 #include "octree.hpp"
-#include "math_utils.h"
+#include "utils/se_common.h"
 #include "gtest/gtest.h"
 
 typedef float testT;
@@ -31,10 +31,10 @@ TEST_F(MultiscaleTest, Init) {
 }
 
 TEST_F(MultiscaleTest, PlainAlloc) {
-  const int3 blocks[2] = {{56, 12, 254}, {87, 32, 423}};
+  const Eigen::Vector3i blocks[2] = {{56, 12, 254}, {87, 32, 423}};
   octlib::key_t alloc_list[2];
   for(int i = 0; i < 2; ++i) {
-    alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z);
+    alloc_list[i] = oct_.hash(blocks[i](0), blocks[i](1), blocks[i](2));
   }
   oct_.allocate(alloc_list, 2);
 
@@ -46,10 +46,10 @@ TEST_F(MultiscaleTest, PlainAlloc) {
 }
 
 TEST_F(MultiscaleTest, ScaledAlloc) {
-  const int3 blocks[2] = {{200, 12, 25}, {87, 32, 423}};
+  const Eigen::Vector3i blocks[2] = {{200, 12, 25}, {87, 32, 423}};
   octlib::key_t alloc_list[2];
   for(int i = 0; i < 2; ++i) {
-    alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z, 5);
+    alloc_list[i] = oct_.hash(blocks[i](0), blocks[i](1), blocks[i](2), 5);
   }
 
   oct_.alloc_update(alloc_list, 2);
@@ -60,17 +60,17 @@ TEST_F(MultiscaleTest, ScaledAlloc) {
 }
 
 TEST_F(MultiscaleTest, Iterator) {
-  const int3 blocks[1] = {{56, 12, 254}};
+  const Eigen::Vector3i blocks[1] = {{56, 12, 254}};
   octlib::key_t alloc_list[1];
-  alloc_list[0] = oct_.hash(blocks[0].x, blocks[0].y, blocks[0].z);
+  alloc_list[0] = oct_.hash(blocks[0](0), blocks[0](1), blocks[0](2));
 
   oct_.alloc_update(alloc_list, 1);
   leaf_iterator<testT> it(oct_);
 
-  typedef std::tuple<int3, int, typename Octree<testT>::compute_type> it_result;
+  typedef std::tuple<Eigen::Vector3i, int, typename Octree<testT>::compute_type> it_result;
   it_result node = it.next();
   for(int i = 256; std::get<1>(node) > 0; node = it.next(), i /= 2){
-    const int3 coords = std::get<0>(node);
+    const Eigen::Vector3i coords = std::get<0>(node);
     const int side = std::get<1>(node);
     const Octree<testT>::compute_type val = std::get<2>(node);
     EXPECT_EQ(side, i);
@@ -78,12 +78,12 @@ TEST_F(MultiscaleTest, Iterator) {
 }
 
 TEST_F(MultiscaleTest, ChildrenMaskTest) {
-  const int3 blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
+  const Eigen::Vector3i blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
     {136, 128, 128}, {128, 136, 128}, {136, 136, 128}, 
     {128, 128, 136}, {136, 128, 136}, {128, 136, 136}, {136, 136, 136}};
   octlib::key_t alloc_list[10];
   for(int i = 0; i < 10; ++i) {
-    alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z, 5);
+    alloc_list[i] = oct_.hash(blocks[i](0), blocks[i](1), blocks[i](2), 5);
   }
 
   oct_.alloc_update(alloc_list, 10);
@@ -100,21 +100,21 @@ TEST_F(MultiscaleTest, ChildrenMaskTest) {
 }
 
 TEST_F(MultiscaleTest, OctantAlloc) {
-  const int3 blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
+  const Eigen::Vector3i blocks[10] = {{56, 12, 254}, {87, 32, 423}, {128, 128, 128},
     {136, 128, 128}, {128, 136, 128}, {136, 136, 128}, 
     {128, 128, 136}, {136, 128, 136}, {128, 136, 136}, {136, 136, 136}};
   octlib::key_t alloc_list[10];
   for(int i = 0; i < 10; ++i) {
-    alloc_list[i] = oct_.hash(blocks[i].x, blocks[i].y, blocks[i].z);
+    alloc_list[i] = oct_.hash(blocks[i](0), blocks[i](1), blocks[i](2));
   }
 
   alloc_list[2] = alloc_list[2] | 3;
   alloc_list[9] = alloc_list[2] | 5;
   oct_.alloc_update(alloc_list, 10);
-  Node<testT> * octant = oct_.fetch_octant(blocks[4].x, blocks[4].y,
-      blocks[4].z, 3);
+  Node<testT> * octant = oct_.fetch_octant(blocks[4](0), blocks[4](1),
+      blocks[4](2), 3);
   ASSERT_TRUE(octant != NULL);
-  octant = oct_.fetch_octant(blocks[9].x, blocks[9].y,
-      blocks[9].z, 6);
+  octant = oct_.fetch_octant(blocks[9](0), blocks[9](1),
+      blocks[9](2), 6);
   ASSERT_TRUE(octant == NULL);
 }

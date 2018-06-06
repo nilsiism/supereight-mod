@@ -3,7 +3,7 @@
 #include <functional>
 #include <vector>
 
-#include "math_utils.h"
+#include "utils/se_common.h"
 #include "algorithms/filter.hpp"
 #include "node.hpp"
 #include "functors/data_handler.hpp"
@@ -18,23 +18,24 @@ namespace iterators {
     class axis_aligned {
       public:
       axis_aligned(MapT<FieldType>& map, UpdateF f) : _map(map), _function(f),
-      _min(make_int3(0)), _max(make_int3(map.size())){ }
+      _min(Eigen::Vector3i::Constant(0)), 
+      _max(Eigen::Vector3i::Constant(map.size())){ }
 
-      axis_aligned(MapT<FieldType>& map, UpdateF f, const int3 min,
-          const int3 max) : _map(map), _function(f),
+      axis_aligned(MapT<FieldType>& map, UpdateF f, const Eigen::Vector3i min,
+          const Eigen::Vector3i max) : _map(map), _function(f),
       _min(min), _max(max){ }
 
       void update_block(VoxelBlock<FieldType> * block) {
-        int3 blockCoord = block->coordinates();
+        Eigen::Vector3i blockCoord = block->coordinates();
         unsigned int y, z, x; 
-        int3 blockSide = make_int3(VoxelBlock<FieldType>::side);
-        int3 start = max(blockCoord, _min);
-        int3 last = min(blockCoord + blockSide, _max);
+        Eigen::Vector3i blockSide = Eigen::Vector3i::Constant(VoxelBlock<FieldType>::side);
+        Eigen::Vector3i start = blockCoord.cwiseMax(_min);
+        Eigen::Vector3i last = (blockCoord + blockSide).cwiseMin(_max);
 
-        for(z = start.z; z < last.z; ++z) {
-          for (y = start.y; y < last.y; ++y) {
-            for (x = start.x; x < last.x; ++x) {
-              int3 vox = make_int3(x, y, z);
+        for(z = start(2); z < last(2); ++z) {
+          for (y = start(1); y < last(1); ++y) {
+            for (x = start(0); x < last(0); ++x) {
+              Eigen::Vector3i vox = Eigen::Vector3i(x, y, z);
               VoxelBlockHandler<FieldType> handler = {block, vox};
               _function(handler, vox);
             }
@@ -43,13 +44,14 @@ namespace iterators {
       }
 
       void update_node(Node<FieldType> * node) { 
-        int3 voxel = make_int3(unpack_morton(node->code));
+        Eigen::Vector3i voxel = Eigen::Vector3i(unpack_morton(node->code));
 #pragma omp simd
         for(int i = 0; i < 8; ++i) {
-          const int3 dir =  make_int3((i & 1) > 0, (i & 2) > 0, (i & 4) > 0);
+          const Eigen::Vector3i dir =  Eigen::Vector3i((i & 1) > 0, (i & 2) > 0, (i & 4) > 0);
           voxel = voxel + (dir * (node->side/2));
-          if(!(in(voxel.x, _min.x, _max.x) && in(voxel.y, _min.y, _max.y) 
-                && in(voxel.z, _min.z, _max.z))) continue;
+          if(!(octlib::math::in(voxel(0), _min(0), _max(0)) && 
+               octlib::math::in(voxel(1), _min(1), _max(1)) && 
+               octlib::math::in(voxel(2), _min(2), _max(2)))) continue;
           NodeHandler<FieldType> handler = {node, i};
           _function(handler, voxel);
         }
@@ -75,8 +77,8 @@ namespace iterators {
     private:
       MapT<FieldType>& _map; 
       UpdateF _function; 
-      int3 _min;
-      int3 _max;
+      Eigen::Vector3i _min;
+      Eigen::Vector3i _max;
     };
   }
 }

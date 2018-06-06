@@ -1,7 +1,6 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.10)
 
-project(pamela_testcases)
-
+project(kfusion)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -108,7 +107,7 @@ endfunction()
 
 set(appname kfusion)
 
-find_package(TooN   REQUIRED)
+find_package(Eigen3 REQUIRED)
 find_package(OpenCL )
 find_package(CUDA   )
 find_package(GLUT   )
@@ -123,7 +122,8 @@ find_package(Qt5Widgets)
 find_package(Qt5Gui)
 find_package(Qt5OpenGL)
 find_package(Qt5PrintSupport)
-include_directories(./include ${TOON_INCLUDE_PATHS} ./thirdparty ../../lib ../../utils ${PCL_INCLUDE_DIRS})
+include_directories(./include ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR} 
+  ${SOPHUS_INCLUDE_PATH} ./thirdparty ../../lib ../../utils)
 
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
 add_library(tiny_obj thirdparty/tiny_obj_loader.cc)
