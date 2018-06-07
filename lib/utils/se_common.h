@@ -12,7 +12,9 @@
 #ifdef __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
+#if __GNUC__ > 6
 #pragma GCC diagnostic ignored "-Wint-in-bool-context"
+#endif
 #include <Eigen/Dense>
 #include <sophus/se3.hpp>
 #pragma GCC diagnostic pop
