@@ -97,7 +97,6 @@ class VoxelBlock: public Node<T> {
     }
 
     VoxelBlock(){
-      timestamp_ = 0;
       coordinates_ = Eigen::Vector3i::Constant(0);
       for (unsigned int i = 0; i < side*sideSq; i++)
         voxel_block_[i] = initValue();
@@ -111,14 +110,6 @@ class VoxelBlock: public Node<T> {
     value_type data(const Eigen::Vector3i pos) const;
     void data(const Eigen::Vector3i pos, const value_type& value);
 
-    void timestamp(const time_t frame){ 
-      timestamp_ = frame;
-    }
-
-    int timestamp() const {
-      return timestamp_;
-    }
-
     void active(const bool a){ active_ = a; }
     bool active() const { return active_; }
 
@@ -129,7 +120,6 @@ class VoxelBlock: public Node<T> {
     VoxelBlock(const VoxelBlock&) = delete;
     Eigen::Vector3i coordinates_;
     value_type voxel_block_[side*sideSq]; // Brick of data.
-    time_t timestamp_;
     bool active_;
 };
 
