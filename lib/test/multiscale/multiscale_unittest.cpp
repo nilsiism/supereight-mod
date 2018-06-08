@@ -65,7 +65,7 @@ TEST_F(MultiscaleTest, Iterator) {
 
   typedef std::tuple<Eigen::Vector3i, int, typename Octree<testT>::value_type> it_result;
   it_result node = it.next();
-  for(int i = 256; std::get<1>(node) > 0; node = it.next(), i /= 2){
+  for(int i = 512; std::get<1>(node) > 0; node = it.next(), i /= 2){
     const Eigen::Vector3i coords = std::get<0>(node);
     const int side = std::get<1>(node);
     const Octree<testT>::value_type val = std::get<2>(node);

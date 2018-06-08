@@ -411,7 +411,8 @@ void Octree<T>::init(int size, float dim) {
   size_ = size;
   dim_ = dim;
   max_level_ = log2(size);
-  root_ = new Node<T>();
+  nodes_buffer_.reserve(1);
+  root_ = nodes_buffer_.acquire_block();
   root_->side = size;
   reserved_ = 1024;
   keys_at_level_ = new se::key_t[reserved_];
