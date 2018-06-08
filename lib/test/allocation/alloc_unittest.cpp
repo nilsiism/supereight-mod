@@ -31,7 +31,7 @@ TEST(AllocationTest, SetSingleVoxel) {
   se::key_t allocList[1] = {code};
   oct.allocate(allocList, 1);
 
-  VoxelBlock<float> * block = oct.fetch(vox(0), vox(1), vox(2));
+  se::VoxelBlock<float> * block = oct.fetch(vox(0), vox(1), vox(2));
   float written_val = 2.f;
   block->data(vox, written_val);
 
@@ -49,7 +49,7 @@ TEST(AllocationTest, FetchOctant) {
   oct.allocate(allocList, 1);
 
   const int depth = 3; /* 32 voxels per side */
-  Node<float> * node = oct.fetch_octant(vox(0), vox(1), vox(2), 3);
+  se::Node<float> * node = oct.fetch_octant(vox(0), vox(1), vox(2), 3);
 
   EXPECT_NE(node, nullptr);
 }

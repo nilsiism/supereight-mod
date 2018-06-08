@@ -171,7 +171,7 @@ namespace se {
          * Returns the next leaf along the ray direction.
          */
 
-        VoxelBlock<T>* next() {
+        se::VoxelBlock<T>* next() {
 
           if(state_ == ADVANCE) advance_ray();
           else if (state_ == FINISHED) return nullptr;
@@ -184,7 +184,7 @@ namespace se {
 
             if (scale_ == min_scale_ && child_ != NULL){
               state_ = ADVANCE;
-              return static_cast<VoxelBlock<T> *>(child_); 
+              return static_cast<se::VoxelBlock<T> *>(child_); 
             } else if (child_ != NULL && t_min_ <= t_max_){  // If the child is valid, descend the tree hierarchy.
               descend();
               continue;
@@ -221,7 +221,7 @@ namespace se {
       private:
         struct stack_entry {
           int scale;
-          Node<T> * parent;
+          se::Node<T> * parent;
           float t_max;
         };
 
@@ -238,8 +238,8 @@ namespace se {
         Eigen::Vector3f t_coef_;
         Eigen::Vector3f t_bias_;
         struct stack_entry stack[CAST_STACK_DEPTH];
-        Node<T> * parent_;
-        Node<T> * child_;
+        se::Node<T> * parent_;
+        se::Node<T> * child_;
         int idx_;
         Eigen::Vector3f pos_;
         int scale;

@@ -25,10 +25,10 @@ namespace iterators {
           const Eigen::Vector3i max) : _map(map), _function(f),
       _min(min), _max(max){ }
 
-      void update_block(VoxelBlock<FieldType> * block) {
+      void update_block(se::VoxelBlock<FieldType> * block) {
         Eigen::Vector3i blockCoord = block->coordinates();
         unsigned int y, z, x; 
-        Eigen::Vector3i blockSide = Eigen::Vector3i::Constant(VoxelBlock<FieldType>::side);
+        Eigen::Vector3i blockSide = Eigen::Vector3i::Constant(se::VoxelBlock<FieldType>::side);
         Eigen::Vector3i start = blockCoord.cwiseMax(_min);
         Eigen::Vector3i last = (blockCoord + blockSide).cwiseMin(_max);
 
@@ -43,7 +43,7 @@ namespace iterators {
         }
       }
 
-      void update_node(Node<FieldType> * node) { 
+      void update_node(se::Node<FieldType> * node) { 
         Eigen::Vector3i voxel = Eigen::Vector3i(unpack_morton(node->code));
 #pragma omp simd
         for(int i = 0; i < 8; ++i) {

@@ -23,15 +23,15 @@ namespace functor {
       void build_active_list() {
         using namespace std::placeholders;
         /* Retrieve the active list */ 
-        const MemoryPool<VoxelBlock<FieldType> >& block_array = 
+        const MemoryPool<se::VoxelBlock<FieldType> >& block_array = 
           _map.getBlockBuffer();
 
         /* Predicates definition */
         const float voxel_size = _map.dim()/_map.size();
         auto in_frustum_predicate = 
-          std::bind(algorithms::in_frustum<VoxelBlock<FieldType>>, _1, 
+          std::bind(algorithms::in_frustum<se::VoxelBlock<FieldType>>, _1, 
               voxel_size, _K*_Tcw.matrix(), _frame_size); 
-        auto is_active_predicate = [](const VoxelBlock<FieldType>* b) {
+        auto is_active_predicate = [](const se::VoxelBlock<FieldType>* b) {
           return b->active();
         };
 
@@ -39,7 +39,7 @@ namespace functor {
             in_frustum_predicate);
       }
 
-      void update_block(VoxelBlock<FieldType> * block, const float voxel_size) {
+      void update_block(se::VoxelBlock<FieldType> * block, const float voxel_size) {
 
         const Eigen::Vector3i blockCoord = block->coordinates();
         const Eigen::Vector3f delta = _Tcw.rotationMatrix() * Eigen::Vector3f(voxel_size, 0, 0);
@@ -47,7 +47,7 @@ namespace functor {
         bool is_visible = false;
 
         unsigned int y, z, blockSide; 
-        blockSide = VoxelBlock<FieldType>::side;
+        blockSide = se::VoxelBlock<FieldType>::side;
         unsigned int ylast = blockCoord(1) + blockSide;
         unsigned int zlast = blockCoord(2) + blockSide;
 
@@ -79,7 +79,7 @@ namespace functor {
         block->active(is_visible);
       }
 
-      void update_node(Node<FieldType> * node, const float voxel_size) { 
+      void update_node(se::Node<FieldType> * node, const float voxel_size) { 
         const Eigen::Vector3i voxel = Eigen::Vector3i(unpack_morton(node->code));
         const Eigen::Vector3f delta = _Tcw.rotationMatrix() * Eigen::Vector3f::Constant(0.5f * voxel_size * node->side);
         const Eigen::Vector3f delta_c = _K.topLeftCorner<3,3>() * delta;
@@ -130,7 +130,7 @@ namespace functor {
       Sophus::SE3f _Tcw;
       Eigen::Matrix4f _K;
       Eigen::Vector2i _frame_size;
-      std::vector<VoxelBlock<FieldType>*> _active_list;
+      std::vector<se::VoxelBlock<FieldType>*> _active_list;
   };
 
   template <typename FieldType, template <typename FieldT> class MapT, 

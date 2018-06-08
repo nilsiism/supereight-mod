@@ -27,7 +27,7 @@ unsigned int buildAllocationList(HashType * allocationList, size_t reserved,
     const float voxelSize, const float band) {
 
   const float inverseVoxelSize = 1/voxelSize;
-  const unsigned block_scale = log2(size) - log2_const(VoxelBlock<FieldType>::side);
+  const unsigned block_scale = log2(size) - log2_const(se::VoxelBlock<FieldType>::side);
 
   Matrix4 invK = inverse(K);
   const Matrix4 kPose = pose * invK;
@@ -65,7 +65,7 @@ unsigned int buildAllocationList(HashType * allocationList, size_t reserved,
             (voxelScaled.z < size) && (voxelScaled.x >= 0) &&
             (voxelScaled.y >= 0) && (voxelScaled.z >= 0)){
           voxel = make_int3(voxelScaled);
-          VoxelBlock<FieldType> * n = map_index.fetch(voxel.x, voxel.y, voxel.z);
+          se::VoxelBlock<FieldType> * n = map_index.fetch(voxel.x, voxel.y, voxel.z);
           if(!n){
             HashType k = map_index.hash(voxel.x, voxel.y, voxel.z, 
                 block_scale);

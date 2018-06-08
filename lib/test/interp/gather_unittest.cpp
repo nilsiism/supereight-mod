@@ -46,13 +46,13 @@ TEST_F(GatherTest, GatherLocal) {
 
 TEST_F(GatherTest, ZCrosses) {
   float points[8];
-  const uint blockSize = VoxelBlock<testT>::side;
+  const uint blockSize = se::VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {132, 128, 135};
   unsigned int crossmask = ((base(0) % blockSize) == blockSize - 1 << 2) | 
                            ((base(1) % blockSize) == blockSize - 1 << 1) |
                             (base(2) % blockSize) == blockSize - 1;
   ASSERT_EQ(crossmask, 1);
-  VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
+  se::VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
   gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {
@@ -62,13 +62,13 @@ TEST_F(GatherTest, ZCrosses) {
 
 TEST_F(GatherTest, YCrosses) {
   float points[8];
-  const uint blockSize = VoxelBlock<testT>::side;
+  const uint blockSize = se::VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {132, 135, 132};
   unsigned int crossmask = ((base(0) % blockSize == blockSize - 1) << 2) | 
                            ((base(1) % blockSize == blockSize - 1) << 1) |
                             ((base(2) % blockSize) == blockSize - 1);
   ASSERT_EQ(crossmask, 2);
-  VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
+  se::VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
   gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {
@@ -78,13 +78,13 @@ TEST_F(GatherTest, YCrosses) {
 
 TEST_F(GatherTest, XCrosses) {
   float points[8];
-  const uint blockSize = VoxelBlock<testT>::side;
+  const uint blockSize = se::VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {135, 132, 132};
   unsigned int crossmask = ((base(0) % blockSize == blockSize - 1) << 2) | 
                            ((base(1) % blockSize == blockSize - 1) << 1) |
                             ((base(2) % blockSize) == blockSize - 1);
   ASSERT_EQ(crossmask, 4);
-  VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
+  se::VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
   gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {
@@ -94,13 +94,13 @@ TEST_F(GatherTest, XCrosses) {
 
 TEST_F(GatherTest, YZCross) {
   float points[8];
-  const uint blockSize = VoxelBlock<testT>::side;
+  const uint blockSize = se::VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {129, 135, 135};
   unsigned int crossmask = ((base(0) % blockSize == blockSize - 1) << 2) | 
                            ((base(1) % blockSize == blockSize - 1) << 1) |
                             ((base(2) % blockSize) == blockSize - 1);
   ASSERT_EQ(crossmask, 3);
-  VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
+  se::VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
   gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {
@@ -110,13 +110,13 @@ TEST_F(GatherTest, YZCross) {
 
 TEST_F(GatherTest, XZCross) {
   float points[8];
-  const uint blockSize = VoxelBlock<testT>::side;
+  const uint blockSize = se::VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {135, 131, 135};
   unsigned int crossmask = ((base(0) % blockSize == blockSize - 1) << 2) | 
                            ((base(1) % blockSize == blockSize - 1) << 1) |
                             ((base(2) % blockSize) == blockSize - 1);
   ASSERT_EQ(crossmask, 5);
-  VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
+  se::VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
   gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {
@@ -126,13 +126,13 @@ TEST_F(GatherTest, XZCross) {
 
 TEST_F(GatherTest, XYCross) {
   float points[8];
-  const uint blockSize = VoxelBlock<testT>::side;
+  const uint blockSize = se::VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {135, 135, 138};
   unsigned int crossmask = ((base(0) % blockSize == blockSize - 1) << 2) | 
                            ((base(1) % blockSize == blockSize - 1) << 1) |
                             ((base(2) % blockSize) == blockSize - 1);
   ASSERT_EQ(crossmask, 6);
-  VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
+  se::VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
   gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {
@@ -142,13 +142,13 @@ TEST_F(GatherTest, XYCross) {
 
 TEST_F(GatherTest, AllCross) {
   float points[8];
-  const uint blockSize = VoxelBlock<testT>::side;
+  const uint blockSize = se::VoxelBlock<testT>::side;
   const Eigen::Vector3i base = {135, 135, 135};
   unsigned int crossmask = ((base(0) % blockSize == blockSize - 1) << 2) | 
                            ((base(1) % blockSize == blockSize - 1) << 1) |
                             ((base(2) % blockSize) == blockSize - 1);
   ASSERT_EQ(crossmask, 7);
-  VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
+  se::VoxelBlock<testT> * block = oct_.fetch(base(0), base(1), base(2));
   gather_points(oct_, base, [](const auto& val){ return val; }, points);
 
   for(int i = 0; i < 8; ++i) {

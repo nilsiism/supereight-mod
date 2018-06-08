@@ -11,18 +11,18 @@ static const Eigen::Vector3i interp_offsets[8] =
    {0, 0, 1}, {1, 0, 1}, {0, 1, 1}, {1, 1, 1}};
 
 template <typename FieldType, typename FieldSelector>
-inline void gather_local(const VoxelBlock<FieldType>* block, const Eigen::Vector3i base, 
+inline void gather_local(const se::VoxelBlock<FieldType>* block, const Eigen::Vector3i base, 
     FieldSelector select, float points[8]) {
 
   if(!block) {
-    points[0] = select(VoxelBlock<FieldType>::empty());
-    points[1] = select(VoxelBlock<FieldType>::empty());
-    points[2] = select(VoxelBlock<FieldType>::empty());
-    points[3] = select(VoxelBlock<FieldType>::empty());
-    points[4] = select(VoxelBlock<FieldType>::empty());
-    points[5] = select(VoxelBlock<FieldType>::empty());
-    points[6] = select(VoxelBlock<FieldType>::empty());
-    points[7] = select(VoxelBlock<FieldType>::empty());
+    points[0] = select(se::VoxelBlock<FieldType>::empty());
+    points[1] = select(se::VoxelBlock<FieldType>::empty());
+    points[2] = select(se::VoxelBlock<FieldType>::empty());
+    points[3] = select(se::VoxelBlock<FieldType>::empty());
+    points[4] = select(se::VoxelBlock<FieldType>::empty());
+    points[5] = select(se::VoxelBlock<FieldType>::empty());
+    points[6] = select(se::VoxelBlock<FieldType>::empty());
+    points[7] = select(se::VoxelBlock<FieldType>::empty());
     return;
   }
 
@@ -38,14 +38,14 @@ inline void gather_local(const VoxelBlock<FieldType>* block, const Eigen::Vector
 }
 
 template <typename FieldType, typename FieldSelector>
-inline void gather_4(const VoxelBlock<FieldType>* block, const Eigen::Vector3i base, 
+inline void gather_4(const se::VoxelBlock<FieldType>* block, const Eigen::Vector3i base, 
     FieldSelector select, const unsigned int offsets[4], float points[8]) {
 
   if(!block) {
-    points[offsets[0]] = select(VoxelBlock<FieldType>::empty());
-    points[offsets[1]] = select(VoxelBlock<FieldType>::empty());
-    points[offsets[2]] = select(VoxelBlock<FieldType>::empty());
-    points[offsets[3]] = select(VoxelBlock<FieldType>::empty());
+    points[offsets[0]] = select(se::VoxelBlock<FieldType>::empty());
+    points[offsets[1]] = select(se::VoxelBlock<FieldType>::empty());
+    points[offsets[2]] = select(se::VoxelBlock<FieldType>::empty());
+    points[offsets[3]] = select(se::VoxelBlock<FieldType>::empty());
     return;
   }
 
@@ -57,12 +57,12 @@ inline void gather_4(const VoxelBlock<FieldType>* block, const Eigen::Vector3i b
 }
 
 template <typename FieldType, typename FieldSelector>
-inline void gather_2(const VoxelBlock<FieldType>* block, const Eigen::Vector3i base, 
+inline void gather_2(const se::VoxelBlock<FieldType>* block, const Eigen::Vector3i base, 
     FieldSelector select, const unsigned int offsets[2], float points[8]) {
 
   if(!block) {
-    points[offsets[0]] = select(VoxelBlock<FieldType>::empty());
-    points[offsets[1]] = select(VoxelBlock<FieldType>::empty());
+    points[offsets[0]] = select(se::VoxelBlock<FieldType>::empty());
+    points[offsets[1]] = select(se::VoxelBlock<FieldType>::empty());
     return;
   }
 
@@ -76,7 +76,7 @@ template <typename FieldType, template<typename FieldT> class MapIndex,
 inline void gather_points(const MapIndex<FieldType>& fetcher, const Eigen::Vector3i base, 
     FieldSelector select, float points[8]) {
  
-  unsigned int blockSize =  VoxelBlock<FieldType>::side;
+  unsigned int blockSize =  se::VoxelBlock<FieldType>::side;
   unsigned int crossmask = ((base(0) % blockSize == blockSize - 1) << 2) | 
                            ((base(1) % blockSize == blockSize - 1) << 1) |
                            ((base(2) % blockSize) == blockSize - 1);
@@ -84,7 +84,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const Eigen::Vecto
   switch(crossmask) {
     case 0: /* all local */
       {
-        VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
+        se::VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
         gather_local(block, base, select, points);
       }
       break;
@@ -92,7 +92,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const Eigen::Vecto
       {
         const unsigned int offs1[4] = {0, 1, 2, 3};
         const unsigned int offs2[4] = {4, 5, 6, 7};
-        VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
+        se::VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
         gather_4(block, base, select, offs1, points);
         const Eigen::Vector3i base1 = base + interp_offsets[offs2[0]];
         block = fetcher.fetch(base1(0), base1(1), base1(2));
@@ -103,7 +103,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const Eigen::Vecto
       {
         const unsigned int offs1[4] = {0, 1, 4, 5};
         const unsigned int offs2[4] = {2, 3, 6, 7};
-        VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
+        se::VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
         gather_4(block, base, select, offs1, points);
         const Eigen::Vector3i base1 = base + interp_offsets[offs2[0]];
         block = fetcher.fetch(base1(0), base1(1), base1(2));
@@ -119,7 +119,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const Eigen::Vecto
         const Eigen::Vector3i base2 = base + interp_offsets[offs2[0]];
         const Eigen::Vector3i base3 = base + interp_offsets[offs3[0]];
         const Eigen::Vector3i base4 = base + interp_offsets[offs4[0]];
-        VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
+        se::VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
         gather_2(block, base, select, offs1, points);
         block = fetcher.fetch(base2(0), base2(1), base2(2));
         gather_2(block, base, select, offs2, points);
@@ -133,7 +133,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const Eigen::Vecto
       {
         const unsigned int offs1[4] = {0, 2, 4, 6};
         const unsigned int offs2[4] = {1, 3, 5, 7};
-        VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
+        se::VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
         gather_4(block, base, select, offs1, points);
         const Eigen::Vector3i base1 = base + interp_offsets[offs2[0]];
         block = fetcher.fetch(base1(0), base1(1), base1(2));
@@ -149,7 +149,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const Eigen::Vecto
         const Eigen::Vector3i base2 = base + interp_offsets[offs2[0]];
         const Eigen::Vector3i base3 = base + interp_offsets[offs3[0]];
         const Eigen::Vector3i base4 = base + interp_offsets[offs4[0]];
-        VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
+        se::VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
         gather_2(block, base, select, offs1, points);
         block = fetcher.fetch(base2(0), base2(1), base2(2));
         gather_2(block, base, select, offs2, points);
@@ -168,7 +168,7 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const Eigen::Vecto
         const Eigen::Vector3i base2 = base + interp_offsets[offs2[0]];
         const Eigen::Vector3i base3 = base + interp_offsets[offs3[0]];
         const Eigen::Vector3i base4 = base + interp_offsets[offs4[0]];
-        VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
+        se::VoxelBlock<FieldType> * block = fetcher.fetch(base(0), base(1), base(2));
         gather_2(block, base, select, offs1, points);
         block = fetcher.fetch(base2(0), base2(1), base2(2));
         gather_2(block, base, select, offs2, points);

@@ -47,7 +47,7 @@ class RayIteratorTest : public ::testing::Test {
 TEST_F(RayIteratorTest, FetchAlongRay) {
   se::ray_iterator<OctreeF::value_type> it(oct_, p_, dir_, 0.4, 4.0f); 
   int i = 0;
-  VoxelBlock<testT> * current;
+  se::VoxelBlock<testT> * current;
   while(current = it.next()) {
     ASSERT_LT(i, alloc_list_.size());
     ASSERT_EQ(current->code, alloc_list_[i]);

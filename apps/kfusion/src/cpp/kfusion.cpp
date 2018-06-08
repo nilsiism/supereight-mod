@@ -246,7 +246,7 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
   if ((doIntegrate && ((frame % integration_rate) == 0)) || (frame <= 3)) {
 
     float voxelsize =  volume._dim/volume._size;
-    int num_vox_per_pix = volume._dim/((VoxelBlock<FieldType>::side)*voxelsize);
+    int num_vox_per_pix = volume._dim/((se::VoxelBlock<FieldType>::side)*voxelsize);
     size_t total = num_vox_per_pix * computationSize.x * computationSize.y;
     if(!reserved) {
       allocationList = (se::key_t* ) calloc(sizeof(se::key_t) * total, 1);

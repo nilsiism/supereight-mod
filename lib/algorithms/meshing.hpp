@@ -86,7 +86,7 @@ namespace meshing {
     }
 
   template <typename FieldType, typename PointT>
-    inline void gather_points( const VoxelBlock<FieldType>* cached, PointT points[8], 
+    inline void gather_points( const se::VoxelBlock<FieldType>* cached, PointT points[8], 
         const int x, const int y, const int z) {
       points[0] = cached->data(Eigen::Vector3i(x, y, z)); 
       points[1] = cached->data(Eigen::Vector3i(x+1, y, z));
@@ -114,9 +114,9 @@ namespace meshing {
   template <typename FieldType, template <typename FieldT> class MapT,
   typename InsidePredicate>
   uint8_t compute_index(const MapT<FieldType>& volume, 
-  const VoxelBlock<FieldType>* cached, InsidePredicate inside,
+  const se::VoxelBlock<FieldType>* cached, InsidePredicate inside,
   const uint x, const uint y, const uint z){
-    unsigned int blockSize =  VoxelBlock<FieldType>::side;
+    unsigned int blockSize =  se::VoxelBlock<FieldType>::side;
     unsigned int local = ((x % blockSize == blockSize - 1) << 2) | 
       ((y % blockSize == blockSize - 1) << 1) |
       ((z % blockSize) == blockSize - 1);
@@ -163,7 +163,7 @@ namespace algorithms {
 
       using namespace meshing;
       std::stringstream points, polygons;
-      std::vector<VoxelBlock<FieldType>*> blocklist;
+      std::vector<se::VoxelBlock<FieldType>*> blocklist;
       std::mutex lck;
       const int size = volume.size();
       const int dim = volume.dim();
@@ -173,8 +173,8 @@ namespace algorithms {
 
 #pragma omp parallel for
       for(size_t i = 0; i < blocklist.size(); i++){
-        VoxelBlock<FieldType> * leaf = static_cast<VoxelBlock<FieldType> *>(blocklist[i]);  
-        int edge = VoxelBlock<FieldType>::side;
+        se::VoxelBlock<FieldType> * leaf = static_cast<se::VoxelBlock<FieldType> *>(blocklist[i]);  
+        int edge = se::VoxelBlock<FieldType>::side;
         int x, y, z ; 
         const Eigen::Vector3i& start = leaf->coordinates();
         const Eigen::Vector3i top = 

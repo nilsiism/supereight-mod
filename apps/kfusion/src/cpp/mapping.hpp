@@ -38,7 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "kfusion/mapping_impl.hpp"
 
 template <typename T>
-void integratePass(VoxelBlock<T> ** blockList, unsigned int list_size, 
+void integratePass(se::VoxelBlock<T> ** blockList, unsigned int list_size, 
     const float * depth, uint2 depthSize, const float voxelSize, 
     const Matrix4 invTrack, const Matrix4 K, const float mu, 
     const float , const double timestamp) {

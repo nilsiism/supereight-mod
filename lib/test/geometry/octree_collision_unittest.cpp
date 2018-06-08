@@ -54,7 +54,7 @@ TEST_F(OctreeCollisionTest, TotallyUnseen) {
     const Eigen::Vector3i coords = std::get<0>(node);
     const int side = std::get<1>(node);
     const Octree<testT>::value_type val = std::get<2>(node);
-    printf("Node's coordinates: (%d, %d, %d), side %d, value %.2f\n", 
+    printf("se::Node's coordinates: (%d, %d, %d), side %d, value %.2f\n", 
         coords(0), coords(1), coords(2), side, val);
     EXPECT_EQ(side, i);
   }
@@ -105,10 +105,10 @@ TEST_F(OctreeCollisionTest, CollisionFreeLeaf){
   const Eigen::Vector3i width = {2, 2, 2};
 
   /* Update leaves as occupied node */
-  VoxelBlock<testT> * block = oct_.fetch(56, 12, 254);
+  se::VoxelBlock<testT> * block = oct_.fetch(56, 12, 254);
   const Eigen::Vector3i blockCoord = block->coordinates();
   int x, y, z, blockSide; 
-  blockSide = (int) VoxelBlock<testT>::side;
+  blockSide = (int) se::VoxelBlock<testT>::side;
   int xlast = blockCoord(0) + blockSide;
   int ylast = blockCoord(1) + blockSide;
   int zlast = blockCoord(2) + blockSide;

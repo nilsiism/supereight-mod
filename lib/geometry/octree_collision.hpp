@@ -42,12 +42,12 @@ inline collision_status update_status(const collision_status previous_status,
  * \param test function that takes a voxel and returns a collision_status value
  */
 template <typename FieldType, typename TestVoxelF>
-collision_status collides_with(const VoxelBlock<FieldType>* block, 
+collision_status collides_with(const se::VoxelBlock<FieldType>* block, 
     const Eigen::Vector3i bbox, const Eigen::Vector3i side, TestVoxelF test) {
   collision_status status = collision_status::empty;
   const Eigen::Vector3i blockCoord = block->coordinates();
   int x, y, z, blockSide; 
-  blockSide = (int) VoxelBlock<FieldType>::side;
+  blockSide = (int) se::VoxelBlock<FieldType>::side;
   int xlast = blockCoord(0) + blockSide;
   int ylast = blockCoord(1) + blockSide;
   int zlast = blockCoord(2) + blockSide;
@@ -55,7 +55,7 @@ collision_status collides_with(const VoxelBlock<FieldType>* block,
     for (y = blockCoord(1); y < ylast; ++y){
       for (x = blockCoord(0); x < xlast; ++x){
 
-        typename VoxelBlock<FieldType>::value_type value;
+        typename se::VoxelBlock<FieldType>::value_type value;
         const Eigen::Vector3i vox{x, y, z};
         if(!geometry::aabb_aabb_collision(bbox, side, 
           vox, Eigen::Vector3i::Constant(1))) continue;
@@ -82,16 +82,16 @@ collision_status collides_with(const Octree<FieldType>& map,
     const Eigen::Vector3i bbox, const Eigen::Vector3i side, TestVoxelF test) {
 
   typedef struct stack_entry { 
-    Node<FieldType>* node_ptr;
+    se::Node<FieldType>* node_ptr;
     Eigen::Vector3i coordinates;
     int side;
-    typename Node<FieldType>::value_type parent_val;
+    typename se::Node<FieldType>::value_type parent_val;
   } stack_entry;
 
   stack_entry stack[Octree<FieldType>::max_depth*8 + 1];
   size_t stack_idx = 0;
 
-  Node<FieldType>* node = map.root();
+  se::Node<FieldType>* node = map.root();
   if(!node) return collision_status::unseen;
 
   stack_entry current;
@@ -105,7 +105,7 @@ collision_status collides_with(const Octree<FieldType>& map,
     node = current.node_ptr;
 
     if(node->isLeaf()){
-      status = collides_with(static_cast<VoxelBlock<FieldType>*>(node), 
+      status = collides_with(static_cast<se::VoxelBlock<FieldType>*>(node), 
           bbox, side, test);
     } 
 
@@ -115,7 +115,7 @@ collision_status collides_with(const Octree<FieldType>& map,
     }
 
     for(int i = 0; i < 8; ++i){
-      Node<FieldType>* child = node->child(i);
+      se::Node<FieldType>* child = node->child(i);
       stack_entry child_descr;
       child_descr.node_ptr = NULL;
       child_descr.side = current.side / 2;

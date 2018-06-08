@@ -49,7 +49,7 @@ TEST_F(MultiscaleTest, ScaledAlloc) {
   }
 
   oct_.allocate(alloc_list, 2);
-  Node<testT>* n = oct_.fetch_octant(87, 32, 420, 5);
+  se::Node<testT>* n = oct_.fetch_octant(87, 32, 420, 5);
   ASSERT_TRUE(n != NULL);
   n->value_[0] = 10.f;
   EXPECT_EQ(oct_.get(87, 32, 420), 10.f);
@@ -83,10 +83,10 @@ TEST_F(MultiscaleTest, ChildrenMaskTest) {
   }
 
   oct_.allocate(alloc_list, 10);
-  const MemoryPool<Node<testT> >& nodes = oct_.getNodesBuffer();
+  const MemoryPool<se::Node<testT> >& nodes = oct_.getNodesBuffer();
   const size_t num_nodes = nodes.size();
   for(size_t i = 0; i < num_nodes; ++i) {
-    Node<testT>* n = nodes[i];
+    se::Node<testT>* n = nodes[i];
     for(int c = 0; c < 8; ++c) {
       if(n->child(c)) {
         ASSERT_TRUE(n->children_mask_ & (1 << c));
@@ -107,7 +107,7 @@ TEST_F(MultiscaleTest, OctantAlloc) {
   alloc_list[2] = alloc_list[2] | 3;
   alloc_list[9] = alloc_list[2] | 5;
   oct_.allocate(alloc_list, 10);
-  Node<testT> * octant = oct_.fetch_octant(blocks[4](0), blocks[4](1),
+  se::Node<testT> * octant = oct_.fetch_octant(blocks[4](0), blocks[4](1),
       blocks[4](2), 3);
   ASSERT_TRUE(octant != NULL);
   octant = oct_.fetch_octant(blocks[9](0), blocks[9](1),

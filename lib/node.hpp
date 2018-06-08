@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "utils/se_common.h"
 #include "utils/memory_pool.hpp"
 
+namespace se { 
 template <typename T>
 class Node {
 
@@ -48,7 +49,7 @@ public:
   value_type init_val() const { return traits_type::initValue(); }
 
   value_type value_[8];
-  se::key_t code;
+  key_t code;
   unsigned int side;
   unsigned char children_mask_;
 
@@ -124,7 +125,8 @@ class VoxelBlock: public Node<T> {
 };
 
 template <typename T>
-inline typename VoxelBlock<T>::value_type VoxelBlock<T>::data(const Eigen::Vector3i pos) const {
+inline typename VoxelBlock<T>::value_type 
+VoxelBlock<T>::data(const Eigen::Vector3i pos) const {
   Eigen::Vector3i offset = pos - coordinates_;
   const value_type& data = voxel_block_[offset(0) + offset(1)*side + 
                                          offset(2)*sideSq];
@@ -136,5 +138,6 @@ inline void VoxelBlock<T>::data(const Eigen::Vector3i pos,
                                 const value_type &value){
   Eigen::Vector3i offset = pos - coordinates_;
   voxel_block_[offset(0) + offset(1)*side + offset(2)*sideSq] = value;
+}
 }
 #endif

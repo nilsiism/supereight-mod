@@ -81,7 +81,7 @@ size_t buildOctantList(HashType* allocationList, size_t reserved,
               allocationList[idx] = k;
             }
           } else if(tree_depth >= leaves_depth) { 
-            static_cast<VoxelBlock<FieldType>*>(node_ptr)->active(true);
+            static_cast<se::VoxelBlock<FieldType>*>(node_ptr)->active(true);
           }
         }
         stepsize = compute_stepsize(travelled, band, voxelSize);  
