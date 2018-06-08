@@ -35,7 +35,7 @@ namespace algorithms {
 #ifdef _OPENMP
   template <typename BlockType, typename... Predicates>
     void filter(std::vector<BlockType *>& out,
-        const MemoryPool<BlockType>& block_array, Predicates... ps) {
+        const se::MemoryPool<BlockType>& block_array, Predicates... ps) {
 
       std::vector<BlockType *> temp;
       int num_elem = block_array.size();
@@ -82,7 +82,7 @@ namespace algorithms {
 #else
   template <typename BlockType, typename... Predicates>
     void filter(std::vector<BlockType *>& out,
-        const MemoryPool<BlockType>& block_array, Predicates... ps) {
+        const se::MemoryPool<BlockType>& block_array, Predicates... ps) {
       for(unsigned int i = 0; i < block_array.size(); ++i) {
         if(satisfies(block_array[i], ps...)){
           out.push_back(block_array[i]);

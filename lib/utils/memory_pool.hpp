@@ -40,6 +40,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <voxel_traits.hpp>
 #include <node.hpp>
 
+namespace se {
 template <typename BlockType>
 class MemoryPool {
 
@@ -110,4 +111,5 @@ class MemoryPool {
     // Disabling copy-constructor
     MemoryPool(const MemoryPool& m);
 };
+}
 #endif

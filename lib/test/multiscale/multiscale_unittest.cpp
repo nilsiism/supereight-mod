@@ -83,7 +83,7 @@ TEST_F(MultiscaleTest, ChildrenMaskTest) {
   }
 
   oct_.allocate(alloc_list, 10);
-  const MemoryPool<se::Node<testT> >& nodes = oct_.getNodesBuffer();
+  const se::MemoryPool<se::Node<testT> >& nodes = oct_.getNodesBuffer();
   const size_t num_nodes = nodes.size();
   for(size_t i = 0; i < num_nodes; ++i) {
     se::Node<testT>* n = nodes[i];

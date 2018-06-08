@@ -23,7 +23,7 @@ namespace functor {
       void build_active_list() {
         using namespace std::placeholders;
         /* Retrieve the active list */ 
-        const MemoryPool<se::VoxelBlock<FieldType> >& block_array = 
+        const se::MemoryPool<se::VoxelBlock<FieldType> >& block_array = 
           _map.getBlockBuffer();
 
         /* Predicates definition */

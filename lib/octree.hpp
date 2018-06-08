@@ -173,8 +173,8 @@ public:
    * blocks, false to retrieve all allocated blocks.
    */
   void getBlockList(std::vector<se::VoxelBlock<T> *>& blocklist, bool active);
-  MemoryPool<se::VoxelBlock<T> >& getBlockBuffer(){ return block_memory_; };
-  MemoryPool<se::Node<T> >& getNodesBuffer(){ return nodes_buffer_; };
+  se::MemoryPool<se::VoxelBlock<T> >& getBlockBuffer(){ return block_memory_; };
+  se::MemoryPool<se::Node<T> >& getNodesBuffer(){ return nodes_buffer_; };
   /*! \brief Computes the morton code of the block containing voxel 
    * at coordinates (x,y,z)
    * \param x x coordinate in interval [0, size]
@@ -223,8 +223,8 @@ private:
   int size_;
   float dim_;
   int max_level_;
-  MemoryPool<se::VoxelBlock<T> > block_memory_;
-  MemoryPool<se::Node<T> > nodes_buffer_;
+  se::MemoryPool<se::VoxelBlock<T> > block_memory_;
+  se::MemoryPool<se::Node<T> > nodes_buffer_;
 
   friend class se::ray_iterator<T>;
   friend class leaf_iterator<T>;
