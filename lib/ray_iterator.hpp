@@ -33,6 +33,9 @@ namespace se {
           voxelSize_ = map_.dim_/map_.size_;
           state_ = INIT; 
 
+          for(int i = 0 ; i < CAST_STACK_DEPTH; ++i)
+            stack[i] = {0, 0, 0};
+
           direction_(0) = fabsf(direction(0)) < epsilon ? 
             copysignf(epsilon, direction(0)) : direction(0);
           direction_(1) = fabsf(direction(1)) < epsilon ? 
@@ -63,9 +66,9 @@ namespace se {
           t_min_ = fmaxf(
               fmaxf(2.0f * t_coef_(0) - t_bias_(0), 2.0f * t_coef_(1) - t_bias_(1)), 2.0f * t_coef_(2) - t_bias_(2));
           t_max_ = fminf(fminf(t_coef_(0) - t_bias_(0), t_coef_(1) - t_bias_(1)), t_coef_(2) - t_bias_(2));
+          h_ = t_max_;
           t_min_ = t_min_init_ = fmaxf(t_min_, nearPlane/map_.dim_);
           t_max_ = t_max_init_ = fminf(t_max_, farPlane/map_.dim_ );
-          h_ = t_max_;
 
           /*
            * Initialise the ray position
