@@ -1,11 +1,11 @@
 all:
 	mkdir -p build/
-	cd build/ && cmake .. -DCMAKE_BUILD_TYPE=Release -DSOPHUS_INCLUDE_DIR=${SOPHUS_ROOT}
+	cd build/ && cmake .. -DCMAKE_BUILD_TYPE=Release
 	$(MAKE) -C build
 
 debug:
 	mkdir -p build/
-	cd build/ && cmake .. -DCMAKE_BUILD_TYPE=Debug -DSOPHUS_INCLUDE_DIR=${SOPHUS_ROOT}
+	cd build/ && cmake .. -DCMAKE_BUILD_TYPE=Debug
 	$(MAKE) -C build
 
 test:
