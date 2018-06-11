@@ -154,7 +154,7 @@ typedef struct Triangle {
     vertexes[0] = Eigen::Vector3f::Constant(0);
     vertexes[1] = Eigen::Vector3f::Constant(0);
     vertexes[2] = Eigen::Vector3f::Constant(0);
-    normal = Eigen::Vector3f(0);
+    normal = Eigen::Vector3f::Constant(0);
     surface_area = -1.f;
   }
   

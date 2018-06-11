@@ -38,8 +38,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <utils/morton_utils.hpp>
 #include "octant_ops.hpp"
 #include <algorithm>
-#include <tuple>
+
+#if defined(_OPENMP) && !defined(__clang__)
 #include <parallel/algorithm>
+#endif
+
+#include <tuple>
+#include <queue>
 #include <node.hpp>
 #include <utils/memory_pool.hpp>
 #include <algorithms/unique.hpp>
@@ -713,7 +718,7 @@ void Octree<T>::reserveBuffers(const int n){
 template <typename T>
 bool Octree<T>::allocate(se::key_t *keys, int num_elem){
 
-#ifdef _OPENMP
+#if defined(_OPENMP) && !defined(__clang__)
   __gnu_parallel::sort(keys, keys+num_elem);
 #else
 std::sort(keys, keys+num_elem);

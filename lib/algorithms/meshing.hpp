@@ -82,7 +82,7 @@ namespace meshing {
         case 11: return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z+1),   
                      Eigen::Vector3i(x,   y+1, z+1));
       }
-      return Eigen::Vector3f(0);
+      return Eigen::Vector3f::Constant(0);
     }
 
   template <typename FieldType, typename PointT>
