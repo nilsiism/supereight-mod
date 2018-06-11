@@ -143,7 +143,7 @@ public:
    */
   se::VoxelBlock<T> * fetch(const int x, const int y, const int z) const;
 
-  /*! \brief Fetch the voxel block at which contains voxel  (x,y,z)
+  /*! \brief Fetch the octant (x,y,z) at level depth
    * \param x x coordinate in interval [0, size]
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
@@ -151,6 +151,21 @@ public:
    */
   se::Node<T> * fetch_octant(const int x, const int y, const int z, 
       const int depth) const;
+
+  /*! \brief Insert the octant at (x,y,z). Not thread safe.
+   * \param x x coordinate in interval [0, size]
+   * \param y y coordinate in interval [0, size]
+   * \param z z coordinate in interval [0, size]
+   * \param depth target insertion level 
+   */
+  se::Node<T> * insert(const int x, const int y, const int z, const int depth);
+
+  /*! \brief Insert the octant (x,y,z) at maximum resolution. Not thread safe.
+   * \param x x coordinate in interval [0, size]
+   * \param y y coordinate in interval [0, size]
+   * \param z z coordinate in interval [0, size]
+   */
+  se::VoxelBlock<T> * insert(const int x, const int y, const int z);
 
   /*! \brief Interp voxel value at voxel position  (x,y,z)
    * \param pos three-dimensional coordinates in which each component belongs 
@@ -352,7 +367,8 @@ inline typename Octree<T>::value_type Octree<T>::get_fine(const int x,
 
   uint edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) +  4*((z & edge) > 0);
+    const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) 
+      +  4*((z & edge) > 0);
     se::Node<T>* tmp = n->child(childid);
     if(!tmp){
       return init_val();
@@ -462,6 +478,68 @@ inline se::Node<T> * Octree<T>::fetch_octant(const int x, const int y,
     }
   }
   return n;
+}
+
+template <typename T>
+se::Node<T> * Octree<T>::insert(const int x, const int y, const int z, 
+    const int depth) {
+
+  // Make sure we have enough space on buffers
+  const int leaves_level = max_depth - se::math::log2_const(blockSide);
+  if(depth > (max_depth - leaves_level)) {
+    block_memory_.reserve(1);
+    nodes_buffer_.reserve(leaves_level);
+  } else {
+    nodes_buffer_.reserve(depth);
+  }
+
+  se::Node<T> * n = root_;
+  // Should not happen if octree has been initialised properly
+  if(!n) {
+    root_ = nodes_buffer_.acquire_block();
+    root_->code = 0;
+    root_->side = size_;
+    n = root_;
+  }
+
+  se::key_t key = se::keyops::encode(x, y, z, depth, max_level_);
+  const unsigned int shift = MAX_BITS - max_level_ - 1;
+
+  uint edge = size_ / 2;
+  for(int d = 1; edge >= blockSide && d <= depth; edge /= 2, ++d){
+    const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) 
+      +  4*((z & edge) > 0);
+
+    // std::cout << "Level: " << d << std::endl;
+    se::Node<T>* tmp = n->child(childid);
+    if(!tmp){
+      const se::key_t prefix = 
+        se::keyops::code(key) & MASK[d + shift];
+      if(edge == blockSide) {
+        tmp = block_memory_.acquire_block();
+        static_cast<se::VoxelBlock<T> *>(tmp)->coordinates(
+            Eigen::Vector3i(unpack_morton(prefix)));
+        static_cast<se::VoxelBlock<T> *>(tmp)->active(true);
+        static_cast<se::VoxelBlock<T> *>(tmp)->code = prefix | d;
+        n->children_mask_ = n->children_mask_ | (1 << childid);
+      } else {
+        tmp = nodes_buffer_.acquire_block();
+        tmp->code = prefix | d;
+        tmp->side = edge;
+        n->children_mask_ = n->children_mask_ | (1 << childid);
+        // std::cout << "coords: " 
+        //   << se::keyops::decode(se::keyops::code(tmp->code)) << std::endl;
+      }
+      n->child(childid) = tmp;
+    }
+    n = tmp;
+  }
+  return n;
+}
+
+template <typename T>
+se::VoxelBlock<T> * Octree<T>::insert(const int x, const int y, const int z) {
+  return static_cast<se::VoxelBlock<T> * >(insert(x, y, z, max_level_));
 }
 
 template <typename T>
@@ -768,7 +846,7 @@ bool Octree<T>::allocate_level(se::key_t* keys, int num_tasks, int target_level)
           parent->children_mask_ = parent->children_mask_ | (1 << index);
         }
         else  {
-          *n = nodes_buffer_.acquire_block();;
+          *n = nodes_buffer_.acquire_block();
           (*n)->code = myKey | level;
           (*n)->side = edge;
           parent->children_mask_ = parent->children_mask_ | (1 << index);

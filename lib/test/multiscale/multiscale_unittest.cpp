@@ -1,6 +1,7 @@
 #include "octree.hpp"
 #include "utils/se_common.h"
 #include "gtest/gtest.h"
+#include <random>
 
 typedef float testT;
 
@@ -113,4 +114,42 @@ TEST_F(MultiscaleTest, OctantAlloc) {
   octant = oct_.fetch_octant(blocks[9](0), blocks[9](1),
       blocks[9](2), 6);
   ASSERT_TRUE(octant == NULL);
+}
+
+TEST_F(MultiscaleTest, SingleInsert) {
+  Eigen::Vector3i vox(32, 208, 44);
+  const int side = se::VoxelBlock<testT>::side;
+  se::VoxelBlock<testT> * n = oct_.insert(vox(0), vox(1), vox(2));
+  Eigen::Vector3i coords = n->coordinates();
+  Eigen::Vector3i rounded = side * (vox/side);
+  ASSERT_TRUE(coords == rounded);
+}
+
+TEST_F(MultiscaleTest, MultipleInsert) {
+  OctreeF tree;
+  tree.init(1024, 10);
+  const int side = se::VoxelBlock<testT>::side;
+  const int max_depth = log2(tree.size());
+  const int leaves_level = max_depth - log2(side);
+  std::random_device rd;  //Will be used to obtain a seed for the random number engine
+  std::mt19937 gen(1); //Standard mersenne_twister_engine seeded with rd()
+  std::uniform_int_distribution<> dis(0, 1023);
+  
+  int num_tested = 0;
+  for(int i = 1, edge = tree.size()/2; i <= leaves_level; ++i, edge = edge/2) { 
+    for(int j = 0; j < 20; ++j) {
+      Eigen::Vector3i vox(dis(gen), dis(gen), dis(gen));
+      se::Node<testT> * n = tree.insert(vox(0), vox(1), vox(2), i);
+      se::Node<testT> * n1 = tree.fetch_octant(vox(0), vox(1), vox(2), i);
+      Eigen::Vector3i rounded = edge * (vox/edge);
+      Eigen::Vector3i coords = se::keyops::decode(n1->code);
+
+      // Check expected coordinates
+      ASSERT_TRUE(coords == rounded);
+      // Should not have any children up to this level
+      ASSERT_TRUE(n1->children_mask_ == 0);
+      ++num_tested;
+    }
+  }
+  std::cout << "tested " << num_tested << " nodes" << std::endl;
 }
