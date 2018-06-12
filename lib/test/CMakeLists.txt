@@ -12,10 +12,11 @@ enable_testing()
 set(CMAKE_CXX_FLAGS_DEBUG "-g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
 add_compile_options(-std=c++1y)
-include_directories(../../lib ../../utils ../../lib/geometry 
+include_directories(../../lib ../../utils ../../lib/geometry ../io
   ${EIGEN3_INCLUDE_DIR} ${SOPHUS_INCLUDE_DIR})
 
 add_subdirectory(octree)
+add_subdirectory(io)
 add_subdirectory(allocation)
 add_subdirectory(functor)
 add_subdirectory(interp)
