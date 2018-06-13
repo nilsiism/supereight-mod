@@ -33,3 +33,26 @@ TEST(SerialiseUnitTest, WriteReadNode) {
   }
 }
 
+TEST(SerialiseUnitTest, WriteReadBlock) {
+  std::string filename = "test.bin";
+  {
+    std::ofstream os (filename, std::ios::binary); 
+    se::VoxelBlock<testT> octant;
+    octant.code = 24;
+    octant.coordinates(Eigen::Vector3i(40, 48, 52));
+    for(int i = 0; i < 512; ++i)
+      octant.data(i, 5.f);
+    se::internal::serialise(os, octant);
+  }
+
+  {
+    std::ifstream is(filename, std::ios::binary);
+    se::VoxelBlock<testT> octant;
+    se::internal::deserialise(octant, is);
+    std::cout << "Read: " << octant.code << ", " << octant.side << " "
+      << ", coords:\n " << octant.coordinates();
+    for(int i = 0; i < 512; ++i)
+      ASSERT_EQ(octant.data(i), 5.f);
+  }
+}
+

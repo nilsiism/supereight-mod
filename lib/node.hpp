@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "octree_defines.h"
 #include "utils/se_common.h"
 #include "utils/memory_pool.hpp"
+#include "io/se_serialise.hpp"
 
 namespace se { 
 template <typename T>
@@ -76,8 +77,12 @@ public:
 
     virtual bool isLeaf(){ return false; }
 
+
 protected:
     Node *child_ptr_[8];
+private:
+    friend std::ofstream& internal::serialise <> (std::ofstream& out, Node& node);
+    friend void internal::deserialise <> (Node& node, std::ifstream& in);
 };
 
 template <typename T>
@@ -111,6 +116,9 @@ class VoxelBlock: public Node<T> {
     value_type data(const Eigen::Vector3i pos) const;
     void data(const Eigen::Vector3i pos, const value_type& value);
 
+    value_type data(const int i) const;
+    void data(const int i, const value_type& value);
+
     void active(const bool a){ active_ = a; }
     bool active() const { return active_; }
 
@@ -122,6 +130,10 @@ class VoxelBlock: public Node<T> {
     Eigen::Vector3i coordinates_;
     value_type voxel_block_[side*sideSq]; // Brick of data.
     bool active_;
+
+    friend std::ofstream& internal::serialise <> (std::ofstream& out, 
+        VoxelBlock& node);
+    friend void internal::deserialise <> (VoxelBlock& node, std::ifstream& in);
 };
 
 template <typename T>
@@ -138,6 +150,18 @@ inline void VoxelBlock<T>::data(const Eigen::Vector3i pos,
                                 const value_type &value){
   Eigen::Vector3i offset = pos - coordinates_;
   voxel_block_[offset(0) + offset(1)*side + offset(2)*sideSq] = value;
+}
+
+template <typename T>
+inline typename VoxelBlock<T>::value_type 
+VoxelBlock<T>::data(const int i) const {
+  const value_type& data = voxel_block_[i];
+  return data;
+}
+
+template <typename T>
+inline void VoxelBlock<T>::data(const int i, const value_type &value){
+  voxel_block_[i] = value;
 }
 }
 #endif

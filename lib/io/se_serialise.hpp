@@ -32,9 +32,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SE_SERIALISE_HPP
 #define SE_SERIALISE_HPP
 #include <fstream>
-#include "node.hpp"
+#include "Eigen/Dense"
 
 namespace se {
+
+  template <typename T>
+  class Node;
+
+  template <typename T>
+  class VoxelBlock;
+
   namespace internal {
     /*
      * \brief Write node's data to output file out. We do not serialise child
@@ -61,6 +68,33 @@ namespace se {
       in.read(reinterpret_cast<char *>(&node.code), sizeof(key_t));
       in.read(reinterpret_cast<char *>(&node.side), sizeof(int));
       in.read(reinterpret_cast<char *>(&node.value_), sizeof(node.value_));
+    }
+
+    /*
+     * \brief Write VoxelBlock's data to output file out. 
+     * \param out binary output file
+     * \param node Node to be serialised
+     */
+    template <typename T>
+    std::ofstream& serialise(std::ofstream& out, VoxelBlock<T>& block) {
+      out.write(reinterpret_cast<char *>(&block.code), sizeof(key_t));
+      out.write(reinterpret_cast<char *>(&block.coordinates_), sizeof(Eigen::Vector3i));
+      out.write(reinterpret_cast<char *>(&block.voxel_block_), 
+          sizeof(block.voxel_block_));
+      return out;
+    }
+
+    /*
+     * \brief Read node's data from input binary file. We do not read child
+     * pointers and mask as those will be reconstructed when deserialising.
+     * \param out binary output file
+     * \param node Node to be serialised
+     */
+    template <typename T>
+    void deserialise(VoxelBlock<T>& block, std::ifstream& in) {
+      in.read(reinterpret_cast<char *>(&block.code), sizeof(key_t));
+      in.read(reinterpret_cast<char *>(&block.coordinates_), sizeof(Eigen::Vector3i));
+      in.read(reinterpret_cast<char *>(&block.voxel_block_), sizeof(block.voxel_block_));
     }
   }
 }
