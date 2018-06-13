@@ -217,6 +217,9 @@ public:
    */
   bool allocate(se::key_t *keys, int num_elem);
 
+  void save(const std::string& filename);
+  void load(const std::string& filename);
+
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
    */
@@ -513,8 +516,7 @@ se::Node<T> * Octree<T>::insert(const int x, const int y, const int z,
     // std::cout << "Level: " << d << std::endl;
     se::Node<T>* tmp = n->child(childid);
     if(!tmp){
-      const se::key_t prefix = 
-        se::keyops::code(key) & MASK[d + shift];
+      const se::key_t prefix = se::keyops::code(key) & MASK[d + shift];
       if(edge == blockSide) {
         tmp = block_memory_.acquire_block();
         static_cast<se::VoxelBlock<T> *>(tmp)->coordinates(
@@ -896,6 +898,60 @@ void Octree<T>::getAllocatedBlockList(se::Node<T> *,
       blocklist.push_back(block_memory_[i]);
     }
   }
+
+template <typename T>
+void Octree<T>::save(const std::string& filename) {
+  {
+    std::ofstream os (filename, std::ios::binary); 
+    os.write(reinterpret_cast<char *>(&size_), sizeof(size_));
+    os.write(reinterpret_cast<char *>(&dim_), sizeof(dim_));
+
+    size_t n = nodes_buffer_.size();
+    os.write(reinterpret_cast<char *>(&n), sizeof(size_t));
+    for(int i = 0; i < n; ++i)
+      se::internal::serialise(os, *nodes_buffer_[i]);
+
+    n = block_memory_.size();
+    os.write(reinterpret_cast<char *>(&n), sizeof(size_t));
+    for(int i = 0; i < n; ++i)
+      se::internal::serialise(os, *block_memory_[i]);
+  }
+}
+
+template <typename T>
+void Octree<T>::load(const std::string& filename) {
+  {
+    std::ifstream is (filename, std::ios::binary); 
+    int size, dim;
+    is.read(reinterpret_cast<char *>(&size), sizeof(size));
+    is.read(reinterpret_cast<char *>(&dim), sizeof(dim));
+
+    init(size, dim);
+    
+    size_t n = 0;
+    is.read(reinterpret_cast<char *>(&n), sizeof(size_t));
+    nodes_buffer_.reserve(n);
+    std::cout << "Reading " << n << " nodes " << std::endl;
+    for(int i = 0; i < n; ++i) {
+      se::Node<T> tmp;
+      se::internal::deserialise(tmp, is);
+      Eigen::Vector3i coords = se::keyops::decode(tmp.code);
+      se::Node<T> * n = insert(coords(0), coords(1), coords(2), se::keyops::level(tmp.code));
+      std::memcpy(n->value_, tmp.value_, sizeof(tmp.value_));
+    }
+
+    is.read(reinterpret_cast<char *>(&n), sizeof(size_t));
+    std::cout << "Reading " << n << " blocks " << std::endl;
+    for(int i = 0; i < block_memory_.size(); ++i) {
+      se::VoxelBlock<T> tmp;
+      se::internal::deserialise(tmp, is);
+      Eigen::Vector3i coords = tmp.coordinates();
+      se::VoxelBlock<T> * n = 
+        static_cast<se::VoxelBlock<T> *>(insert(coords(0), coords(1), coords(2), se::keyops::level(tmp.code)));
+      std::memcpy(n->getBlockRawPtr(), tmp.getBlockRawPtr(), sizeof(*(tmp.getBlockRawPtr())));
+    }
+  }
+}
 
 #include "ray_iterator.hpp"
 
