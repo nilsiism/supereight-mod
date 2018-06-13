@@ -82,8 +82,8 @@ void read_input(std::string inputfile, T * in) {
 
 inline uchar4 gs2rgb(double h) {
 	uchar4 rgb;
-	double v;
-	double r, g, b;
+	double v = 0;
+	double r = 0, g = 0, b = 0;
 	v = 0.75;
 	if (v > 0) {
 		double m;
