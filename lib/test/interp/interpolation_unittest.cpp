@@ -23,8 +23,8 @@ class InterpolationTest : public ::testing::Test {
       float dim = 5.f;
       oct_.init(size, dim); // 5 meters
 
-      const unsigned center = 2.5f;
-      const unsigned radius = center + 0.5f; 
+      const float center = 2.5f;
+      const float radius = center + 0.5f; 
 
       const float voxelsize = oct_.dim()/oct_.size();
       const float inverse_voxelsize = 1.f/voxelsize;
