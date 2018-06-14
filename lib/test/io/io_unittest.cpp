@@ -126,9 +126,11 @@ TEST(SerialiseUnitTest, SerialiseTree) {
     se::Node<testT> * n  = node_buffer_base[i];
     se::Node<testT> * n1 = node_buffer_copy[i];
     ASSERT_EQ(n->code, n1->code);
-    if(n->children_mask_ != n1->children_mask_) {
-      std::cout << "break here" << std::endl;
-    }
+    ASSERT_EQ(n->children_mask_, n1->children_mask_);
   }
+
+  auto& block_buffer_base = tree.getBlockBuffer();
+  auto& block_buffer_copy = tree_copy.getBlockBuffer();
+  ASSERT_EQ(block_buffer_base.size(), block_buffer_copy.size());
 }
 

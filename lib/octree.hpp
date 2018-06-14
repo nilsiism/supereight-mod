@@ -921,6 +921,7 @@ void Octree<T>::save(const std::string& filename) {
 template <typename T>
 void Octree<T>::load(const std::string& filename) {
   {
+    std::cout << "Loading octree from disk... " << filename << std::endl;
     std::ifstream is (filename, std::ios::binary); 
     int size, dim;
     is.read(reinterpret_cast<char *>(&size), sizeof(size));
@@ -942,7 +943,7 @@ void Octree<T>::load(const std::string& filename) {
 
     is.read(reinterpret_cast<char *>(&n), sizeof(size_t));
     std::cout << "Reading " << n << " blocks " << std::endl;
-    for(int i = 0; i < block_memory_.size(); ++i) {
+    for(int i = 0; i < n; ++i) {
       se::VoxelBlock<T> tmp;
       se::internal::deserialise(tmp, is);
       Eigen::Vector3i coords = tmp.coordinates();
