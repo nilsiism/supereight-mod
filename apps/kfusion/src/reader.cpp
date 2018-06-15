@@ -6,7 +6,8 @@
  This code is licensed under the MIT License.
 
  */
-#include <kernels.h>
+// #include <DenseSLAMSystem.h>
+#include <commons.h>
 #include <interface.h>
 #include <constant_parameters.h>
 #include <config.h>

@@ -6,7 +6,7 @@
  This code is licensed under the MIT License.
 
  */
-#include <kernels.h>
+#include <DenseSLAMSystem.h>
 #include "timings.h"
 #include <perfstats.h>
 #include <vtk-io.h>
@@ -36,9 +36,6 @@ float3 * normal;
 se::key_t* allocationList;
 size_t reserved;
 
-float3 bbox_min;
-float3 bbox_max;
-
 // intra-frame
 TrackData * trackingResult;
 float* reductionoutput;
@@ -55,7 +52,7 @@ bool bayesian = false;
   std::vector<Matrix4> poses;
 
 
-void Kfusion::languageSpecificConstructor() {
+void DenseSLAMSystem::languageSpecificConstructor() {
 
 	if (getenv("KERNEL_TIMINGS"))
 		print_kernel_timing = true;
@@ -111,7 +108,7 @@ void Kfusion::languageSpecificConstructor() {
 	reset();
 }
 
-Kfusion::~Kfusion() {
+DenseSLAMSystem::~DenseSLAMSystem() {
 
 	free(reductionoutput);
 	for (unsigned int i = 0; i < iterations.size(); ++i) {
@@ -131,7 +128,7 @@ Kfusion::~Kfusion() {
 
 	volume.release();
 }
-void Kfusion::reset() {
+void DenseSLAMSystem::reset() {
 }
 void init() {
 }
@@ -141,7 +138,7 @@ void clean() {
 }
 ;
 
-bool Kfusion::preprocessing(const ushort * inputDepth, const uint2 inputSize, 
+bool DenseSLAMSystem::preprocessing(const ushort * inputDepth, const uint2 inputSize, 
     const bool filterInput){
 
     mm2metersKernel(floatDepth, computationSize, inputDepth, inputSize);
@@ -162,7 +159,7 @@ bool Kfusion::preprocessing(const ushort * inputDepth, const uint2 inputSize,
 	return true;
 }
 
-bool Kfusion::tracking(float4 k, float icp_threshold, uint tracking_rate,
+bool DenseSLAMSystem::tracking(float4 k, float icp_threshold, uint tracking_rate,
 		uint frame) {
 
 	if (frame % tracking_rate != 0)
@@ -223,7 +220,7 @@ bool Kfusion::tracking(float4 k, float icp_threshold, uint tracking_rate,
 
 }
 
-bool Kfusion::raycasting(float4 k, float mu, uint frame) {
+bool DenseSLAMSystem::raycasting(float4 k, float mu, uint frame) {
 
   bool doRaycast = false;
 
@@ -237,7 +234,7 @@ bool Kfusion::raycasting(float4 k, float mu, uint frame) {
   return doRaycast;
 }
 
-bool Kfusion::integration(float4 k, uint integration_rate, float mu,
+bool DenseSLAMSystem::integration(float4 k, uint integration_rate, float mu,
 		uint frame) {
 
 	bool doIntegrate = poses.empty() ? checkPoseKernel(pose, oldPose, reductionoutput,
@@ -318,11 +315,11 @@ bool Kfusion::integration(float4 k, uint integration_rate, float mu,
 
 }
 
-void Kfusion::dumpVolume(std::string ) {
+void DenseSLAMSystem::dumpVolume(std::string ) {
 
 }
 
-void Kfusion::printStats(){
+void DenseSLAMSystem::printStats(){
     int occupiedVoxels = 0;
     for(unsigned int x = 0; x < volume._size; x++){
         for(unsigned int y = 0; y < volume._size; y++){
@@ -365,7 +362,7 @@ void raycastOrthogonal(Volume<FieldType> & volume, std::vector<float4> & points,
 }
 
 
-void Kfusion::getPointCloudFromVolume(){
+void DenseSLAMSystem::getPointCloudFromVolume(){
 
   std::vector<float4> points;
 
@@ -427,7 +424,7 @@ void Kfusion::getPointCloudFromVolume(){
   //    }
 }
 
-void Kfusion::renderVolume(uchar4 * out, uint2 outputSize, int frame,
+void DenseSLAMSystem::renderVolume(uchar4 * out, uint2 outputSize, int frame,
 		int raycast_rendering_rate, float4 k, float largestep) {
 	if (frame % raycast_rendering_rate == 0)
 		renderVolumeKernel(volume, out, outputSize,
@@ -437,15 +434,15 @@ void Kfusion::renderVolume(uchar4 * out, uint2 outputSize, int frame,
         !compareMatrix4(*(this->viewPose), raycastPose), vertex, normal);
 }
 
-void Kfusion::renderTrack(uchar4 * out, uint2 outputSize) {
+void DenseSLAMSystem::renderTrack(uchar4 * out, uint2 outputSize) {
 	renderTrackKernel(out, trackingResult, outputSize);
 }
 
-void Kfusion::renderDepth(uchar4 * out, uint2 outputSize) {
+void DenseSLAMSystem::renderDepth(uchar4 * out, uint2 outputSize) {
 	renderDepthKernel(out, floatDepth, outputSize, nearPlane, farPlane);
 }
 
-void Kfusion::dump_mesh(const char* filename){
+void DenseSLAMSystem::dump_mesh(const char* filename){
 
   std::vector<Triangle> mesh;
   auto inside = [](const Volume<FieldType>::value_type& val) {

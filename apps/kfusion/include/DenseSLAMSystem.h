@@ -18,7 +18,7 @@
 
 /// OBJ ///
 
-class Kfusion {
+class DenseSLAMSystem {
 private:
 	uint2 computationSize;
 	float step;
@@ -38,7 +38,7 @@ private:
 	void raycast(uint frame, const float4& k, float mu);
 
 public:
-	Kfusion(uint2 inputSize, uint3 volumeResolution, float3 volumeDimensions,
+	DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3 volumeDimensions,
 			float3 initPose, std::vector<int> & pyramid, Configuration config):
 			computationSize(make_uint2(inputSize.x, inputSize.y)) {
 
@@ -64,7 +64,7 @@ public:
 		this->languageSpecificConstructor();
 	}
 //Allow a kfusion object to be created with a pose which include orientation as well as position
-	Kfusion(uint2 inputSize, uint3 volumeResolution, float3 volumeDimensions,
+	DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3 volumeDimensions,
 			Matrix4 initPose, std::vector<int> & pyramid, Configuration config) :
 			computationSize(make_uint2(inputSize.x, inputSize.y)) {
 		this->_initPose = getPosition();
@@ -86,7 +86,7 @@ public:
 	}
 
 	void languageSpecificConstructor();
-	~Kfusion();
+	~DenseSLAMSystem();
 
 	void reset();
 	bool getTracked() {

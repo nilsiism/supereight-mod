@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(kfusion)
+project(volumetric-slam)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -105,7 +105,7 @@ function(add_version appname version compile_flags link_flags)
 
 endfunction()
 
-set(appname kfusion)
+set(appname volumetric-slam)
 
 find_package(Eigen3 REQUIRED)
 find_package(Sophus REQUIRED)
@@ -142,7 +142,7 @@ ENDIF(STATS)
 
 # ----------------- CPP VERSION ----------------- 
 
-add_library(${appname}-cpp  src/cpp/kfusion.cpp)
+add_library(${appname}-cpp  src/cpp/DenseSLAMSystem.cpp)
 target_compile_options(${appname}-cpp PRIVATE -Wall -Wextra -Werror -Wno-unknown-pragmas)
 target_link_libraries(${appname}-cpp   ${common_libraries})	
 add_version(${appname} cpp "" "")
@@ -150,7 +150,7 @@ add_version(${appname} cpp "" "")
 # ----------------- OPENMP VERSION ----------------- 
 
 if(OPENMP_FOUND)
-  add_library(${appname}-openmp  src/cpp/kfusion.cpp)
+  add_library(${appname}-openmp  src/cpp/DenseSLAMSystem.cpp)
   # target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -std=c++11 -Wall -Wextra  -Wno-unknown-pragmas -qopt-report=2 -qopt-report-file=./icc_report.txt -qopt-report-phase=vec)
   target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -Wall -Wextra -Werror -Wno-unknown-pragmas)
   target_link_libraries(${appname}-openmp   ${common_libraries})	

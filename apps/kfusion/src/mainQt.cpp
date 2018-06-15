@@ -6,7 +6,7 @@
  This code is licensed under the MIT License.
 
  */
-#include <kernels.h>
+#include <DenseSLAMSystem.h>
 #include <interface.h>
 #include <default_parameters.h>
 #include <stdint.h>
@@ -37,7 +37,7 @@ static uchar4 * depthRender = NULL;
 static uchar4 * trackRender = NULL;
 static uchar4 * volumeRender = NULL;
 static DepthReader *reader = NULL;
-static Kfusion *kfusion = NULL;
+static DenseSLAMSystem *pipeline = NULL;
 
 static float3 init_pose;
 static std::ostream* logstream = &std::cout;
@@ -56,7 +56,7 @@ DepthReader *createReader(Configuration *config, std::string filename = "");
 int processAll(DepthReader *reader, bool processFrame, bool renderImages,
 		Configuration *config, bool reset = false);
 
-void qtLinkKinectQt(int argc, char *argv[], Kfusion **_kfusion,
+void qtLinkKinectQt(int argc, char *argv[], DenseSLAMSystem **_pipeline,
 		DepthReader **_depthReader, Configuration *config, void *depthRender,
 		void *trackRender, void *volumeModel, void *inputRGB);
 void storeStats(int frame, double *timings, float3 pos, bool tracked,
@@ -112,7 +112,7 @@ int main(int argc, char ** argv) {
         (uchar4*) malloc(sizeof(uchar4) * computationSize.x*computationSize.y);
 
 	init_pose = config.initial_pos_factor * config.volume_size;
-	kfusion = new Kfusion(computationSize, config.volume_resolution,
+	pipeline = new DenseSLAMSystem(computationSize, config.volume_resolution,
 			config.volume_size, init_pose, config.pyramid, config);
 
 	if (config.log_file != "") {
@@ -129,7 +129,7 @@ int main(int argc, char ** argv) {
 	//We can opt to not run the gui which would be faster
 	if (!config.no_gui) {
 #ifdef __QT__
-		qtLinkKinectQt(argc,argv, &kfusion, &reader, &config, depthRender, trackRender, volumeRender, inputRGB);
+		qtLinkKinectQt(argc,argv, &pipeline, &reader, &config, depthRender, trackRender, volumeRender, inputRGB);
 #else
 		if ((reader == NULL) || (reader->cameraActive == false)) {
 			std::cerr << "No valid input file specified\n";
@@ -154,7 +154,7 @@ int main(int argc, char ** argv) {
 
 	if (config.dump_volume_file != "") {
     double start = tock();
-		kfusion->dump_mesh(config.dump_volume_file.c_str());
+		pipeline->dump_mesh(config.dump_volume_file.c_str());
     double end = tock();
 	  Stats.sample("meshing", end - start, PerfStats::TIME);
 	}
@@ -221,24 +221,24 @@ int processAll(DepthReader *reader, bool processFrame, bool renderImages,
 			powerMonitor->start();
 
 		timings[1] = tock();
-		kfusion->preprocessing(inputDepth, inputSize, config->bilateralFilter);
+		pipeline->preprocessing(inputDepth, inputSize, config->bilateralFilter);
 
 		timings[2] = tock();
 
-		tracked = kfusion->tracking(camera, config->icp_threshold,
+		tracked = pipeline->tracking(camera, config->icp_threshold,
 				config->tracking_rate, frame);
 
-		pos = kfusion->getPosition();
-		pose = kfusion->getPose();
+		pos = pipeline->getPosition();
+		pose = pipeline->getPose();
 
 		timings[3] = tock();
 
-		integrated = kfusion->integration(camera, config->integration_rate,
+		integrated = pipeline->integration(camera, config->integration_rate,
 				config->mu, frame);
 
 		timings[4] = tock();
 
-		raycasted = kfusion->raycasting(camera, config->mu, frame);
+		raycasted = pipeline->raycasting(camera, config->mu, frame);
 
 		timings[5] = tock();
 
@@ -250,9 +250,9 @@ int processAll(DepthReader *reader, bool processFrame, bool renderImages,
 
 	}
 	if (renderImages) {
-		kfusion->renderDepth(depthRender, kfusion->getComputationResolution());
-		kfusion->renderTrack(trackRender, kfusion->getComputationResolution());
-		kfusion->renderVolume(volumeRender, kfusion->getComputationResolution(),
+		pipeline->renderDepth(depthRender, pipeline->getComputationResolution());
+		pipeline->renderTrack(trackRender, pipeline->getComputationResolution());
+		pipeline->renderVolume(volumeRender, pipeline->getComputationResolution(),
 				(processFrame ? reader->getFrameNumber() - frameOffset : 0),
 				config->rendering_rate, camera, 0.75 * config->mu);
 		timings[6] = tock();

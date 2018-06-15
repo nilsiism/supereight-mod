@@ -7,7 +7,7 @@
 
  */
 
-#include <kernels.h>
+#include <DenseSLAMSystem.h>
 #include <interface.h>
 #include <default_parameters.h>
 #include <stdint.h>
@@ -100,7 +100,7 @@ int main(int argc, char ** argv) {
 
 	uint frame = 0;
 
-	Kfusion kfusion(computationSize, config.volume_resolution,
+	DenseSLAMSystem pipeline(computationSize, config.volume_resolution,
 			config.volume_size, init_pose, config.pyramid, config);
      
   bool bilateralfilter = false;
@@ -116,35 +116,35 @@ int main(int argc, char ** argv) {
 
 		timings[1] = tock();
 
-		kfusion.preprocessing(inputDepth, inputSize, config.bilateralFilter);
+		pipeline.preprocessing(inputDepth, inputSize, config.bilateralFilter);
 
 		timings[2] = tock();
 
-		bool tracked = kfusion.tracking(camera, config.icp_threshold,
+		bool tracked = pipeline.tracking(camera, config.icp_threshold,
 				config.tracking_rate, frame);
 
 
 		timings[3] = tock();
 
-		Matrix4 pose = kfusion.getPose();
+		Matrix4 pose = pipeline.getPose();
 
 		float xt = pose.data[0].w - init_pose.x;
 		float yt = pose.data[1].w - init_pose.y;
 		float zt = pose.data[2].w - init_pose.z;
 
 
-		bool integrated = kfusion.integration(camera, config.integration_rate,
+		bool integrated = pipeline.integration(camera, config.integration_rate,
 				config.mu, frame);
 
 		timings[4] = tock();
 
-		bool raycast = kfusion.raycasting(camera, config.mu, frame);
+		bool raycast = pipeline.raycasting(camera, config.mu, frame);
 
 		timings[5] = tock();
 
-		kfusion.renderDepth(depthRender, computationSize);
-		kfusion.renderTrack(trackRender, computationSize);
-		kfusion.renderVolume(volumeRender, computationSize, frame,
+		pipeline.renderDepth(depthRender, computationSize);
+		pipeline.renderTrack(trackRender, computationSize);
+		pipeline.renderVolume(volumeRender, computationSize, frame,
 				config.rendering_rate, camera, 0.75 * config.mu);
 
 		timings[6] = tock();
@@ -170,15 +170,15 @@ int main(int argc, char ** argv) {
 
   if (config.dump_volume_file != "") {
     double s = tock();
-    kfusion.dumpVolume(config.dump_volume_file);
+    pipeline.dumpVolume(config.dump_volume_file);
     double e = tock();
     std::cout << "Mesh generated in " << e - s << " seconds" << std::endl;
   }
 
-  kfusion.printStats();
+  pipeline.printStats();
   
   
-    // kfusion.getPointCloudFromVolume(config.mu);
+    // pipeline.getPointCloudFromVolume(config.mu);
 
 	//  =========  FREE BASIC BUFFERS  =========
 
