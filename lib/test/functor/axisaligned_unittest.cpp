@@ -54,13 +54,8 @@ TEST_F(AxisAlignedTest, Init) {
     ASSERT_EQ(data, voxel_traits<testT>::initValue());
   }; 
 
-  iterators::functor::axis_aligned<testT, Octree, decltype(initialise)> 
-    funct(oct_, initialise);
-  funct.apply();
-
-  iterators::functor::axis_aligned<testT, Octree, decltype(test)> 
-    funct_test(oct_, test);
-  funct_test.apply();
+  se::functor::axis_aligned_map(oct_, initialise);
+  se::functor::axis_aligned_map(oct_, test);
 }
 
 TEST_F(AxisAlignedTest, BBoxTest) {
@@ -69,10 +64,8 @@ TEST_F(AxisAlignedTest, BBoxTest) {
           handler.set(10.f);
     };
 
-  iterators::functor::axis_aligned<testT, Octree, decltype(set_to_ten)> 
-    funct(oct_, set_to_ten, Eigen::Vector3i::Constant(100), 
-        Eigen::Vector3i::Constant(151));
-  funct.apply();
+  se::functor::axis_aligned_map(oct_, set_to_ten, 
+      Eigen::Vector3i::Constant(100), Eigen::Vector3i::Constant(151));
 
   for(int z = 50; z < 200; ++z)
     for(int y = 50; y < 200; ++y)

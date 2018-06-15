@@ -57,7 +57,7 @@ TEST_F(InterpolationTest, Init) {
     handler.set(data);
   }; 
 
-  iterators::functor::axis_aligned<testT, Octree, decltype(initialise)> 
+  se::functor::axis_aligned<testT, Octree, decltype(initialise)> 
     funct(oct_, initialise);
   funct.apply();
 
@@ -65,9 +65,7 @@ TEST_F(InterpolationTest, Init) {
     auto data = handler.get();
     ASSERT_EQ(data.x, test_fun(v(0), v(1), v(2)));
   }; 
-  iterators::functor::axis_aligned<testT, Octree, decltype(test)> 
-    funct_test(oct_, test);
-  funct_test.apply();
+  se::functor::axis_aligned_map(oct_, test);
 
   // std::stringstream f;
   // f << "./analytical_function.vtk";
@@ -86,7 +84,7 @@ TEST_F(InterpolationTest, Init) {
 //     ASSERT_EQ(data(0), interpolated);
 //   }; 
 // 
-//   iterators::functor::axis_aligned<testT, Octree, decltype(test)> 
+//   se::functor::axis_aligned<testT, Octree, decltype(test)> 
 //     funct_test(oct_, test);
 //   funct_test.apply();
 // }

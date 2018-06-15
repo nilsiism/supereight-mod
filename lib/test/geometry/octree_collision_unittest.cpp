@@ -36,7 +36,7 @@ class OctreeCollisionTest : public ::testing::Test {
           handler.set(10.f);
         }
       };
-      iterators::functor::axis_aligned<testT, Octree, decltype(set_to_ten)> 
+      se::functor::axis_aligned<testT, Octree, decltype(set_to_ten)> 
         funct(oct_, set_to_ten);
       funct.apply();
     }
@@ -90,9 +90,7 @@ TEST_F(OctreeCollisionTest, Collision){
   auto update = [](auto& handler, const Eigen::Vector3i& coords) {
       handler.set(2.f);
   };
-  iterators::functor::axis_aligned<testT, Octree, decltype(update)> 
-    funct(oct_, update);
-  funct.apply();
+  se::functor::axis_aligned_map(oct_, update);
  
   const collision_status collides = collides_with(oct_, test_bbox, width, 
       test_voxel);
