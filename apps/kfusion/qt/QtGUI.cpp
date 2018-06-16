@@ -8,7 +8,7 @@
  */
 
 #define EXTERNS TRUE
-#include "kernels.h"
+#include "DenseSLAMSystem.h"
 #include <stdlib.h>
 #include "interface.h"
 #include <config.h>
@@ -44,7 +44,7 @@ extern DepthReader *createReader(Configuration *config, std::string filename =
 
 );
 //We need to know where our kfusion object is so we can get required information
-static Kfusion **kfusion_pp;
+static DenseSLAMSystem **pipeline_pp;
 static DepthReader **reader_pp;
 static Configuration *config;
 
@@ -80,14 +80,14 @@ void setLoopMode(bool value) {
 //Should we have a powerMonitor in the main code we can 
 extern PowerMonitor *powerMonitor;
 
-// We can pass this to the QT and it will allow us to change features in the Kfusion
-static void newKfusion(bool resetPose) {
-	Matrix4 init_pose = (*kfusion_pp)->getPose();
+// We can pass this to the QT and it will allow us to change features in the DenseSLAMSystem
+static void newDenseSLAMSystem(bool resetPose) {
+	Matrix4 init_pose = (*pipeline_pp)->getPose();
 
-	if (*kfusion_pp)
-		delete *kfusion_pp;
+	if (*pipeline_pp)
+		delete *pipeline_pp;
 	if (!resetPose)
-		*kfusion_pp = new Kfusion(
+		*pipeline_pp = new DenseSLAMSystem(
 				make_uint2(640 / config->compute_size_ratio,
 						480 / config->compute_size_ratio),
 				make_uint3(config->volume_resolution.x,
@@ -102,7 +102,7 @@ static void newKfusion(bool resetPose) {
 						config->initial_pos_factor.z, 0, 0, 0)
 						* config->volume_size.x);
 		rot = makeVector(0.0, 0, 0, 0, 0, 0);
-		*kfusion_pp = new Kfusion(
+		*pipeline_pp = new DenseSLAMSystem(
 				make_uint2(640 / config->compute_size_ratio,
 						480 / config->compute_size_ratio),
 				make_uint3(config->volume_resolution.x,
@@ -119,8 +119,8 @@ static void newKfusion(bool resetPose) {
 			480 / config->compute_size_ratio);
 	reset = true;
 }
-static void continueWithNewKfusion() {
-	newKfusion(false);
+static void continueWithNewDenseSLAMSystem() {
+	newDenseSLAMSystem(false);
 }
 
 //The GUI is passed this function and can call it to pause/start the camera or load a new scene
@@ -158,7 +158,7 @@ CameraState setEnableCamera(CameraState state, string inputFile) {
 
 				appWindow->updateChoices();
 				if (reader) {
-					newKfusion(true);
+					newDenseSLAMSystem(true);
 					appWindow->setCameraFunction(&(reader->cameraActive),
 							(CameraState (*)(CameraState,
 									std::string))&setEnableCamera);
@@ -225,15 +225,15 @@ void qtIdle(void) {
 	//This will set the view for rendering the model, either to the tracked camera view or the static view    
 	Matrix4 pose = toMatrix4(trans * rot);
 	if (usePOV)
-		(*kfusion_pp)->setViewPose(); //current position as found by track
+		(*pipeline_pp)->setViewPose(); //current position as found by track
 	else
-		(*kfusion_pp)->setViewPose(&pose);
+		(*pipeline_pp)->setViewPose(&pose);
 	//If we are are reading a file then get a new frame and process it.
 	if ((*reader_pp) && (*reader_pp)->cameraActive) {
 		int finished = processAll((*reader_pp), true, true, config, reset);
 		if (finished) {
 			if (loopEnabled) {
-				newKfusion(true);
+				newDenseSLAMSystem(true);
 				(*reader_pp)->restart();
 			} else {
 				(*reader_pp)->cameraActive = false;
@@ -269,7 +269,7 @@ void dumpVolume() {
 	std::string filename = appWindow->fileSaveSelector("Save volume", ".",
 			"vol (*.vol);; All files (*.*)");
 	if (filename != "")
-		(*kfusion_pp)->dumpVolume(filename.c_str());
+		(*pipeline_pp)->dumpVolume(filename.c_str());
 }
 void dumpLog() {
 	std::string filename = appWindow->fileSaveSelector("Save sequence log", ".",
@@ -292,10 +292,10 @@ void dumpPowerLog() {
 
 //This function is what sets up the GUI
 
-void qtLinkKinectQt(int argc, char *argv[], Kfusion **_kfusion,
+void qtLinkKinectQt(int argc, char *argv[], DenseSLAMSystem **_pipe,
 		DepthReader **_depthReader, Configuration *_config, void *depthRender,
 		void *trackRender, void *volumeRender, void *inputRGB) {
-	kfusion_pp = _kfusion;
+	pipeline_pp = _pipe;
 	config = _config;
 	reader_pp = _depthReader;
 	trans = SE3<float>(
@@ -312,7 +312,7 @@ void qtLinkKinectQt(int argc, char *argv[], Kfusion **_kfusion,
 	appWindow->setIdleFunction(qtIdle);
 
 	//Function to call to reset model (also enable reset button)
-	appWindow->setResetFunction(&continueWithNewKfusion);
+	appWindow->setResetFunction(&continueWithNewDenseSLAMSystem);
 
 	//Function to call when we change our looping (also enable loop on file menu)
 	appWindow->setLoopEnableFunction(&setLoopMode);
@@ -339,24 +339,24 @@ void qtLinkKinectQt(int argc, char *argv[], Kfusion **_kfusion,
 			(*reader_pp) ? &((*reader_pp)->cameraActive) : &cameraActive,
 			(CameraState (*)(CameraState, std::string))&setEnableCamera);
 
-			//This sets up the images but is pretty ugly and would be better stashed in Kfusion
+			//This sets up the images but is pretty ugly and would be better stashed in DenseSLAMSystem
 
 appWindow	->addButtonChoices("Compute Res",
 			{ "640x480", "320x240", "160x120", "80x60" }, { 1, 2, 4, 8 },
-			&(config->compute_size_ratio), continueWithNewKfusion);
+			&(config->compute_size_ratio), continueWithNewDenseSLAMSystem);
 	appWindow->addButtonChoices("Vol. Size", { "4.0mx4.0mx4.0m",
 			"2.0mx2.0mx2.0m", "1.0mx1.0mx1.0m" }, { 4.0, 2.0, 1.0 },
-			(float *) (&(config->volume_size.x)), continueWithNewKfusion);
+			(float *) (&(config->volume_size.x)), continueWithNewDenseSLAMSystem);
 	appWindow->addButtonChoices("Vol. Res", { "1024x1024x1024", "512x512x512",
 			"256x256x256", "128x128x128", "64x64x64", "32x32x32" }, { 1024, 512,
 			256, 128, 64, 32 }, (int *) &(config->volume_resolution.x),
-			continueWithNewKfusion);
+			continueWithNewDenseSLAMSystem);
 
 	appWindow->addButtonChoices("ICP threshold", { "1e-4", "1e-5", "1e-6" }, {
 			1e-4, 1e-5, 1e-6 }, (float *) &(config->icp_threshold));
 	appWindow->addButtonChoices("Mu", { "0.005", "0.011", "0.022", "0.045",
 			"0.090", "0.180", "0.360" }, { 0.005, 0.011, 0.022, 0.045, 0.09,
-			0.18, 0.36 }, (float *) &(config->mu), continueWithNewKfusion);
+			0.18, 0.36 }, (float *) &(config->mu), continueWithNewDenseSLAMSystem);
 
 	int cwidth = (
 			((*reader_pp) == NULL) ? 640 : ((*reader_pp)->getinputSize()).x)
