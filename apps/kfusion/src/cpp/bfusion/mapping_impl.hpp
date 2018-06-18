@@ -4,7 +4,7 @@
 #include <node.hpp>
 #include <constant_parameters.h>
 #include "bspline_lookup.cc"
-#include "../continuous/volume_traits.hpp"
+#include "continuous/volume_traits.hpp"
 #include "functors/projective_functor.hpp"
 
 float interpDepth(const float * depth, const uint2 depthSize, 

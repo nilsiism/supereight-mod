@@ -15,10 +15,13 @@
 #include <perfstats.h>
 #include <timings.h>
 #include <config.h>
+#include <octree.hpp>
+#include "continuous/volume_instance.hpp"
 
 /// OBJ ///
 
 class DenseSLAMSystem {
+
 private:
 	uint2 computationSize;
 	float step;
@@ -34,6 +37,26 @@ private:
   float _mu;
   bool shouldRender = false;
   Configuration config;
+
+  // input once
+  float * gaussian;
+
+  // inter-frame
+  float3 * vertex;
+  float3 * normal;
+
+  se::key_t* allocationList;
+  size_t reserved;
+
+  // intra-frame
+  TrackData * trackingResult;
+  float* reductionoutput;
+  float ** ScaledDepth;
+  float * floatDepth;
+  Matrix4 oldPose;
+  Matrix4 raycastPose;
+  float3 ** inputVertex;
+  float3 ** inputNormal;
 
 	void raycast(uint frame, const float4& k, float mu);
 

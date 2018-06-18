@@ -10,8 +10,6 @@
 #include "timings.h"
 #include <perfstats.h>
 #include <vtk-io.h>
-#include <octree.hpp>
-#include "continuous/volume_instance.hpp"
 #include "algorithms/meshing.hpp"
 #include "geometry/octree_collision.hpp"
 #include "preprocessing.cpp"
@@ -22,29 +20,11 @@
 #include "bfusion/alloc_impl.hpp"
 #include "kfusion/alloc_impl.hpp"
 
+Volume<FieldType> volume;
 
 extern PerfStats Stats;
 
-// input once
-float * gaussian;
 
-// inter-frame
-Volume<FieldType> volume;
-float3 * vertex;
-float3 * normal;
-
-se::key_t* allocationList;
-size_t reserved;
-
-// intra-frame
-TrackData * trackingResult;
-float* reductionoutput;
-float ** ScaledDepth;
-float * floatDepth;
-Matrix4 oldPose;
-Matrix4 raycastPose;
-float3 ** inputVertex;
-float3 ** inputNormal;
 
 bool bayesian = false;
 
@@ -118,8 +98,6 @@ DenseSLAMSystem::~DenseSLAMSystem() {
 	}
 	free(ScaledDepth);
 	free(inputVertex);
-	free(inputNormal);
-
 	free(vertex);
 	free(normal);
 	free(gaussian);
@@ -147,14 +125,8 @@ bool DenseSLAMSystem::preprocessing(const ushort * inputDepth, const uint2 input
 			e_delta, radius);
     }
     else {
-      unsigned int y;
-#pragma omp parallel for \
-      shared(ScaledDepth), private(y)
-      for (y = 0; y < computationSize.y; y++) {
-        for (unsigned int x = 0; x < computationSize.x; x++) {
-          ScaledDepth[0][x + y*computationSize.x] = floatDepth[x + y*computationSize.x]; 
-        }
-      }
+      std::memcpy(ScaledDepth[0], floatDepth, 
+          sizeof(float) * computationSize.x * computationSize.y);
     }
 	return true;
 }

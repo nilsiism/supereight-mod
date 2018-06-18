@@ -1,7 +1,6 @@
 #ifndef KFUSION_MAPPING_HPP
 #define KFUSION_MAPPING_HPP
 #include <node.hpp>
-#include "../continuous/volume_traits.hpp"
 
 struct sdf_update {
 
