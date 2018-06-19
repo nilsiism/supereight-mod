@@ -318,7 +318,7 @@ class KinectFusion(SLAMAlgorithm):
         if self.bilateralFilter:
             args.extend(['-F', ''])
 
-        return [self.bin_path + 'kfusion-main-' + self.impl] + (args)
+        return [self.bin_path + 'volumetric-slam-main-' + self.impl] + (args)
 
     def _store_variables(self, res):
         res['compute-size-ratio'] = str(self.compute_size_ratio)
