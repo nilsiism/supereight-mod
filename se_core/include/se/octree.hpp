@@ -33,11 +33,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define OCTREE_H
 
 #include <cstring>
-#include <utils/se_common.h>
-#include <octree_defines.h>
-#include <utils/morton_utils.hpp>
-#include "octant_ops.hpp"
 #include <algorithm>
+#include "utils/se_common.h"
+#include "octree_defines.h"
+#include "utils/morton_utils.hpp"
+#include "octant_ops.hpp"
 
 #if defined(_OPENMP) && !defined(__clang__)
 #include <parallel/algorithm>
@@ -45,11 +45,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <tuple>
 #include <queue>
-#include <node.hpp>
-#include <utils/memory_pool.hpp>
-#include <algorithms/unique.hpp>
-#include <geometry/aabb_collision.hpp>
-#include <interpolation/interp_gather.hpp>
+#include "node.hpp"
+#include "utils/memory_pool.hpp"
+#include "algorithms/unique.hpp"
+#include "geometry/aabb_collision.hpp"
+#include "interpolation/interp_gather.hpp"
 
 
 inline int __float_as_int(float value){
@@ -303,7 +303,7 @@ inline typename Octree<T>::value_type Octree<T>::get(const Eigen::Vector3f p,
 
   // Get the block.
 
-  uint edge = size_ >> 1;
+  unsigned edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
     n = n->child((pos(0) & edge) > 0, (pos(1) & edge) > 0, (pos(2) & edge) > 0);
     if(!n){
@@ -324,7 +324,7 @@ inline void  Octree<T>::set(const int x,
     return;
   }
 
-  uint edge = size_ >> 1;
+  unsigned edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
     se::Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!tmp){
@@ -346,7 +346,7 @@ inline typename Octree<T>::value_type Octree<T>::get(const int x,
     return init_val();
   }
 
-  uint edge = size_ >> 1;
+  unsigned edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
     const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) +  4*((z & edge) > 0);
     se::Node<T>* tmp = n->child(childid);
@@ -368,7 +368,7 @@ inline typename Octree<T>::value_type Octree<T>::get_fine(const int x,
     return init_val();
   }
 
-  uint edge = size_ >> 1;
+  unsigned edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
     const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) 
       +  4*((z & edge) > 0);
@@ -402,7 +402,7 @@ inline typename Octree<T>::value_type Octree<T>::get(const int x,
     return init_val();
   }
 
-  uint edge = size_ >> 1;
+  unsigned edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
     n = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!n){
@@ -453,7 +453,7 @@ inline se::VoxelBlock<T> * Octree<T>::fetch(const int x, const int y,
   }
 
   // Get the block.
-  uint edge = size_ / 2;
+  unsigned edge = size_ / 2;
   for(; edge >= blockSide; edge /= 2){
     n = n->child((x & edge) > 0u, (y & edge) > 0u, (z & edge) > 0u);
     if(!n){
@@ -473,7 +473,7 @@ inline se::Node<T> * Octree<T>::fetch_octant(const int x, const int y,
   }
 
   // Get the block.
-  uint edge = size_ / 2;
+  unsigned edge = size_ / 2;
   for(int d = 1; edge >= blockSide && d <= depth; edge /= 2, ++d){
     n = n->child((x & edge) > 0u, (y & edge) > 0u, (z & edge) > 0u);
     if(!n){
@@ -508,7 +508,7 @@ se::Node<T> * Octree<T>::insert(const int x, const int y, const int z,
   se::key_t key = se::keyops::encode(x, y, z, depth, max_level_);
   const unsigned int shift = MAX_BITS - max_level_ - 1;
 
-  uint edge = size_ / 2;
+  unsigned edge = size_ / 2;
   for(int d = 1; edge >= blockSide && d <= depth; edge /= 2, ++d){
     const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) 
       +  4*((z & edge) > 0);

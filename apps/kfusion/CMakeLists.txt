@@ -122,7 +122,7 @@ find_package(Qt5Gui)
 find_package(Qt5OpenGL)
 find_package(Qt5PrintSupport)
 include_directories(./include ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR} 
-  ${SOPHUS_INCLUDE_PATH} ./thirdparty ../../lib ../../utils)
+  ${SOPHUS_INCLUDE_PATH} ./thirdparty ../../se_core/include/ ../../utils)
 
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
 add_library(tiny_obj thirdparty/tiny_obj_loader.cc)

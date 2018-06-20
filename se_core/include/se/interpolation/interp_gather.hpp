@@ -1,6 +1,6 @@
 #ifndef INTERP_GATHER_H
 #define INTERP_GATHER_H
-#include "node.hpp"
+#include "../node.hpp"
 
 /*
  * Interpolation's point gather offsets

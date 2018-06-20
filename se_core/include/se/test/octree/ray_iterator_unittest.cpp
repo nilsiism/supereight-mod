@@ -1,4 +1,3 @@
-#include "utils/se_common.h"
 #include "octree.hpp"
 #include "gtest/gtest.h"
 #include <vector>

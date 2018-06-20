@@ -7,7 +7,7 @@
 typedef float testT;
 template <>
 struct voxel_traits<testT> {
-  typedef float1 value_type;
+  typedef float value_type;
   static inline value_type empty(){ return {0.f}; }
   static inline value_type initValue(){ return {1.f}; }
 };
@@ -52,8 +52,8 @@ class InterpolationTest : public ::testing::Test {
 TEST_F(InterpolationTest, Init) {
 
   auto initialise = [](auto& handler, const Eigen::Vector3i& v) {
-    float1 data;
-    data.x = test_fun(v(0), v(1), v(2));
+    float data;
+    data = test_fun(v(0), v(1), v(2));
     handler.set(data);
   }; 
 
@@ -63,7 +63,7 @@ TEST_F(InterpolationTest, Init) {
 
   auto test = [](auto& handler, const Eigen::Vector3i& v) {
     auto data = handler.get();
-    ASSERT_EQ(data.x, test_fun(v(0), v(1), v(2)));
+    ASSERT_EQ(data, test_fun(v(0), v(1), v(2)));
   }; 
   se::functor::axis_aligned_map(oct_, test);
 

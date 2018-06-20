@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef SE_SERIALISE_HPP
 #define SE_SERIALISE_HPP
 #include <fstream>
+#include "../octree_defines.h"
 #include "Eigen/Dense"
 
 namespace se {

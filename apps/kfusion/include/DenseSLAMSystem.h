@@ -15,7 +15,7 @@
 #include <perfstats.h>
 #include <timings.h>
 #include <config.h>
-#include <octree.hpp>
+#include <se/octree.hpp>
 #include "continuous/volume_instance.hpp"
 
 /// OBJ ///

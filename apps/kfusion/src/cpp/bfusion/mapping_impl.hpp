@@ -1,11 +1,11 @@
 #ifndef BFUSION_MAPPING_HPP
 #define BFUSION_MAPPING_HPP
 
-#include <node.hpp>
+#include <se/node.hpp>
+#include <se/functors/projective_functor.hpp>
 #include <constant_parameters.h>
 #include "bspline_lookup.cc"
 #include "continuous/volume_traits.hpp"
-#include "functors/projective_functor.hpp"
 
 float interpDepth(const float * depth, const uint2 depthSize, 
     const float2 proj) {

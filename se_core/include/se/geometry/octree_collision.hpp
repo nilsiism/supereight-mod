@@ -1,8 +1,8 @@
 #ifndef OCTREE_COLLISION_HPP
 #define OCTREE_COLLISION_HPP
-#include "node.hpp"
-#include "octree.hpp"
-#include "geometry/aabb_collision.hpp"
+#include "../node.hpp"
+#include "../octree.hpp"
+#include "aabb_collision.hpp"
 
 enum class collision_status {
   occupied,

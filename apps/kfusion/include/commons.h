@@ -33,7 +33,7 @@
 
 // Internal dependencies
 #include <math_utils.h>
-#include <voxel_traits.hpp>
+#include <se/voxel_traits.hpp>
 #include <constant_parameters.h>
 
 //External dependencies

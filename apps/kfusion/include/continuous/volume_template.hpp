@@ -1,8 +1,8 @@
 #ifndef VOLUME_TEMPLATE_H
 #define VOLUME_TEMPLATE_H
 
-#include <voxel_traits.hpp>
-#include <utils/memory_pool.hpp>
+#include <se/voxel_traits.hpp>
+#include <se/utils/memory_pool.hpp>
 #include <type_traits>
 #include <cstring>
 

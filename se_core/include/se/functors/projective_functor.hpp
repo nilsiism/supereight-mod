@@ -4,10 +4,10 @@
 #include <vector>
 
 #include <sophus/se3.hpp>
-#include "utils/se_common.h"
-#include "algorithms/filter.hpp"
-#include "node.hpp"
-#include "functors/data_handler.hpp"
+#include "../utils/se_common.h"
+#include "../algorithms/filter.hpp"
+#include "../node.hpp"
+#include "../functors/data_handler.hpp"
 
 namespace functor {
   template <typename FieldType, template <typename FieldT> class MapT, 

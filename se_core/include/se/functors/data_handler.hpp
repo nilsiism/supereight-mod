@@ -1,7 +1,7 @@
 #ifndef DATA_HANDLER_HPP
 #define DATA_HANDLER_HPP
-#include "utils/se_common.h"
-#include "node.hpp"
+#include "../utils/se_common.h"
+#include "../node.hpp"
 
 template <typename SpecialisedHandlerT, typename NodeT>
 class DataHandlerBase {

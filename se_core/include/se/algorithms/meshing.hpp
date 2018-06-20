@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef MESHING_HPP
 #define MESHING_HPP
-#include <octree.hpp>
+#include "../octree.hpp"
 #include "edge_tables.h"
 
 namespace meshing {
@@ -54,7 +54,7 @@ namespace meshing {
 
   template <typename Map, typename FieldSelector>
     inline Eigen::Vector3f interp_vertexes(const Map& volume, FieldSelector select, 
-        const uint x, const uint y, const uint z, const int edge){
+        const unsigned x, const unsigned y, const unsigned z, const int edge){
       switch(edge){
         case 0:  return compute_intersection(volume, select, Eigen::Vector3i(x,   y, z),     
                      Eigen::Vector3i(x+1, y, z));
@@ -115,7 +115,7 @@ namespace meshing {
   typename InsidePredicate>
   uint8_t compute_index(const MapT<FieldType>& volume, 
   const se::VoxelBlock<FieldType>* cached, InsidePredicate inside,
-  const uint x, const uint y, const uint z){
+  const unsigned x, const unsigned y, const unsigned z){
     unsigned int blockSize =  se::VoxelBlock<FieldType>::side;
     unsigned int local = ((x % blockSize == blockSize - 1) << 2) | 
       ((y % blockSize == blockSize - 1) << 1) |

@@ -44,7 +44,7 @@ TEST(AllocationTest, FetchOctant) {
   OctreeF oct;
   oct.init(256, 5);
   const Eigen::Vector3i vox = {25, 65, 127};
-  const uint code = oct.hash(vox(0), vox(1), vox(2)); 
+  const unsigned code = oct.hash(vox(0), vox(1), vox(2)); 
   se::key_t allocList[1] = {code};
   oct.allocate(allocList, 1);
 

@@ -7,11 +7,11 @@
 
  */
 #include <DenseSLAMSystem.h>
+#include <se/algorithms/meshing.hpp>
+#include <se/geometry/octree_collision.hpp>
 #include "timings.h"
 #include <perfstats.h>
 #include <vtk-io.h>
-#include "algorithms/meshing.hpp"
-#include "geometry/octree_collision.hpp"
 #include "preprocessing.cpp"
 #include "tracking.cpp"
 #include "rendering.cpp"

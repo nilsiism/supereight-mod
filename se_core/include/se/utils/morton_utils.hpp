@@ -1,7 +1,7 @@
 #ifndef MORTON_UTILS_HPP
 #define MORTON_UTILS_HPP
 #include <cstdint>
-#include "octree_defines.h"
+#include "../octree_defines.h"
 #include "se_common.h"
 
 inline uint64_t expand(unsigned long long value) {

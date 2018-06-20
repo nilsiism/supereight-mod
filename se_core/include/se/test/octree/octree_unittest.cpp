@@ -171,7 +171,7 @@ TEST(Octree, EdgeOctantExteriorNeighbours) {
 
 TEST(Octree, OctantSiblings) {
   const int max_depth = 5;
-  const uint size = std::pow(2, 5);
+  const unsigned size = std::pow(2, 5);
   const int level = 2;
   const se::key_t cell = se::keyops::encode(16, 16, 16, level, max_depth);
   se::key_t s[8];

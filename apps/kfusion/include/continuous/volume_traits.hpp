@@ -2,7 +2,7 @@
 #define VOLUME_H
 
 // Data types definitions
-#include "voxel_traits.hpp"
+#include <se/voxel_traits.hpp>
 
 /******************************************************************************
  *

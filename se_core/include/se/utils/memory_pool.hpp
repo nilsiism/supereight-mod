@@ -36,9 +36,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 #include <atomic>
 #include <mutex>
-#include <vector_types.h>
-#include <voxel_traits.hpp>
-#include <node.hpp>
 
 namespace se {
 template <typename BlockType>
