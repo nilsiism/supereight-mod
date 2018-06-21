@@ -8,7 +8,7 @@
  */
 
 #define EXTERNS TRUE
-#include "DenseSLAMSystem.h"
+#include <se/DenseSLAMSystem.h>
 #include <stdlib.h>
 #include "interface.h"
 #include <config.h>

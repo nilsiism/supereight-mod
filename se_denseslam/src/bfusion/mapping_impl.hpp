@@ -5,7 +5,6 @@
 #include <se/functors/projective_functor.hpp>
 #include <constant_parameters.h>
 #include "bspline_lookup.cc"
-#include "continuous/volume_traits.hpp"
 
 float interpDepth(const float * depth, const uint2 depthSize, 
     const float2 proj) {

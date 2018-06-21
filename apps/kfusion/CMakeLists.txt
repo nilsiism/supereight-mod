@@ -122,7 +122,8 @@ find_package(Qt5Gui)
 find_package(Qt5OpenGL)
 find_package(Qt5PrintSupport)
 include_directories(./include ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR} 
-  ${SOPHUS_INCLUDE_PATH} ./thirdparty ../../se_core/include/ ../../utils)
+  ${SOPHUS_INCLUDE_PATH} ./thirdparty ../../se_denseslam/include
+  ../../se_core/include/ ../../utils)
 
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
 add_library(tiny_obj thirdparty/tiny_obj_loader.cc)
@@ -142,7 +143,7 @@ ENDIF(STATS)
 
 # ----------------- CPP VERSION ----------------- 
 
-add_library(${appname}-cpp  src/cpp/DenseSLAMSystem.cpp)
+add_library(${appname}-cpp  ../../se_denseslam/src/DenseSLAMSystem.cpp)
 target_compile_options(${appname}-cpp PRIVATE -Wall -Wextra -Werror -Wno-unknown-pragmas)
 target_link_libraries(${appname}-cpp   ${common_libraries})	
 add_version(${appname} cpp "" "")
@@ -150,8 +151,7 @@ add_version(${appname} cpp "" "")
 # ----------------- OPENMP VERSION ----------------- 
 
 if(OPENMP_FOUND)
-  add_library(${appname}-openmp  src/cpp/DenseSLAMSystem.cpp)
-  # target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -std=c++11 -Wall -Wextra  -Wno-unknown-pragmas -qopt-report=2 -qopt-report-file=./icc_report.txt -qopt-report-phase=vec)
+  add_library(${appname}-openmp  ../../se_denseslam/src/DenseSLAMSystem.cpp)
   target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -Wall -Wextra -Werror -Wno-unknown-pragmas)
   target_link_libraries(${appname}-openmp   ${common_libraries})	
   add_version(${appname} openmp ${OpenMP_CXX_FLAGS} ${OpenMP_CXX_FLAGS})

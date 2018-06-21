@@ -17,7 +17,7 @@
 #include <getopt.h>
 
 #include <constant_parameters.h>
-#include <config.h>
+#include <se/config.h>
 
 ////////////////////////// RUNTIME PARAMETERS //////////////////////
 

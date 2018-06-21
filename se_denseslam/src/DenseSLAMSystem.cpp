@@ -6,12 +6,12 @@
  This code is licensed under the MIT License.
 
  */
-#include <DenseSLAMSystem.h>
+#include <se/DenseSLAMSystem.h>
 #include <se/algorithms/meshing.hpp>
 #include <se/geometry/octree_collision.hpp>
+#include <se/vtk-io.h>
 #include "timings.h"
 #include <perfstats.h>
-#include <vtk-io.h>
 #include "preprocessing.cpp"
 #include "tracking.cpp"
 #include "rendering.cpp"

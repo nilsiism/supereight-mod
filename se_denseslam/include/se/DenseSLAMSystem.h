@@ -11,10 +11,10 @@
 #define _KERNELS_
 
 #include <cstdlib>
-#include <commons.h>
+#include <se/commons.h>
 #include <perfstats.h>
 #include <timings.h>
-#include <config.h>
+#include <se/config.h>
 #include <se/octree.hpp>
 #include "continuous/volume_instance.hpp"
 

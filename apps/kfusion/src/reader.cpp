@@ -7,10 +7,10 @@
 
  */
 // #include <DenseSLAMSystem.h>
-#include <commons.h>
+#include <se/commons.h>
 #include <interface.h>
 #include <constant_parameters.h>
-#include <config.h>
+#include <se/config.h>
 #include <stdint.h>
 #include <sstream>
 #include <string>
