@@ -7,8 +7,8 @@
 
  */
 #include <se/DenseSLAMSystem.h>
-#include <interface.h>
 #include <default_parameters.h>
+#include <interface.h>
 #include <stdint.h>
 #include <tick.h>
 #include <vector>

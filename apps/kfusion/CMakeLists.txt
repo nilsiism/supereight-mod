@@ -125,7 +125,7 @@ if(WITH_OPENMP AND OPENMP_FOUND)
   list(APPEND common_libraries "${OpenMP_CXX_FLAGS}")
 endif()
 
-include_directories(  ../se_shared ./include ../../se_core/include/
+include_directories(../../se_shared ./include ../../se_core/include/
   ../../se_denseslam/include ../../utils 
   ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR} ${SOPHUS_INCLUDE_DIR})
 

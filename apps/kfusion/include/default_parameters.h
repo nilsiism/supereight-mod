@@ -16,7 +16,7 @@
 #include <sstream>
 #include <getopt.h>
 
-#include <constant_parameters.h>
+#include <se/constant_parameters.h>
 #include <se/config.h>
 
 ////////////////////////// RUNTIME PARAMETERS //////////////////////

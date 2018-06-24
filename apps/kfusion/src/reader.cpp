@@ -9,7 +9,7 @@
 // #include <DenseSLAMSystem.h>
 #include <se/commons.h>
 #include <interface.h>
-#include <constant_parameters.h>
+#include <se/constant_parameters.h>
 #include <se/config.h>
 #include <stdint.h>
 #include <sstream>

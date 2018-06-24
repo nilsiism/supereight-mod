@@ -23,6 +23,7 @@ include_directories(./include ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR}
   ${SOPHUS_INCLUDE_DIR} ../se_shared ./include
   ../se_core/include/ ../utils)
 set(common_compile_flags "")
+set(common_libraries lodepng)
 
 # ----------------- OFUsion -----------------
 set(field_type FIELD_TYPE=Occupancy)

@@ -30,14 +30,14 @@ if __name__ == "__main__":
     # for mu in [0.1, 0.05]:
     run_counter = 0
     # for sequence in ICL + TUM_RGB_FR1 + TUM_RGB_FR2 + TUM_RGB_FR3:
-    for sequence in [TUM_RGB_FR2_DESK]:
-        for resol in [2048]:
+    for sequence in [ICL_NUIM_LIV_2]:
+        for resol in [1024]:
             for version in ['openmp']:
                 kernel_data = []
                 mu = 0.075
                 algorithm.impl = version
                 algorithm.volume_resolution = str(resol)
-                algorithm.volume_size = '20'
+                algorithm.volume_size = '10'
                 algorithm.compute_size_ratio = 2
                 algorithm.integration_rate = 1
                 algorithm.mu = mu

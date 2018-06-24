@@ -11,7 +11,7 @@
 #include <se/DenseSLAMSystem.h>
 #include <stdlib.h>
 #include "interface.h"
-#include <config.h>
+#include <se/config.h>
 #include <perfstats.h>
 #include <PowerMonitor.h>
 
