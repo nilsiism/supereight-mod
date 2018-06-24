@@ -15,5 +15,5 @@ option(WITH_OPENMP "Compile with OpenMP" ON)
 
 set(BUILT_LIBS "")
 add_subdirectory(se_denseslam)
-add_subdirectory(apps/kfusion)
+add_subdirectory(se_apps)
 
