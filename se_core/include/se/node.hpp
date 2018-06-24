@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <time.h>
 #include <atomic>
+#include "voxel_traits.hpp"
 #include "octree_defines.h"
 #include "utils/se_common.h"
 #include "utils/memory_pool.hpp"

@@ -13,5 +13,3 @@ include_directories(.)
 add_library(lodepng SHARED lodepng.cpp)
 add_executable(scene2raw scene2raw.cpp)
 target_link_libraries(scene2raw lodepng)
-
-# add_subdirectory(./SurfReg/src)

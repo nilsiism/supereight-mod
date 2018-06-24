@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include "utils/se_common.h"
 #include "octree_defines.h"
+#include "voxel_traits.hpp"
 #include "utils/morton_utils.hpp"
 #include "octant_ops.hpp"
 

@@ -3,7 +3,7 @@
 
 #include <se/node.hpp>
 #include <se/functors/projective_functor.hpp>
-#include <constant_parameters.h>
+#include <se/constant_parameters.h>
 #include "bspline_lookup.cc"
 
 float interpDepth(const float * depth, const uint2 depthSize, 

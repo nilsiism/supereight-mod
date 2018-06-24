@@ -33,8 +33,7 @@
 
 // Internal dependencies
 #include <math_utils.h>
-#include <se/voxel_traits.hpp>
-#include <constant_parameters.h>
+#include <se/constant_parameters.h>
 
 //External dependencies
 #undef isnan
@@ -42,7 +41,6 @@
 #include <TooN/TooN.h>
 #include <TooN/se3.h>
 #include <TooN/GR_SVD.h>
-#include <tiny_obj_loader.h>
 ////////////////////////// MATh STUFF //////////////////////
 
 #define INVALID -2
@@ -573,49 +571,6 @@ void writeposfile(std::string prefix, int idx, Matrix4 m, uint) {
 // 
 // 	fDumpFile.close();
 // }
-
-// Load .obj file int tinyobj representation.
-inline bool loadObjFile(std::string filename, 
-                        std::vector<tinyobj::shape_t>& shapes, 
-                        std::vector<tinyobj::material_t>& materials){
-
-  std::string err;
-  bool ret = tinyobj::LoadObj(shapes, materials, err, filename.c_str(), "/");
-  if(!ret){
-    std::cout << "Error while loading .obj file: " << err <<  std::endl;
-  }
-  return ret;
-}
-
-inline void objToTriangles(const std::vector<tinyobj::shape_t>& shapes,
-                           std::vector<Triangle>& out){
-  for(unsigned int i = 0; i < shapes.size(); ++i){
-    const tinyobj::shape_t & shape = shapes[i];  
-    
-    const std::vector<unsigned int>& indices = shape.mesh.indices;    
-    for(unsigned int it = 0; it < shape.mesh.indices.size() / 3; ++it){
-      Triangle t;
-      uint index = (indices[it*3]);
-      
-      t.vertexes[0] = Eigen::Vector3f(shape.mesh.positions.at(3*index+0),
-                                      shape.mesh.positions.at(3*index+1),
-                                      shape.mesh.positions.at(3*index+2));
-
-      index = indices[it*3+1];
-      t.vertexes[1] = Eigen::Vector3f(shape.mesh.positions.at(3*index+0),
-                                      shape.mesh.positions.at(3*index+1),
-                                      shape.mesh.positions.at(3*index+2));
-      index = indices[it*3+2];
-      t.vertexes[2] = Eigen::Vector3f(shape.mesh.positions.at(3*index+0),
-                                      shape.mesh.positions.at(3*index+1),
-                                      shape.mesh.positions.at(3*index+2));
-     
-      t.compute_normal(); 
-      t.area();
-      out.push_back(t);
-    } 
-  }
-}
 
 inline void writeVtkMesh(const char * filename, 
                          const std::vector<Triangle>& mesh,

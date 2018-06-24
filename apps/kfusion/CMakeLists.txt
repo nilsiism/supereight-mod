@@ -1,35 +1,25 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(volumetric-slam)
+project(se-apps)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
-
-if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g ")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g ")
-  add_definitions(-DDEBUG=1)
-else(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -O3  ")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -O3 ")
-endif(CMAKE_BUILD_TYPE STREQUAL "Debug")
-
-# add_compile_options(-std=c++11 -Wall -Wno-unknown-pragmas -Wextra -Werror -Wno-error=deprecated-declarations -Wno-error=array-bounds)
-add_compile_options(-std=c++14 -march=native)
 
 if(APPLE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__APPLE__")
 endif(APPLE)
 
-
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
 
 
-function(add_version appname version compile_flags link_flags)
+function(add_version appname compile_flags libraries)
 
   if(APPLE)
-    set(main_common_libraries     ${link_flags} stdc++ pthread)
+    set(main_common_libraries ${libraries} stdc++ pthread)
   else(APPLE)
-    set(main_common_libraries     ${link_flags} rt stdc++ pthread)
+    set(main_common_libraries ${libraries} rt stdc++ pthread)
   endif(APPLE)
+
+  message(STATUS "LINK_FLAGS ${libraries}")
+  message(STATUS "main common libraries ${main_common_libraries}")
 
   set(main_common_compile_flags ${compile_flags})
 
@@ -42,78 +32,76 @@ function(add_version appname version compile_flags link_flags)
 
 
   #  ------ BENCHMARK --------
-  add_executable(${appname}-benchmark-${version} src/benchmark.cpp src/PowerMonitor.cpp)
-  target_link_libraries(${appname}-benchmark-${version} ${appname}-${version} ${main_common_libraries})
-  SET_TARGET_PROPERTIES(${appname}-benchmark-${version}
+  add_executable(${appname}-benchmark src/benchmark.cpp src/PowerMonitor.cpp)
+  target_link_libraries(${appname}-benchmark ${appname} ${main_common_libraries})
+  SET_TARGET_PROPERTIES(${appname}-benchmark
     PROPERTIES COMPILE_FLAGS "${main_common_compile_flags}")
 
 
   #  ------ MAIN --------
-  if (GLUT_FOUND)
-    add_executable(${appname}-main-${version} src/mainQt.cpp src/PowerMonitor.cpp src/reader.cpp)
+   if (GLUT_FOUND)
+     add_executable(${appname}-main src/mainQt.cpp src/PowerMonitor.cpp src/reader.cpp)
 
-    SET_TARGET_PROPERTIES(${appname}-main-${version}
-      PROPERTIES COMPILE_FLAGS "${main_common_compile_flags}")
-
-
-    if(APPLE)
-      target_link_libraries(${appname}-main-${version} ${appname}-${version} ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES}  ${main_common_libraries} )
-    else(APPLE)
-      target_link_libraries(${appname}-main-${version} ${appname}-${version} ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES}  ${main_common_libraries} GL )
-    endif(APPLE)
-  endif(GLUT_FOUND)
-  #  ------ QT --------
-  if (Qt5OpenGL_FOUND)
-
-    file(GLOB qt_srcs qt/*)
-
-    QT5_ADD_RESOURCES( ResourceSources  "qt/images.qrc")
-    set(qt_srcs ${qt_srcs} ${ResourceSources} include/PowerMonitor.h ../../utils/perfstats.h)
-    SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
-    SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
-    set(CMAKE_AUTOMOC ON)
-    set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
-    include_directories(qt)
-    add_definitions( -D_FILE_OFFSET_BITS=64 -fPIC )
-
-    add_executable(${appname}-qt-${version} src/mainQt.cpp src/PowerMonitor.cpp ${qt_srcs} src/reader.cpp)
-
-    ### qt5_use_modules is not available with cmake 2.8.7 ###
-    #qt5_use_modules(qtgui-${version} Core Gui Widgets OpenGL PrintSupport)
-
-    add_definitions(${Qt5Widgets_DEFINITIONS})
-    add_definitions(${Qt5OpenGL_DEFINITIONS})
-    add_definitions(${Qt5PrintSuppoer_DEFINITIONS})
-    include_directories(${Qt5Widgets_INCLUDE_DIRS})
-    include_directories(${Qt5OpenGL_INCLUDE_DIRS})
-    include_directories(${Qt5PrintSupport_INCLUDE_DIRS})
-    include_directories(${Qt5Gui_INCLUDE_DIRS})
-
-    SET_TARGET_PROPERTIES(${appname}-qt-${version} PROPERTIES COMPILE_FLAGS "${main_common_compile_flags} -std=c++0x  -D__QT__")
-
-    if(APPLE)
-      target_link_libraries(${appname}-qt-${version} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::PrintSupport 
-        ${main_common_libraries} ${appname}-${version}  ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES}   )  
-    else(APPLE) 
-      target_link_libraries(${appname}-qt-${version} Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::PrintSupport 
-        ${main_common_libraries} ${appname}-${version}  ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES}  GL )  
-    endif(APPLE)
+     SET_TARGET_PROPERTIES(${appname}-main
+       PROPERTIES COMPILE_FLAGS "${main_common_compile_flags}")
 
 
-  endif(Qt5OpenGL_FOUND)
+     if(APPLE)
+       target_link_libraries(${appname}-main ${appname} ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES}  ${main_common_libraries} )
+     else(APPLE)
+       target_link_libraries(${appname}-main ${appname} ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES}  ${main_common_libraries} GL )
+     endif(APPLE)
+   endif(GLUT_FOUND)
+   #  ------ QT --------
+   if (Qt5OpenGL_FOUND)
+
+     file(GLOB qt_srcs qt/*)
+
+     QT5_ADD_RESOURCES( ResourceSources  "qt/images.qrc")
+     set(qt_srcs ${qt_srcs} ${ResourceSources} include/PowerMonitor.h ../../utils/perfstats.h)
+     SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
+     SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
+     set(CMAKE_AUTOMOC ON)
+     set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+     include_directories(qt)
+     add_definitions( -D_FILE_OFFSET_BITS=64 -fPIC )
+
+     add_executable(${appname}-qt src/mainQt.cpp src/PowerMonitor.cpp ${qt_srcs} src/reader.cpp)
+
+     ### qt5_use_modules is not available with cmake 2.8.7 ###
+     #qt5_use_modules(qtgui Core Gui Widgets OpenGL PrintSupport)
+
+     add_definitions(${Qt5Widgets_DEFINITIONS})
+     add_definitions(${Qt5OpenGL_DEFINITIONS})
+     add_definitions(${Qt5PrintSuppoer_DEFINITIONS})
+     include_directories(${Qt5Widgets_INCLUDE_DIRS})
+     include_directories(${Qt5OpenGL_INCLUDE_DIRS})
+     include_directories(${Qt5PrintSupport_INCLUDE_DIRS})
+     include_directories(${Qt5Gui_INCLUDE_DIRS})
+
+     SET_TARGET_PROPERTIES(${appname}-qt PROPERTIES COMPILE_FLAGS "${main_common_compile_flags} -std=c++0x  -D__QT__")
+
+     if(APPLE)
+       target_link_libraries(${appname}-qt Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::PrintSupport 
+         ${main_common_libraries} ${appname}  ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES}   )  
+     else(APPLE) 
+       target_link_libraries(${appname}-qt Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::PrintSupport 
+         ${main_common_libraries} ${appname}  ${GLUT_LIBRARIES} ${OPENGL_LIBRARIES}  GL )  
+     endif(APPLE)
+
+
+   endif(Qt5OpenGL_FOUND)
 
 endfunction()
 
-set(appname volumetric-slam)
-
-find_package(Eigen3 REQUIRED)
-find_package(Sophus REQUIRED)
 find_package(GLUT   )
 find_package(OpenGL )
 find_package(OpenNI2)
 find_package(PAPI)
-find_package(OpenMP)
+if(WITH_OPENMP)
+  find_package(OpenMP)
+endif()
 
 find_package(PkgConfig)
 find_package(Qt5Core)
@@ -121,42 +109,26 @@ find_package(Qt5Widgets)
 find_package(Qt5Gui)
 find_package(Qt5OpenGL)
 find_package(Qt5PrintSupport)
-include_directories(./include ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR} 
-  ${SOPHUS_INCLUDE_PATH} ./thirdparty ../../se_denseslam/include
-  ../../se_core/include/ ../../utils)
 
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
-add_library(tiny_obj thirdparty/tiny_obj_loader.cc)
 if(APPLE)
-  set(common_libraries stdc++ pthread tiny_obj lodepng)
+  set(common_libraries stdc++ pthread lodepng)
 else(APPLE)
-  set(common_libraries rt stdc++ pthread tiny_obj lodepng)
+  set(common_libraries rt stdc++ pthread lodepng)
 endif(APPLE)
+message(STATUS "COMMON LIBRARIES ${common_libraries}")
 
 
 set(common_compile_flags "")
-
-OPTION(STATS "Enable stats collection" OFF)
-IF(STATS)
-  add_definitions(-DSTATS)
-ENDIF(STATS)
-
-# ----------------- CPP VERSION ----------------- 
-
-add_library(${appname}-cpp  ../../se_denseslam/src/DenseSLAMSystem.cpp)
-target_compile_options(${appname}-cpp PRIVATE -Wall -Wextra -Werror -Wno-unknown-pragmas)
-target_link_libraries(${appname}-cpp   ${common_libraries})	
-add_version(${appname} cpp "" "")
-
-# ----------------- OPENMP VERSION ----------------- 
-
-if(OPENMP_FOUND)
-  add_library(${appname}-openmp  ../../se_denseslam/src/DenseSLAMSystem.cpp)
-  target_compile_options(${appname}-openmp PRIVATE ${OpenMP_CXX_FLAGS} -Wall -Wextra -Werror -Wno-unknown-pragmas)
-  target_link_libraries(${appname}-openmp   ${common_libraries})	
-  add_version(${appname} openmp ${OpenMP_CXX_FLAGS} ${OpenMP_CXX_FLAGS})
+if(WITH_OPENMP AND OPENMP_FOUND)
+  list(APPEND common_compile_flags "${OpenMP_CXX_FLAGS}")
+  list(APPEND common_libraries "${OpenMP_CXX_FLAGS}")
 endif()
 
-#  ----------------- thirdparty ----------------- 
+include_directories(  ../se_shared ./include ../../se_core/include/
+  ../../se_denseslam/include ../../utils 
+  ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR} ${SOPHUS_INCLUDE_DIR})
 
-add_subdirectory( thirdparty    )
+foreach(appname ${BUILT_LIBS})
+  add_version(${appname} "" "${common_libraries}")
+endforeach()
