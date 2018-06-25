@@ -120,7 +120,7 @@ if(WITH_OPENMP AND OPENMP_FOUND)
 endif()
 
 include_directories(../se_shared ./include ../se_core/include/
-  ../se_denseslam/include ../utils 
+  ../se_denseslam/include ../se_tools 
   ${TOON_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${SOPHUS_INCLUDE_DIR})
 
 foreach(appname ${BUILT_LIBS})

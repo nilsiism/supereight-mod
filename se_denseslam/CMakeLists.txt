@@ -21,7 +21,7 @@ set(appname ${PROJECT_NAME})
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
 
 include_directories(./include ${TOON_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} 
-  ${SOPHUS_INCLUDE_DIR} ../se_shared ./include
+  ${SOPHUS_INCLUDE_DIR} ../se_shared ../se_tools ./include
   ../se_core/include/ ../utils)
 set(common_compile_flags "")
 set(common_libraries lodepng)

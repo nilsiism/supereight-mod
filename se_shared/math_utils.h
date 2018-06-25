@@ -3,12 +3,8 @@
 
 #include <iostream>
 #include <cmath>
-#ifndef CUDA
-#include "vector_types.h"
-#else
-#include <cuda_runtime.h>
-#endif
-#include "cutil_math.h"
+#include "thirdparty/vector_types.h"
+#include "thirdparty/cutil_math.h"
 
 
 #define SOPHUS_DISABLE_ENSURES

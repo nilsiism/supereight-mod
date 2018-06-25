@@ -10,8 +10,7 @@
 #ifndef DEFAULT_PARAMETERS_H_
 #define DEFAULT_PARAMETERS_H_
 
-#include <vector_types.h>
-#include <cutil_math.h>
+#include <math_utils.h>
 #include <vector>
 #include <sstream>
 #include <getopt.h>
