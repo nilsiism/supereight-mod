@@ -10,6 +10,7 @@ endif(APPLE)
 
 find_package(Eigen3 REQUIRED)
 find_package(Sophus REQUIRED)
+find_package(TooN REQUIRED)
 if(WITH_OPENMP)
   find_package(OpenMP)
 endif()
@@ -19,7 +20,7 @@ set(appname ${PROJECT_NAME})
 
 # ---- PREPARE COMMON DEPENDENCIES  ------------ 
 
-include_directories(./include ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR} 
+include_directories(./include ${TOON_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} 
   ${SOPHUS_INCLUDE_DIR} ../se_shared ./include
   ../se_core/include/ ../utils)
 set(common_compile_flags "")

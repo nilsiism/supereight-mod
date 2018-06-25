@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(se-apps)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/cmake)
 
 if(APPLE)
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -D__APPLE__")
@@ -17,9 +16,6 @@ function(add_version appname compile_flags libraries)
   else(APPLE)
     set(main_common_libraries ${libraries} rt stdc++ pthread)
   endif(APPLE)
-
-  message(STATUS "LINK_FLAGS ${libraries}")
-  message(STATUS "main common libraries ${main_common_libraries}")
 
   set(main_common_compile_flags ${compile_flags})
 
@@ -116,8 +112,6 @@ if(APPLE)
 else(APPLE)
   set(common_libraries rt stdc++ pthread lodepng)
 endif(APPLE)
-message(STATUS "COMMON LIBRARIES ${common_libraries}")
-
 
 set(common_compile_flags "")
 if(WITH_OPENMP AND OPENMP_FOUND)
@@ -127,7 +121,7 @@ endif()
 
 include_directories(../se_shared ./include ../se_core/include/
   ../se_denseslam/include ../utils 
-  ${TOON_INCLUDE_PATH} ${EIGEN3_INCLUDE_DIR} ${SOPHUS_INCLUDE_DIR})
+  ${TOON_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${SOPHUS_INCLUDE_DIR})
 
 foreach(appname ${BUILT_LIBS})
   add_version(${appname} "" "${common_libraries}")
