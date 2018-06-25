@@ -4,17 +4,19 @@ volumetric SLAM pipeline implementation.
 
 # Related publications
 This software implements the octree library and dense SLAM system presented in
-our paper "Efficient Octree-Based Volumetric SLAM Supporting Signed-Distance
-and Occupancy Mapping". If you publish work that relates to this software,
+our paper 
+[1] Efficient Octree-Based Volumetric SLAM Supporting Signed-Distance
+and Occupancy Mapping. 
+If you publish work that relates to this software,
 please cite our paper as:
 
-@ARTICLE{VespaRAL18, 
+`@ARTICLE{VespaRAL18, 
 author={E. Vespa and N. Nikolov and M. Grimm and L. Nardi and P. H. J. Kelly
 and S. Leutenegger}, 
 journal={IEEE Robotics and Automation Letters}, 
 title={Efficient Octree-Based Volumetric SLAM Supporting Signed-Distance and
 Occupancy Mapping}, year={2018}, volume={3}, number={2}, pages={1144-1151}, 
-doi={10.1109/LRA.2018.2792537}, ISSN={}, month={April}}
+doi={10.1109/LRA.2018.2792537}, ISSN={}, month={April}}`
 
 # Licence
 The core library is released under the BSD 3-clause Licence. There are part of
