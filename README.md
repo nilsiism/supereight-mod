@@ -53,5 +53,25 @@ The benchmarking and GUI apps additionally require:
 * Python/Numpy for evaluation scripts
 
 # Build
-Simply type `make` from the project root. This will create a build folder and
-invoke cmake from there.
+From the project root:
+`make`
+This will create a build/ folder from which `cmake ..` is invoked.
+
+# Usage example
+To run one of the apps in se_apps you need to first produce an input file. We
+use SLAMBench 1.0 file format (https://github.com/pamela-project/slambench).
+The tool scene2raw can be used to produce an input sequence from the ICL-NUIM
+dataset:
+```
+mkdir living_room_traj2_loop
+cd living_room_traj2_loop
+wget http://www.doc.ic.ac.uk/~ahanda/living_room_traj2_loop.tgz
+tar xzf living_room_traj2_loop.tgz
+cd ..
+build/se_tools/scene2raw living_room_traj2_loop living_room_traj2_loop/scene.raw
+```
+Then it can be used as input to one of the apps 
+
+```
+./build/se_apps/se-denseslam-sdf-main -i living_room_traj2_loop/scene.raw -s 4.8 -p 0.34,0.5,0.24 -z 4 -c 2 -r 1 -k 481.2,-480,320,240  > benchmark.log
+```
