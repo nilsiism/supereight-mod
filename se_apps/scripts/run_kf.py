@@ -32,7 +32,7 @@ if __name__ == "__main__":
     # for sequence in ICL + TUM_RGB_FR1 + TUM_RGB_FR2 + TUM_RGB_FR3:
     for sequence in [ICL_NUIM_LIV_2]:
         for resol in [1024]:
-            for version in ['openmp']:
+            for version in ['sdf']:
                 kernel_data = []
                 mu = 0.075
                 algorithm.impl = version
