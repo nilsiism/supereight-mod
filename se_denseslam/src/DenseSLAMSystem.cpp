@@ -226,7 +226,7 @@ bool DenseSLAMSystem::integration(float4 k, uint integration_rate, float mu,
      allocated  = buildAllocationList(allocationList, reserved, 
         volume._map_index, pose, getCameraMatrix(k), floatDepth, computationSize, volume._size,
       voxelsize, 2*mu);  
-    } else if(std::is_same<FieldType, BFusion>::value) {
+    } else if(std::is_same<FieldType, OFusion>::value) {
      allocated = buildOctantList(allocationList, reserved, volume._map_index,
          pose, getCameraMatrix(k), floatDepth, computationSize, voxelsize,
          compute_stepsize, step_to_depth, 6*mu);  
@@ -242,7 +242,7 @@ bool DenseSLAMSystem::integration(float4 k, uint integration_rate, float mu,
           to_eigen(getCameraMatrix(k)), 
           Eigen::Vector2i(computationSize.x, computationSize.y), 
           funct);
-    } else if(std::is_same<FieldType, BFusion>::value) {
+    } else if(std::is_same<FieldType, OFusion>::value) {
 
       float timestamp = (1.f/30.f)*frame; 
       struct bfusion_update funct(floatDepth, 

@@ -14,7 +14,11 @@
 #define INDEX_STRUCTURE Octree
 #endif
 
-typedef SDF FieldType;
+
+#ifndef FIELD_TYPE
+#define FIELD_TYPE SDF
+#endif
+typedef FIELD_TYPE FieldType;
 
 template <typename T>
 using Volume = VolumeTemplate<T, INDEX_STRUCTURE>;

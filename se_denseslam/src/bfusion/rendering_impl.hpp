@@ -1,7 +1,7 @@
 #include <math_utils.h>
 #include <type_traits>
 
-inline float4 raycast(const Volume<BFusion>& volume, const float3 origin, 
+inline float4 raycast(const Volume<OFusion>& volume, const float3 origin, 
     const float3 direction, const float tnear, const float tfar, const float, 
     const float step, const float) { 
   auto select_occupancy = [](const auto& val){ return val.x; };
@@ -14,7 +14,7 @@ inline float4 raycast(const Volume<BFusion>& volume, const float3 origin,
     // if we are not already in it
     if (f_t <= SURF_BOUNDARY) { 
       for (; t < tfar; t += stepsize) {
-        Volume<BFusion>::value_type data = volume.get(origin + direction * t);
+        Volume<OFusion>::value_type data = volume.get(origin + direction * t);
         if(data.x > -100.f && data.y > 0.f){
           f_tt = volume.interp(origin + direction * t, select_occupancy);
         }
@@ -31,7 +31,7 @@ inline float4 raycast(const Volume<BFusion>& volume, const float3 origin,
   return make_float4(0);
 }
 
-float4 raycast(const Volume<BFusion>& volume, const uint2 pos, const Matrix4 view,
+float4 raycast(const Volume<OFusion>& volume, const uint2 pos, const Matrix4 view,
     const float nearPlane, const float farPlane, const float mu, 
     const float step, const float, const float largestep)
 {

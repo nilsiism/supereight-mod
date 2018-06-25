@@ -27,7 +27,7 @@ set(common_compile_flags "")
 set(common_libraries lodepng)
 
 # ----------------- OFUsion -----------------
-set(field_type FIELD_TYPE=Occupancy)
+set(field_type FIELD_TYPE=OFusion)
 
 add_library(${appname}-ofusion STATIC ../../se_denseslam/src/DenseSLAMSystem.cpp)
 if(WITH_OPENMP AND OPENMP_FOUND)

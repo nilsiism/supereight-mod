@@ -101,7 +101,7 @@ void vertex2normalKernel(float3 * out, const float3 * in, uint2 imageSize) {
       if(std::is_same<FieldType, SDF>::value) {
         out[x + y * imageSize.x] =  normalize(cross(dyv, dxv)); // switched dx and dy to get factor -1
       }
-      else if(std::is_same<FieldType, BFusion>::value) {
+      else if(std::is_same<FieldType, OFusion>::value) {
         out[x + y * imageSize.x] =  normalize(cross(dxv, dyv)); // switched dx and dy to get factor -1
       }
 		}

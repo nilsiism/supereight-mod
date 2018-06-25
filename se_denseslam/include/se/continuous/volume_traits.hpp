@@ -24,9 +24,9 @@ struct voxel_traits<SDF> {
  *
 ****************************************************************************/
 
-class BFusion {};
+class OFusion {};
 template<>
-struct voxel_traits<BFusion> {
+struct voxel_traits<OFusion> {
   typedef struct  {
     float x;
     double y;
