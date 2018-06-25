@@ -26,17 +26,17 @@ for which licence applies.
 # Project structure
 supereight is made of three main different components:
 
-* se\_core: the main header only template octree library
-* se\_denseslam: the volumetric SLAM pipelines presented in [1], which can be
+* `se_core`: the main header only template octree library
+* `se_denseslam`: the volumetric SLAM pipelines presented in [1], which can be
   compiled in a library and used in external projects.
-* se\_apps: front-end applications which run the se-denseslam pipelines on
+* `se_apps`: front-end applications which run the se-denseslam pipelines on
   given inputs or live camera.
 
-Additionally, se\_tools includes the dataset generation tool and some libraries
-required by se_denseslam and se_apps.
+Additionally, `se_tools` includes the dataset generation tool and some libraries
+required by `se_denseslam` and `se_apps`.
 
 # Dependencies
-The following packages are required to build the se-denseslam library:
+The following packages are required to build the `se-denseslam` library:
 * CMake >= 3.10
 * Eigen3 
 * Sophus
