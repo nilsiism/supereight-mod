@@ -30,6 +30,7 @@
 #ifndef UNIQUE_HPP
 #define UNIQUE_HPP
 
+namespace se {
 namespace algorithms {
   template <typename T>
     inline int unique(T* keys, int num_keys){
@@ -94,5 +95,6 @@ namespace algorithms {
       }
       return end;
     }
+}
 }
 #endif

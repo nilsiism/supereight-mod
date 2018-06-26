@@ -97,7 +97,7 @@ class UniqueMultiscaleTest : public ::testing::Test {
 
 TEST_F(UniqueTest, FilterDuplicates) {
   std::sort(keys, keys + 10);
-  const int last = algorithms::unique(keys, 10);
+  const int last = se::algorithms::unique(keys, 10);
   for(int i = 1; i < last; ++i) { 
     ASSERT_TRUE(keys[i] != keys[i-1]);
   }
@@ -109,7 +109,7 @@ TEST_F(UniqueMultiscaleTest, FilterDuplicates) {
    * 0x1FFu extracts the last 9 bits of a morton number,
    * corresponding to the edge of a voxel block: 3*log2(se::VoxelBlock<T>::side)
    */
-  const int last = algorithms::unique_multiscale(keys, 10, 0x1FFu);
+  const int last = se::algorithms::unique_multiscale(keys, 10, 0x1FFu);
   ASSERT_EQ(last, 7);
   for(int i = 1; i < last; ++i) { 
     // std::cout << "(Key: " << (keys[i-1] & (~0x1FFu)) << ", Scale: " 
@@ -125,7 +125,7 @@ TEST_F(UniqueMultiscaleTest, FilterDuplicatesTillLevel) {
    * 0x1FFu extracts the last 9 bits of a morton number,
    * corresponding to the edge of a voxel block: 3*log2(se::VoxelBlock<T>::side)
    */
-  const int last = algorithms::unique_multiscale(keys, 10, 0x1FFu, 6);
+  const int last = se::algorithms::unique_multiscale(keys, 10, 0x1FFu, 6);
   ASSERT_EQ(last, 6);
   for(int i = 1; i <= last; ++i) { 
     // std::cout << "(Key: " << (keys[i-1] & (~0x1FFu)) << ", Scale: " 
