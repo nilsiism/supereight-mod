@@ -156,15 +156,6 @@ public:
         return _initPose;
     }
 
-	inline void computeFrame(const ushort * inputDepth, const uint2 inputSize,
-			float4 k, uint integration_rate, uint tracking_rate,
-			float icp_threshold, float mu, const uint frame) {
-		preprocessing(inputDepth, inputSize, true);
-		_tracked = tracking(k, icp_threshold, tracking_rate, frame);
-		_integrated = integration(k, integration_rate, mu, frame);
-		raycasting(k, mu, frame);
-	}
-
 	bool preprocessing(const ushort * inputDepth, const uint2 inputSize, 
                      const bool filterInput);
 
@@ -177,9 +168,6 @@ public:
 	bool integration(float4 k, uint integration_rate, float mu, uint frame);
 
   void dumpVolume(std::string filename);
-  void printStats();
-
-  void getPointCloudFromVolume();
 
   void renderVolume(uchar4 * out, const uint2 outputSize, int frame, int rate,
       float4 k, float mu);

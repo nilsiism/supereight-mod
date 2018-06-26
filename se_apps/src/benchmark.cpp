@@ -175,11 +175,6 @@ int main(int argc, char ** argv) {
     std::cout << "Mesh generated in " << e - s << " seconds" << std::endl;
   }
 
-  pipeline.printStats();
-  
-  
-    // pipeline.getPointCloudFromVolume(config.mu);
-
 	//  =========  FREE BASIC BUFFERS  =========
 
 	free(inputDepth);
