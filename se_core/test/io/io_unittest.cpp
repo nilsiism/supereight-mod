@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <fstream>
 #include <string>
 #include <random>
-#include "se_serialise.hpp"
+#include "io/se_serialise.hpp"
 #include "node.hpp"
 #include "octree.hpp"
 #include "gtest/gtest.h"
