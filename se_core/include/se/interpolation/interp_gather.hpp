@@ -30,6 +30,8 @@
 #define INTERP_GATHER_H
 #include "../node.hpp"
 
+namespace se {
+
 /*
  * Interpolation's point gather offsets
  */
@@ -230,5 +232,6 @@ inline void gather_points(const MapIndex<FieldType>& fetcher, const Eigen::Vecto
       }
       break;
   }
+}
 }
 #endif
