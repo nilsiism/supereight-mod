@@ -266,7 +266,7 @@ bool DenseSLAMSystem::integration(float4 k, uint integration_rate, float mu,
     if(std::is_same<FieldType, SDF>::value) {
       struct sdf_update funct(floatDepth, 
           Eigen::Vector2i(computationSize.x, computationSize.y), mu, 100);
-      functor::projective_map(volume._map_index, 
+      se::functor::projective_map(volume._map_index, 
           to_sophus(pose).inverse(), 
           to_eigen(getCameraMatrix(k)), 
           Eigen::Vector2i(computationSize.x, computationSize.y), 
@@ -277,7 +277,7 @@ bool DenseSLAMSystem::integration(float4 k, uint integration_rate, float mu,
       struct bfusion_update funct(floatDepth, 
           Eigen::Vector2i(computationSize.x, computationSize.y), mu, timestamp);
 
-      functor::projective_map(volume._map_index, 
+      se::functor::projective_map(volume._map_index, 
           to_sophus(pose).inverse(), 
           to_eigen(getCameraMatrix(k)), 
           Eigen::Vector2i(computationSize.x, computationSize.y), 

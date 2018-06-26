@@ -31,6 +31,7 @@
 #include "../utils/memory_pool.hpp"
 #include "../utils/morton_utils.hpp"
 
+namespace se {
 namespace algorithms {
 
   template <typename VoxelBlockType>
@@ -115,5 +116,6 @@ namespace algorithms {
       } 
     }
 #endif
+}
 }
 #endif

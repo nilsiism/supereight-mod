@@ -38,6 +38,7 @@
 #include "../node.hpp"
 #include "../functors/data_handler.hpp"
 
+namespace se {
 namespace functor {
   template <typename FieldType, template <typename FieldT> class MapT, 
             typename UpdateF>
@@ -172,5 +173,6 @@ namespace functor {
       it(map, funct, Tcw, K, framesize);
     it.apply();
   }
+}
 }
 #endif
