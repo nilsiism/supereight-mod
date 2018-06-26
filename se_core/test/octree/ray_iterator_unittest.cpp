@@ -29,6 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 #include "octree.hpp"
+#include "ray_iterator.hpp"
 #include "gtest/gtest.h"
 #include <vector>
 
@@ -40,7 +41,7 @@ struct voxel_traits<testT> {
   static inline value_type empty(){ return 0.f; }
   static inline value_type initValue(){ return 1.f; }
 };
-typedef Octree<testT> OctreeF;
+typedef se::Octree<testT> OctreeF;
 
 class RayIteratorTest : public ::testing::Test {
   protected:
@@ -74,7 +75,7 @@ class RayIteratorTest : public ::testing::Test {
 };
 
 TEST_F(RayIteratorTest, FetchAlongRay) {
-  se::ray_iterator<OctreeF::value_type> it(oct_, p_, dir_, 0.4, 4.0f); 
+  se::ray_iterator<testT> it(oct_, p_, dir_, 0.4, 4.0f); 
   int i = 0;
   se::VoxelBlock<testT> * current;
   while(current = it.next()) {

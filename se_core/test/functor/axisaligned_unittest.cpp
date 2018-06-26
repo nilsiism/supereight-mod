@@ -55,7 +55,7 @@ class AxisAlignedTest : public ::testing::Test {
       const int band = 1 * inverse_voxelsize;
       const Eigen::Vector3i offset = 
         Eigen::Vector3i::Constant(oct_.size()/2 - band/2);
-      unsigned leaf_level = log2(size) - log2(Octree<testT>::blockSide);
+      unsigned leaf_level = log2(size) - log2(se::Octree<testT>::blockSide);
       for(int z = 0; z < band; ++z) {
         for(int y = 0; y < band; ++y) {
           for(int x = 0; x < band; ++x) {
@@ -68,7 +68,7 @@ class AxisAlignedTest : public ::testing::Test {
       oct_.allocate(alloc_list.data(), alloc_list.size());
     }
 
-  typedef Octree<testT> OctreeF;
+  typedef se::Octree<testT> OctreeF;
   OctreeF oct_;
   std::vector<se::key_t> alloc_list;
 };

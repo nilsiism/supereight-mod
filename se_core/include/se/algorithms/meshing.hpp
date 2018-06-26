@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "../octree.hpp"
 #include "edge_tables.h"
 
+namespace se {
 namespace meshing {
   enum status : uint8_t {
     OUTSIDE = 0x0,
@@ -205,5 +206,6 @@ namespace algorithms {
         }
       }
     }
+}
 }
 #endif

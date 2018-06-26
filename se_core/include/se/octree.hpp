@@ -78,9 +78,9 @@ inline float __int_as_float(int value){
 }
 
 namespace se {
-  template <typename T>
-    class ray_iterator;
-}
+
+template <typename T>
+class ray_iterator;
 
 template <typename T>
 class leaf_iterator;
@@ -100,9 +100,9 @@ public:
   // # of voxels per side in a voxel block
   static constexpr unsigned int blockSide = BLOCK_SIDE;
   // maximum tree depth in bits
-  static constexpr unsigned int max_depth = ((sizeof(se::key_t)*8)/3);
+  static constexpr unsigned int max_depth = ((sizeof(key_t)*8)/3);
   // Tree depth at which blocks are found
-  static constexpr unsigned int block_depth = max_depth - se::math::log2_const(BLOCK_SIDE);
+  static constexpr unsigned int block_depth = max_depth - math::log2_const(BLOCK_SIDE);
 
 
   Octree(){
@@ -119,7 +119,7 @@ public:
 
   inline int size() const { return size_; }
   inline float dim() const { return dim_; }
-  inline se::Node<T>* root() const { return root_; }
+  inline Node<T>* root() const { return root_; }
 
   /*! \brief Retrieves voxel value at coordinates (x,y,z), if not present it 
    * allocates it. This method is not thread safe.
@@ -142,7 +142,7 @@ public:
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
    */
-  se::VoxelBlock<T> * fetch(const int x, const int y, const int z) const;
+  VoxelBlock<T> * fetch(const int x, const int y, const int z) const;
 
   /*! \brief Fetch the octant (x,y,z) at level depth
    * \param x x coordinate in interval [0, size]
@@ -150,7 +150,7 @@ public:
    * \param z z coordinate in interval [0, size]
    * \param depth maximum depth to be searched 
    */
-  se::Node<T> * fetch_octant(const int x, const int y, const int z, 
+  Node<T> * fetch_octant(const int x, const int y, const int z, 
       const int depth) const;
 
   /*! \brief Insert the octant at (x,y,z). Not thread safe.
@@ -159,14 +159,14 @@ public:
    * \param z z coordinate in interval [0, size]
    * \param depth target insertion level 
    */
-  se::Node<T> * insert(const int x, const int y, const int z, const int depth);
+  Node<T> * insert(const int x, const int y, const int z, const int depth);
 
   /*! \brief Insert the octant (x,y,z) at maximum resolution. Not thread safe.
    * \param x x coordinate in interval [0, size]
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
    */
-  se::VoxelBlock<T> * insert(const int x, const int y, const int z);
+  VoxelBlock<T> * insert(const int x, const int y, const int z);
 
   /*! \brief Interp voxel value at voxel position  (x,y,z)
    * \param pos three-dimensional coordinates in which each component belongs 
@@ -193,22 +193,22 @@ public:
    * \param active boolean switch. Set to true to retrieve visible, allocated 
    * blocks, false to retrieve all allocated blocks.
    */
-  void getBlockList(std::vector<se::VoxelBlock<T> *>& blocklist, bool active);
-  se::MemoryPool<se::VoxelBlock<T> >& getBlockBuffer(){ return block_memory_; };
-  se::MemoryPool<se::Node<T> >& getNodesBuffer(){ return nodes_buffer_; };
+  void getBlockList(std::vector<VoxelBlock<T> *>& blocklist, bool active);
+  MemoryPool<VoxelBlock<T> >& getBlockBuffer(){ return block_memory_; };
+  MemoryPool<Node<T> >& getNodesBuffer(){ return nodes_buffer_; };
   /*! \brief Computes the morton code of the block containing voxel 
    * at coordinates (x,y,z)
    * \param x x coordinate in interval [0, size]
    * \param y y coordinate in interval [0, size]
    * \param z z coordinate in interval [0, size]
    */
-  se::key_t hash(const int x, const int y, const int z) {
-    const int scale = max_level_ - se::math::log2_const(blockSide); // depth of blocks
-    return se::keyops::encode(x, y, z, scale, max_level_);   
+  key_t hash(const int x, const int y, const int z) {
+    const int scale = max_level_ - math::log2_const(blockSide); // depth of blocks
+    return keyops::encode(x, y, z, scale, max_level_);   
   }
 
-  se::key_t hash(const int x, const int y, const int z, se::key_t scale) {
-    return se::keyops::encode(x, y, z, scale, max_level_); 
+  key_t hash(const int x, const int y, const int z, key_t scale) {
+    return keyops::encode(x, y, z, scale, max_level_); 
   }
 
   /*! \brief allocate a set of voxel blocks via their positional key  
@@ -216,7 +216,7 @@ public:
    * morton number)
    * \param number of keys in the keys array
    */
-  bool allocate(se::key_t *keys, int num_elem);
+  bool allocate(key_t *keys, int num_elem);
 
   void save(const std::string& filename);
   void load(const std::string& filename);
@@ -239,49 +239,49 @@ private:
 
   struct stack_entry {
     int scale;
-    se::Node<T> * parent;
+    Node<T> * parent;
     float t_max;
   };
 
-  se::Node<T> * root_;
+  Node<T> * root_;
   int size_;
   float dim_;
   int max_level_;
-  se::MemoryPool<se::VoxelBlock<T> > block_memory_;
-  se::MemoryPool<se::Node<T> > nodes_buffer_;
+  MemoryPool<VoxelBlock<T> > block_memory_;
+  MemoryPool<Node<T> > nodes_buffer_;
 
-  friend class se::ray_iterator<T>;
+  friend class ray_iterator<T>;
   friend class leaf_iterator<T>;
 
   // Allocation specific variables
-  se::key_t* keys_at_level_;
+  key_t* keys_at_level_;
   int reserved_;
 
   // Private implementation of cached methods
-  value_type get(const int x, const int y, const int z, se::VoxelBlock<T>* cached) const;
-  value_type get(const Eigen::Vector3f pos, se::VoxelBlock<T>* cached) const;
+  value_type get(const int x, const int y, const int z, VoxelBlock<T>* cached) const;
+  value_type get(const Eigen::Vector3f pos, VoxelBlock<T>* cached) const;
 
   // Parallel allocation of a given tree level for a set of input keys.
   // Pre: levels above target_level must have been already allocated
-  bool allocate_level(se::key_t * keys, int num_tasks, int target_level);
+  bool allocate_level(key_t * keys, int num_tasks, int target_level);
 
   void reserveBuffers(const int n);
 
   // General helpers
 
-  int leavesCountRecursive(se::Node<T> *);
-  int nodeCountRecursive(se::Node<T> *);
-  void getActiveBlockList(se::Node<T> *, std::vector<se::VoxelBlock<T> *>& blocklist);
-  void getAllocatedBlockList(se::Node<T> *, std::vector<se::VoxelBlock<T> *>& blocklist);
+  int leavesCountRecursive(Node<T> *);
+  int nodeCountRecursive(Node<T> *);
+  void getActiveBlockList(Node<T> *, std::vector<VoxelBlock<T> *>& blocklist);
+  void getAllocatedBlockList(Node<T> *, std::vector<VoxelBlock<T> *>& blocklist);
 
-  void deleteNode(se::Node<T> ** node);
+  void deleteNode(Node<T> ** node);
   void deallocateTree(){ deleteNode(&root_); }
 };
 
 
 template <typename T>
 inline typename Octree<T>::value_type Octree<T>::get(const Eigen::Vector3f p, 
-    se::VoxelBlock<T>* cached) const {
+    VoxelBlock<T>* cached) const {
 
   const Eigen::Vector3i pos = Eigen::Vector3i{(p(0) * size_ / dim_),
                                               (p(1) * size_ / dim_),
@@ -297,7 +297,7 @@ inline typename Octree<T>::value_type Octree<T>::get(const Eigen::Vector3f p,
     }
   }
 
-  se::Node<T> * n = root_;
+  Node<T> * n = root_;
   if(!n) {
     return empty();
   }
@@ -313,28 +313,28 @@ inline typename Octree<T>::value_type Octree<T>::get(const Eigen::Vector3f p,
   }
 
   // Get the element in the voxel block
-  return static_cast<se::VoxelBlock<T>*>(n)->data(pos);
+  return static_cast<VoxelBlock<T>*>(n)->data(pos);
 }
 
 template <typename T>
 inline void  Octree<T>::set(const int x,
     const int y, const int z, const value_type val) {
 
-  se::Node<T> * n = root_;
+  Node<T> * n = root_;
   if(!n) {
     return;
   }
 
   unsigned edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
-    se::Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
+    Node<T>* tmp = n->child((x & edge) > 0, (y & edge) > 0, (z & edge) > 0);
     if(!tmp){
       return;
     }
     n = tmp;
   }
 
-  static_cast<se::VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z), val);
+  static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z), val);
 }
 
 
@@ -342,7 +342,7 @@ template <typename T>
 inline typename Octree<T>::value_type Octree<T>::get(const int x,
     const int y, const int z) const {
 
-  se::Node<T> * n = root_;
+  Node<T> * n = root_;
   if(!n) {
     return init_val();
   }
@@ -350,21 +350,21 @@ inline typename Octree<T>::value_type Octree<T>::get(const int x,
   unsigned edge = size_ >> 1;
   for(; edge >= blockSide; edge = edge >> 1){
     const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) +  4*((z & edge) > 0);
-    se::Node<T>* tmp = n->child(childid);
+    Node<T>* tmp = n->child(childid);
     if(!tmp){
       return n->value_[childid];
     }
     n = tmp;
   }
 
-  return static_cast<se::VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
+  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
 }
 
 template <typename T>
 inline typename Octree<T>::value_type Octree<T>::get_fine(const int x,
     const int y, const int z) const {
 
-  se::Node<T> * n = root_;
+  Node<T> * n = root_;
   if(!n) {
     return init_val();
   }
@@ -373,19 +373,19 @@ inline typename Octree<T>::value_type Octree<T>::get_fine(const int x,
   for(; edge >= blockSide; edge = edge >> 1){
     const int childid = ((x & edge) > 0) +  2 * ((y & edge) > 0) 
       +  4*((z & edge) > 0);
-    se::Node<T>* tmp = n->child(childid);
+    Node<T>* tmp = n->child(childid);
     if(!tmp){
       return init_val();
     }
     n = tmp;
   }
 
-  return static_cast<se::VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
+  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
 }
 
 template <typename T>
 inline typename Octree<T>::value_type Octree<T>::get(const int x,
-   const int y, const int z, se::VoxelBlock<T>* cached) const {
+   const int y, const int z, VoxelBlock<T>* cached) const {
 
   if(cached != NULL){
     const Eigen::Vector3i pos = Eigen::Vector3i(x, y, z);
@@ -398,7 +398,7 @@ inline typename Octree<T>::value_type Octree<T>::get(const int x,
     }
   }
 
-  se::Node<T> * n = root_;
+  Node<T> * n = root_;
   if(!n) {
     return init_val();
   }
@@ -411,11 +411,11 @@ inline typename Octree<T>::value_type Octree<T>::get(const int x,
     }
   }
 
-  return static_cast<se::VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
+  return static_cast<VoxelBlock<T> *>(n)->data(Eigen::Vector3i(x, y, z));
 }
 
 template <typename T>
-void Octree<T>::deleteNode(se::Node<T> **node){
+void Octree<T>::deleteNode(Node<T> **node){
 
   if(*node){
     for (int i = 0; i < 8; i++) {
@@ -440,15 +440,15 @@ void Octree<T>::init(int size, float dim) {
   root_ = nodes_buffer_.acquire_block();
   root_->side = size;
   reserved_ = 1024;
-  keys_at_level_ = new se::key_t[reserved_];
+  keys_at_level_ = new key_t[reserved_];
   std::memset(keys_at_level_, 0, reserved_);
 }
 
 template <typename T>
-inline se::VoxelBlock<T> * Octree<T>::fetch(const int x, const int y, 
+inline VoxelBlock<T> * Octree<T>::fetch(const int x, const int y, 
    const int z) const {
 
-  se::Node<T> * n = root_;
+  Node<T> * n = root_;
   if(!n) {
     return NULL;
   }
@@ -461,14 +461,14 @@ inline se::VoxelBlock<T> * Octree<T>::fetch(const int x, const int y,
       return NULL;
     }
   }
-  return static_cast<se::VoxelBlock<T>* > (n);
+  return static_cast<VoxelBlock<T>* > (n);
 }
 
 template <typename T>
-inline se::Node<T> * Octree<T>::fetch_octant(const int x, const int y, 
+inline Node<T> * Octree<T>::fetch_octant(const int x, const int y, 
    const int z, const int depth) const {
 
-  se::Node<T> * n = root_;
+  Node<T> * n = root_;
   if(!n) {
     return NULL;
   }
@@ -485,11 +485,11 @@ inline se::Node<T> * Octree<T>::fetch_octant(const int x, const int y,
 }
 
 template <typename T>
-se::Node<T> * Octree<T>::insert(const int x, const int y, const int z, 
+Node<T> * Octree<T>::insert(const int x, const int y, const int z, 
     const int depth) {
 
   // Make sure we have enough space on buffers
-  const int leaves_level = max_depth - se::math::log2_const(blockSide);
+  const int leaves_level = max_depth - math::log2_const(blockSide);
   if(depth > (max_depth - leaves_level)) {
     block_memory_.reserve(1);
     nodes_buffer_.reserve(leaves_level);
@@ -497,7 +497,7 @@ se::Node<T> * Octree<T>::insert(const int x, const int y, const int z,
     nodes_buffer_.reserve(depth);
   }
 
-  se::Node<T> * n = root_;
+  Node<T> * n = root_;
   // Should not happen if octree has been initialised properly
   if(!n) {
     root_ = nodes_buffer_.acquire_block();
@@ -506,7 +506,7 @@ se::Node<T> * Octree<T>::insert(const int x, const int y, const int z,
     n = root_;
   }
 
-  se::key_t key = se::keyops::encode(x, y, z, depth, max_level_);
+  key_t key = keyops::encode(x, y, z, depth, max_level_);
   const unsigned int shift = MAX_BITS - max_level_ - 1;
 
   unsigned edge = size_ / 2;
@@ -515,15 +515,15 @@ se::Node<T> * Octree<T>::insert(const int x, const int y, const int z,
       +  4*((z & edge) > 0);
 
     // std::cout << "Level: " << d << std::endl;
-    se::Node<T>* tmp = n->child(childid);
+    Node<T>* tmp = n->child(childid);
     if(!tmp){
-      const se::key_t prefix = se::keyops::code(key) & MASK[d + shift];
+      const key_t prefix = keyops::code(key) & MASK[d + shift];
       if(edge == blockSide) {
         tmp = block_memory_.acquire_block();
-        static_cast<se::VoxelBlock<T> *>(tmp)->coordinates(
+        static_cast<VoxelBlock<T> *>(tmp)->coordinates(
             Eigen::Vector3i(unpack_morton(prefix)));
-        static_cast<se::VoxelBlock<T> *>(tmp)->active(true);
-        static_cast<se::VoxelBlock<T> *>(tmp)->code = prefix | d;
+        static_cast<VoxelBlock<T> *>(tmp)->active(true);
+        static_cast<VoxelBlock<T> *>(tmp)->code = prefix | d;
         n->children_mask_ = n->children_mask_ | (1 << childid);
       } else {
         tmp = nodes_buffer_.acquire_block();
@@ -531,7 +531,7 @@ se::Node<T> * Octree<T>::insert(const int x, const int y, const int z,
         tmp->side = edge;
         n->children_mask_ = n->children_mask_ | (1 << childid);
         // std::cout << "coords: " 
-        //   << se::keyops::decode(se::keyops::code(tmp->code)) << std::endl;
+        //   << keyops::decode(keyops::code(tmp->code)) << std::endl;
       }
       n->child(childid) = tmp;
     }
@@ -541,16 +541,16 @@ se::Node<T> * Octree<T>::insert(const int x, const int y, const int z,
 }
 
 template <typename T>
-se::VoxelBlock<T> * Octree<T>::insert(const int x, const int y, const int z) {
-  return static_cast<se::VoxelBlock<T> * >(insert(x, y, z, max_level_));
+VoxelBlock<T> * Octree<T>::insert(const int x, const int y, const int z) {
+  return static_cast<VoxelBlock<T> * >(insert(x, y, z, max_level_));
 }
 
 template <typename T>
 template <typename FieldSelector>
 float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
   
-  const Eigen::Vector3i base = se::math::floorf(pos).cast<int>();
-  const Eigen::Vector3f factor = se::math::fracf(pos);
+  const Eigen::Vector3i base = math::floorf(pos).cast<int>();
+  const Eigen::Vector3f factor = math::fracf(pos);
   const Eigen::Vector3i lower = base.cwiseMax(Eigen::Vector3i::Constant(0));
 
   float points[8];
@@ -573,8 +573,8 @@ float Octree<T>::interp(Eigen::Vector3f pos, FieldSelector select) const {
 template <typename T>
 Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos) const {
 
-   Eigen::Vector3i base = Eigen::Vector3i(se::math::floorf(pos).cast<int>());
-   Eigen::Vector3f factor = se::math::fracf(pos);
+   Eigen::Vector3i base = Eigen::Vector3i(math::floorf(pos).cast<int>());
+   Eigen::Vector3f factor = math::fracf(pos);
    Eigen::Vector3i lower_lower = (base - Eigen::Vector3i::Constant(1)).cwiseMax(Eigen::Vector3i::Constant(0));
    Eigen::Vector3i lower_upper = base.cwiseMax(Eigen::Vector3i::Constant(0));
    Eigen::Vector3i upper_lower = (base + Eigen::Vector3i::Constant(1)).cwiseMin(
@@ -586,7 +586,7 @@ Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos) const {
 
   Eigen::Vector3f gradient;
 
-  se::VoxelBlock<T> * n = fetch(base(0), base(1), base(2));
+  VoxelBlock<T> * n = fetch(base(0), base(1), base(2));
   gradient(0) = (((get(upper_lower(0), lower(1), lower(2), n)(0)
           - get(lower_lower(0), lower(1), lower(2), n)(0)) * (1 - factor(0))
         + (get(upper_upper(0), lower(1), lower(2), n)(0)
@@ -660,8 +660,8 @@ template <typename T>
 template <typename FieldSelector>
 Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos, FieldSelector select) const {
 
-   Eigen::Vector3i base = Eigen::Vector3i(se::math::floorf(pos).cast<int>());
-   Eigen::Vector3f factor = se::math::fracf(pos);
+   Eigen::Vector3i base = Eigen::Vector3i(math::floorf(pos).cast<int>());
+   Eigen::Vector3f factor = math::fracf(pos);
    Eigen::Vector3i lower_lower = (base - Eigen::Vector3i::Constant(1)).cwiseMax(Eigen::Vector3i::Constant(0));
    Eigen::Vector3i lower_upper = base.cwiseMax(Eigen::Vector3i::Constant(0));
    Eigen::Vector3i upper_lower = (base + Eigen::Vector3i::Constant(1)).cwiseMin(
@@ -673,7 +673,7 @@ Eigen::Vector3f Octree<T>::grad(const Eigen::Vector3f pos, FieldSelector select)
 
   Eigen::Vector3f gradient;
 
-  se::VoxelBlock<T> * n = fetch(base(0), base(1), base(2));
+  VoxelBlock<T> * n = fetch(base(0), base(1), base(2));
   gradient(0) = (((select(get(upper_lower(0), lower(1), lower(2), n))
           - select(get(lower_lower(0), lower(1), lower(2), n))) * (1 - factor(0))
         + (select(get(upper_upper(0), lower(1), lower(2), n))
@@ -749,7 +749,7 @@ int Octree<T>::leavesCount(){
 }
 
 template <typename T>
-int Octree<T>::leavesCountRecursive(se::Node<T> * n){
+int Octree<T>::leavesCountRecursive(Node<T> * n){
 
   if(!n) return 0;
 
@@ -772,7 +772,7 @@ int Octree<T>::nodeCount(){
 }
 
 template <typename T>
-int Octree<T>::nodeCountRecursive(se::Node<T> * node){
+int Octree<T>::nodeCountRecursive(Node<T> * node){
   if (!node) {
     return 0;
   }
@@ -790,14 +790,14 @@ void Octree<T>::reserveBuffers(const int n){
   if(n > reserved_){
     // std::cout << "Reserving " << n << " entries in allocation buffers" << std::endl;
     delete[] keys_at_level_;
-    keys_at_level_ = new se::key_t[n];
+    keys_at_level_ = new key_t[n];
     reserved_ = n;
   }
   block_memory_.reserve(n);
 }
 
 template <typename T>
-bool Octree<T>::allocate(se::key_t *keys, int num_elem){
+bool Octree<T>::allocate(key_t *keys, int num_elem){
 
 #if defined(_OPENMP) && !defined(__clang__)
   __gnu_parallel::sort(keys, keys+num_elem);
@@ -814,7 +814,7 @@ std::sort(keys, keys+num_elem);
   const int leaves_level = max_level_ - log2(blockSide);
   const unsigned int shift = MAX_BITS - max_level_ - 1;
   for (int level = 1; level <= leaves_level; level++){
-    const se::key_t mask = MASK[level + shift] | SCALE_MASK;
+    const key_t mask = MASK[level + shift] | SCALE_MASK;
     compute_prefix(keys, keys_at_level_, num_elem, mask);
     last_elem = algorithms::unique_multiscale(keys_at_level_, num_elem, 
         SCALE_MASK, level);
@@ -824,28 +824,28 @@ std::sort(keys, keys+num_elem);
 }
 
 template <typename T>
-bool Octree<T>::allocate_level(se::key_t* keys, int num_tasks, int target_level){
+bool Octree<T>::allocate_level(key_t* keys, int num_tasks, int target_level){
 
   int leaves_level = max_level_ - log2(blockSide);
   nodes_buffer_.reserve(num_tasks);
 
 #pragma omp parallel for
   for (int i = 0; i < num_tasks; i++){
-    se::Node<T> ** n = &root_;
-    se::key_t myKey = se::keyops::code(keys[i]);
+    Node<T> ** n = &root_;
+    key_t myKey = keyops::code(keys[i]);
     int edge = size_/2;
 
     for (int level = 1; level <= target_level; ++level){
       int index = child_id(myKey, level, max_level_); 
-      se::Node<T> * parent = *n;
+      Node<T> * parent = *n;
       n = &(*n)->child(index);
 
       if(!(*n)){
         if(level == leaves_level){
           *n = block_memory_.acquire_block();
-          static_cast<se::VoxelBlock<T> *>(*n)->coordinates(Eigen::Vector3i(unpack_morton(myKey)));
-          static_cast<se::VoxelBlock<T> *>(*n)->active(true);
-          static_cast<se::VoxelBlock<T> *>(*n)->code = myKey | level;
+          static_cast<VoxelBlock<T> *>(*n)->coordinates(Eigen::Vector3i(unpack_morton(myKey)));
+          static_cast<VoxelBlock<T> *>(*n)->active(true);
+          static_cast<VoxelBlock<T> *>(*n)->code = myKey | level;
           parent->children_mask_ = parent->children_mask_ | (1 << index);
         }
         else  {
@@ -862,17 +862,17 @@ bool Octree<T>::allocate_level(se::key_t* keys, int num_tasks, int target_level)
 }
 
 template <typename T>
-void Octree<T>::getBlockList(std::vector<se::VoxelBlock<T>*>& blocklist, bool active){
-  se::Node<T> * n = root_;
+void Octree<T>::getBlockList(std::vector<VoxelBlock<T>*>& blocklist, bool active){
+  Node<T> * n = root_;
   if(!n) return;
   if(active) getActiveBlockList(n, blocklist);
   else getAllocatedBlockList(n, blocklist);
 }
 
 template <typename T>
-void Octree<T>::getActiveBlockList(se::Node<T> *n,
-    std::vector<se::VoxelBlock<T>*>& blocklist){
-  using tNode = se::Node<T>;
+void Octree<T>::getActiveBlockList(Node<T> *n,
+    std::vector<VoxelBlock<T>*>& blocklist){
+  using tNode = Node<T>;
   if(!n) return;
   std::queue<tNode *> q;
   q.push(n);
@@ -881,7 +881,7 @@ void Octree<T>::getActiveBlockList(se::Node<T> *n,
     q.pop();
 
     if(node->isLeaf()){
-      se::VoxelBlock<T>* block = static_cast<se::VoxelBlock<T> *>(node);
+      VoxelBlock<T>* block = static_cast<VoxelBlock<T> *>(node);
       if(block->active()) blocklist.push_back(block);
       continue;
     }
@@ -893,8 +893,8 @@ void Octree<T>::getActiveBlockList(se::Node<T> *n,
 }
 
 template <typename T>
-void Octree<T>::getAllocatedBlockList(se::Node<T> *,
-    std::vector<se::VoxelBlock<T>*>& blocklist){
+void Octree<T>::getAllocatedBlockList(Node<T> *,
+    std::vector<VoxelBlock<T>*>& blocklist){
   for(unsigned int i = 0; i < block_memory_.size(); ++i) {
       blocklist.push_back(block_memory_[i]);
     }
@@ -910,12 +910,12 @@ void Octree<T>::save(const std::string& filename) {
     size_t n = nodes_buffer_.size();
     os.write(reinterpret_cast<char *>(&n), sizeof(size_t));
     for(int i = 0; i < n; ++i)
-      se::internal::serialise(os, *nodes_buffer_[i]);
+      internal::serialise(os, *nodes_buffer_[i]);
 
     n = block_memory_.size();
     os.write(reinterpret_cast<char *>(&n), sizeof(size_t));
     for(int i = 0; i < n; ++i)
-      se::internal::serialise(os, *block_memory_[i]);
+      internal::serialise(os, *block_memory_[i]);
   }
 }
 
@@ -935,28 +935,25 @@ void Octree<T>::load(const std::string& filename) {
     nodes_buffer_.reserve(n);
     std::cout << "Reading " << n << " nodes " << std::endl;
     for(int i = 0; i < n; ++i) {
-      se::Node<T> tmp;
-      se::internal::deserialise(tmp, is);
-      Eigen::Vector3i coords = se::keyops::decode(tmp.code);
-      se::Node<T> * n = insert(coords(0), coords(1), coords(2), se::keyops::level(tmp.code));
+      Node<T> tmp;
+      internal::deserialise(tmp, is);
+      Eigen::Vector3i coords = keyops::decode(tmp.code);
+      Node<T> * n = insert(coords(0), coords(1), coords(2), keyops::level(tmp.code));
       std::memcpy(n->value_, tmp.value_, sizeof(tmp.value_));
     }
 
     is.read(reinterpret_cast<char *>(&n), sizeof(size_t));
     std::cout << "Reading " << n << " blocks " << std::endl;
     for(int i = 0; i < n; ++i) {
-      se::VoxelBlock<T> tmp;
-      se::internal::deserialise(tmp, is);
+      VoxelBlock<T> tmp;
+      internal::deserialise(tmp, is);
       Eigen::Vector3i coords = tmp.coordinates();
-      se::VoxelBlock<T> * n = 
-        static_cast<se::VoxelBlock<T> *>(insert(coords(0), coords(1), coords(2), se::keyops::level(tmp.code)));
+      VoxelBlock<T> * n = 
+        static_cast<VoxelBlock<T> *>(insert(coords(0), coords(1), coords(2), keyops::level(tmp.code)));
       std::memcpy(n->getBlockRawPtr(), tmp.getBlockRawPtr(), sizeof(*(tmp.getBlockRawPtr())));
     }
   }
 }
-
-#include "ray_iterator.hpp"
-
 
 template <typename T>
 class leaf_iterator {
@@ -972,7 +969,7 @@ class leaf_iterator {
     switch(state_) {
       case BRANCH_NODES:
         if(last < map_.nodes_buffer_.size()) {
-          se::Node<T>* n = map_.nodes_buffer_[last++];
+          Node<T>* n = map_.nodes_buffer_[last++];
           return std::make_tuple(unpack_morton(n->code), 
                                  n->side, n->value_[0]);
         } else {
@@ -983,9 +980,9 @@ class leaf_iterator {
         break;
       case LEAF_NODES:
         if(last < map_.block_memory_.size()) {
-          se::VoxelBlock<T>* n = map_.block_memory_[last++];
+          VoxelBlock<T>* n = map_.block_memory_[last++];
           return std::make_tuple(unpack_morton(n->code), 
-              int(se::VoxelBlock<T>::side), n->value_[0]); 
+              int(VoxelBlock<T>::side), n->value_[0]); 
               /* the above int init required due to odr-use of static member */
         } else {
           last = 0;
@@ -1010,4 +1007,5 @@ class leaf_iterator {
   ITER_STATE state_;
   size_t last;
 };
+}
 #endif // OCTREE_H

@@ -36,6 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "functors/axis_aligned_functor.hpp"
 #include "gtest/gtest.h"
 
+using namespace se::geometry;
 typedef float testT;
 
 template <>
@@ -66,24 +67,22 @@ class OctreeCollisionTest : public ::testing::Test {
           handler.set(10.f);
         }
       };
-      se::functor::axis_aligned<testT, Octree, decltype(set_to_ten)> 
-        funct(oct_, set_to_ten);
-      funct.apply();
+      se::functor::axis_aligned_map(oct_, set_to_ten);
     }
 
-  typedef Octree<testT> OctreeF;
+  typedef se::Octree<testT> OctreeF;
   OctreeF oct_;
 };
 
 TEST_F(OctreeCollisionTest, TotallyUnseen) {
 
-  leaf_iterator<testT> it(oct_);
-  typedef std::tuple<Eigen::Vector3i, int, typename Octree<testT>::value_type> it_result;
+  se::leaf_iterator<testT> it(oct_);
+  typedef std::tuple<Eigen::Vector3i, int, typename se::Octree<testT>::value_type> it_result;
   it_result node = it.next();
   for(int i = 256; std::get<1>(node) > 0; node = it.next(), i /= 2){
     const Eigen::Vector3i coords = std::get<0>(node);
     const int side = std::get<1>(node);
-    const Octree<testT>::value_type val = std::get<2>(node);
+    const se::Octree<testT>::value_type val = std::get<2>(node);
     printf("se::Node's coordinates: (%d, %d, %d), side %d, value %.2f\n", 
         coords(0), coords(1), coords(2), side, val);
     EXPECT_EQ(side, i);

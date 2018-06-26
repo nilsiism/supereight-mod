@@ -31,6 +31,7 @@
 #include <cmath>
 #include "../utils/se_common.h"
 
+namespace se {
 namespace geometry {
   inline int axis_overlap(int a, const int a_edge, 
        int b, const int b_edge) {
@@ -70,5 +71,6 @@ namespace geometry {
            axis_contained(a(1), a_edge(1), b(1), b_edge(1)) && 
            axis_contained(a(2), a_edge(2), b(2), b_edge(2));
   }
+}
 }
 #endif

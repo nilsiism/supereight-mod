@@ -39,7 +39,7 @@ struct voxel_traits<float> {
 };
 
 TEST(AllocationTest, EmptySingleVoxel) {
-  typedef Octree<float> OctreeF;
+  typedef se::Octree<float> OctreeF;
   OctreeF oct;
   oct.init(256, 5);
   const Eigen::Vector3i vox = {25, 65, 127};
@@ -50,7 +50,7 @@ TEST(AllocationTest, EmptySingleVoxel) {
 }
 
 TEST(AllocationTest, SetSingleVoxel) {
-  typedef Octree<float> OctreeF;
+  typedef se::Octree<float> OctreeF;
   OctreeF oct;
   oct.init(256, 5);
   const Eigen::Vector3i vox = {25, 65, 127};
@@ -67,7 +67,7 @@ TEST(AllocationTest, SetSingleVoxel) {
 }
 
 TEST(AllocationTest, FetchOctant) {
-  typedef Octree<float> OctreeF;
+  typedef se::Octree<float> OctreeF;
   OctreeF oct;
   oct.init(256, 5);
   const Eigen::Vector3i vox = {25, 65, 127};

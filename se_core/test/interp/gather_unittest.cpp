@@ -56,7 +56,7 @@ class GatherTest : public ::testing::Test {
       oct_.allocate(alloc_list, 10);
     }
 
-  typedef Octree<testT> OctreeF;
+  typedef se::Octree<testT> OctreeF;
   OctreeF oct_;
 };
 

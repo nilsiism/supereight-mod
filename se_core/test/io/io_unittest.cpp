@@ -128,7 +128,7 @@ TEST(SerialiseUnitTest, WriteReadBlockStruct) {
 }
 
 TEST(SerialiseUnitTest, SerialiseTree) {
-  Octree<testT> tree;
+  se::Octree<testT> tree;
   tree.init(1024, 10);
   const int side = se::VoxelBlock<testT>::side;
   const int max_depth = log2(tree.size());
@@ -146,7 +146,7 @@ TEST(SerialiseUnitTest, SerialiseTree) {
   std::string filename = "octree-test.bin";
   tree.save(filename);
 
-  Octree<testT> tree_copy;
+  se::Octree<testT> tree_copy;
   tree_copy.load(filename);
 
   auto& node_buffer_base = tree.getNodesBuffer();

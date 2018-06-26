@@ -35,6 +35,7 @@
  */
 
 #include <se/DenseSLAMSystem.h>
+#include <se/ray_iterator.hpp>
 #include <se/algorithms/meshing.hpp>
 #include <se/geometry/octree_collision.hpp>
 #include <se/vtk-io.h>
@@ -460,7 +461,7 @@ void DenseSLAMSystem::dump_mesh(const char* filename){
     return val.x;
   };
 
-  algorithms::marching_cube(volume._map_index, select, inside, mesh);
+  se::algorithms::marching_cube(volume._map_index, select, inside, mesh);
   writeVtkMesh(filename, mesh);
 }
 

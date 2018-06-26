@@ -32,6 +32,8 @@
 #include "../octree.hpp"
 #include "aabb_collision.hpp"
 
+namespace se {
+namespace geometry {
 enum class collision_status {
   occupied,
   unseen,
@@ -166,5 +168,7 @@ collision_status collides_with(const Octree<FieldType>& map,
     current = stack[--stack_idx]; 
   }
   return status;
+}
+}
 }
 #endif

@@ -49,7 +49,7 @@ class MultiscaleTest : public ::testing::Test {
 
     }
 
-  typedef Octree<testT> OctreeF;
+  typedef se::Octree<testT> OctreeF;
   OctreeF oct_;
 };
 
@@ -92,14 +92,14 @@ TEST_F(MultiscaleTest, Iterator) {
   alloc_list[0] = oct_.hash(blocks[0](0), blocks[0](1), blocks[0](2));
 
   oct_.allocate(alloc_list, 1);
-  leaf_iterator<testT> it(oct_);
+  se::leaf_iterator<testT> it(oct_);
 
-  typedef std::tuple<Eigen::Vector3i, int, typename Octree<testT>::value_type> it_result;
+  typedef std::tuple<Eigen::Vector3i, int, typename se::Octree<testT>::value_type> it_result;
   it_result node = it.next();
   for(int i = 512; std::get<1>(node) > 0; node = it.next(), i /= 2){
     const Eigen::Vector3i coords = std::get<0>(node);
     const int side = std::get<1>(node);
-    const Octree<testT>::value_type val = std::get<2>(node);
+    const se::Octree<testT>::value_type val = std::get<2>(node);
     EXPECT_EQ(side, i);
   }
 }

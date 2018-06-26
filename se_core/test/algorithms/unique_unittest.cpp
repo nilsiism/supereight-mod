@@ -60,7 +60,7 @@ class UniqueTest : public ::testing::Test {
     }
     
     MortonType keys[10];
-    typedef Octree<testT> OctreeF;
+    typedef se::Octree<testT> OctreeF;
     OctreeF oct;
 };
 
@@ -91,7 +91,7 @@ class UniqueMultiscaleTest : public ::testing::Test {
     }
    
     MortonType keys[10];
-    typedef Octree<testT> OctreeF;
+    typedef se::Octree<testT> OctreeF;
     OctreeF oct;
 };
 
