@@ -72,6 +72,7 @@ private:
 
   se::key_t* allocationList;
   size_t reserved;
+  Volume<FieldType> volume;
 
   // intra-frame
   TrackData * trackingResult;
@@ -83,66 +84,25 @@ private:
   float3 ** inputVertex;
   float3 ** inputNormal;
 
-	void raycast(uint frame, const float4& k, float mu);
-
 public:
-	DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3 volumeDimensions,
-			float3 initPose, std::vector<int> & pyramid, Configuration config):
-			computationSize(make_uint2(inputSize.x, inputSize.y)) {
 
-		this->_initPose = initPose;
-		this->volumeDimensions = volumeDimensions;
-		this->volumeResolution = volumeResolution;
-    this->voxel_block_size = config.voxel_block_size;
-    this->_mu = config.mu;
-    this->config = config;
+  DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, 
+      float3 volumeDimensions, float3 initPose, std::vector<int> & pyramid, 
+      Configuration config);
 
-    pose.data[0] = {1.f, 0.f, 0.f, initPose.x};
-    pose.data[1] = {0.f, 1.f, 0.f, initPose.y};
-    pose.data[2] = {0.f, 0.f, 1.f, initPose.z};
-    pose.data[3] = {0.f, 0.f, 0.f, 1.f};
-		this->iterations.clear();
-		for (std::vector<int>::iterator it = pyramid.begin();
-				it != pyramid.end(); it++) {
-			this->iterations.push_back(*it);
-		}
-
-		step = min(volumeDimensions) / max(volumeResolution);
-		viewPose = &pose;
-		this->languageSpecificConstructor();
-	}
-//Allow a kfusion object to be created with a pose which include orientation as well as position
-	DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3 volumeDimensions,
-			Matrix4 initPose, std::vector<int> & pyramid, Configuration config) :
-			computationSize(make_uint2(inputSize.x, inputSize.y)) {
-		this->_initPose = getPosition();
-		this->volumeDimensions = volumeDimensions;
-		this->volumeResolution = volumeResolution;
-        this->voxel_block_size = config.voxel_block_size;
-        this->_mu = config.mu;
-		pose = initPose;
-
-		this->iterations.clear();
-		for (std::vector<int>::iterator it = pyramid.begin();
-				it != pyramid.end(); it++) {
-			this->iterations.push_back(*it);
-		}
-
-		step = min(volumeDimensions) / max(volumeResolution);
-		viewPose = &pose;
-		this->languageSpecificConstructor();
-	}
-
+  DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, 
+      float3 volumeDimensions, Matrix4 initPose, std::vector<int> & pyramid, 
+      Configuration config);
 	void languageSpecificConstructor();
 	~DenseSLAMSystem();
 
-	void reset();
 	bool getTracked() {
 		return (_tracked);
 	}
 	bool getIntegrated() {
 		return (_integrated);
 	}
+
 	float3 getPosition() {
 		//std::cerr << "InitPose =" << _initPose.x << "," << _initPose.y  <<"," << _initPose.z << "    ";
 		//std::cerr << "pose =" << pose.data[0].w << "," << pose.data[1].w  <<"," << pose.data[2].w << "    ";
@@ -152,9 +112,9 @@ public:
 		return (make_float3(xt, yt, zt));
 	}
 
-    float3 getInitPos(){
-        return _initPose;
-    }
+  float3 getInitPos(){
+    return _initPose;
+  }
 
 	bool preprocessing(const ushort * inputDepth, const uint2 inputSize, 
                      const bool filterInput);

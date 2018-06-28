@@ -49,17 +49,59 @@
 #include "bfusion/alloc_impl.hpp"
 #include "kfusion/alloc_impl.hpp"
 
-Volume<FieldType> volume;
 
 extern PerfStats Stats;
 
+// For debugging purposes, will be deleted once done.
+std::vector<Matrix4> poses;
 
+DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3 volumeDimensions,
+			float3 initPose, std::vector<int> & pyramid, Configuration config):
+  computationSize(make_uint2(inputSize.x, inputSize.y)) {
 
-bool bayesian = false;
+    this->_initPose = initPose;
+    this->volumeDimensions = volumeDimensions;
+    this->volumeResolution = volumeResolution;
+    this->voxel_block_size = config.voxel_block_size;
+    this->_mu = config.mu;
+    this->config = config;
 
-  // For debugging purposes, will be deleted once done.
-  std::vector<Matrix4> poses;
+    pose.data[0] = {1.f, 0.f, 0.f, initPose.x};
+    pose.data[1] = {0.f, 1.f, 0.f, initPose.y};
+    pose.data[2] = {0.f, 0.f, 1.f, initPose.z};
+    pose.data[3] = {0.f, 0.f, 0.f, 1.f};
+    this->iterations.clear();
+    for (std::vector<int>::iterator it = pyramid.begin();
+        it != pyramid.end(); it++) {
+      this->iterations.push_back(*it);
+    }
 
+    step = min(volumeDimensions) / max(volumeResolution);
+    viewPose = &pose;
+    this->languageSpecificConstructor();
+  }
+
+DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, 
+    float3 volumeDimensions, Matrix4 initPose, std::vector<int> & pyramid, 
+    Configuration config) :
+  computationSize(make_uint2(inputSize.x, inputSize.y)) {
+    this->_initPose = getPosition();
+    this->volumeDimensions = volumeDimensions;
+    this->volumeResolution = volumeResolution;
+    this->voxel_block_size = config.voxel_block_size;
+    this->_mu = config.mu;
+    pose = initPose;
+
+    this->iterations.clear();
+    for (std::vector<int>::iterator it = pyramid.begin();
+        it != pyramid.end(); it++) {
+      this->iterations.push_back(*it);
+    }
+
+    step = min(volumeDimensions) / max(volumeResolution);
+    viewPose = &pose;
+    this->languageSpecificConstructor();
+  }
 
 void DenseSLAMSystem::languageSpecificConstructor() {
 
@@ -111,10 +153,7 @@ void DenseSLAMSystem::languageSpecificConstructor() {
     std::cout << "Parsed " << poses.size() << " poses" << std::endl;
   }
 
-  bayesian = config.bayesian;
-
 	volume.init(volumeResolution.x, volumeDimensions.x);
-	reset();
 }
 
 DenseSLAMSystem::~DenseSLAMSystem() {
@@ -132,18 +171,8 @@ DenseSLAMSystem::~DenseSLAMSystem() {
 	free(gaussian);
   
   if(allocationList) free(allocationList);
-
 	volume.release();
 }
-void DenseSLAMSystem::reset() {
-}
-void init() {
-}
-;
-// stub
-void clean() {
-}
-;
 
 bool DenseSLAMSystem::preprocessing(const ushort * inputDepth, const uint2 inputSize, 
     const bool filterInput){
