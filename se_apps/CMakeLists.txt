@@ -54,7 +54,7 @@ function(add_version appname compile_flags libraries)
      file(GLOB qt_srcs qt/*)
 
      QT5_ADD_RESOURCES( ResourceSources  "qt/images.qrc")
-     set(qt_srcs ${qt_srcs} ${ResourceSources} include/PowerMonitor.h ../../utils/perfstats.h)
+     set(qt_srcs ${qt_srcs} ${ResourceSources} include/PowerMonitor.h ../se_shared/perfstats.h)
      SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS "")
      SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS "")
      set(CMAKE_AUTOMOC ON)
