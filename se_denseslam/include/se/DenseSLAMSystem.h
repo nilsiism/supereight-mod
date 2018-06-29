@@ -73,7 +73,7 @@ private:
 
   se::key_t* allocation_list_;
   size_t reserved_;
-  std::shared_ptr<Volume<FieldType> > volume_ptr;
+  std::shared_ptr<Volume<FieldType> > volume_ptr_;
 
   // intra-frame
   TrackData * tracking_result_;
