@@ -60,8 +60,8 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3
   computation_size_(make_uint2(inputSize.x, inputSize.y)) {
 
     this->_initPose = initPose;
-    this->volumeDimensions = volumeDimensions;
-    this->volumeResolution = volumeResolution;
+    this->volume_dimension_ = volumeDimensions;
+    this->volume_resolution_ = volumeResolution;
     this->voxel_block_size = config.voxel_block_size;
     this->_mu = config.mu;
     this->config = config;
@@ -86,8 +86,8 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution,
     Configuration config) :
   computation_size_(make_uint2(inputSize.x, inputSize.y)) {
     this->_initPose = getPosition();
-    this->volumeDimensions = volumeDimensions;
-    this->volumeResolution = volumeResolution;
+    this->volume_dimension_ = volumeDimensions;
+    this->volume_resolution_ = volumeResolution;
     this->voxel_block_size = config.voxel_block_size;
     this->_mu = config.mu;
     pose_ = initPose;
@@ -154,7 +154,7 @@ void DenseSLAMSystem::languageSpecificConstructor() {
   }
 
   volume_ptr = std::make_shared<Volume<FieldType> >();
-	volume_ptr->init(volumeResolution.x, volumeDimensions.x);
+        volume_ptr->init(volume_resolution_.x, volume_dimension_.x);
 }
 
 DenseSLAMSystem::~DenseSLAMSystem() {

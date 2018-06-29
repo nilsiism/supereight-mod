@@ -54,8 +54,8 @@ private:
 	float step;
         Matrix4 pose_;
         Matrix4 *viewPose_;
-	float3 volumeDimensions;
-	uint3 volumeResolution;
+        float3 volume_dimension_;
+        uint3 volume_resolution_;
 	std::vector<int> iterations;
 	bool _tracked;
 	bool _integrated;
@@ -88,12 +88,12 @@ private:
 
 public:
 
-  DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, 
-      float3 volumeDimensions, float3 initPose, std::vector<int> & pyramid, 
+  DenseSLAMSystem(uint2 inputSize, uint3 volume_resolution_,
+      float3 volume_dimension_, float3 initPose, std::vector<int> & pyramid,
       Configuration config);
 
-  DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, 
-      float3 volumeDimensions, Matrix4 initPose, std::vector<int> & pyramid, 
+  DenseSLAMSystem(uint2 inputSize, uint3 volume_resolution_,
+      float3 volume_dimension_, Matrix4 initPose, std::vector<int> & pyramid,
       Configuration config);
 	void languageSpecificConstructor();
 	~DenseSLAMSystem();
@@ -156,10 +156,10 @@ public:
                 return (viewPose_);
 	}
 	float3 getModelDimensions() {
-		return (volumeDimensions);
+                return (volume_dimension_);
 	}
 	uint3 getModelResolution() {
-		return (volumeResolution);
+                return (volume_resolution_);
 	}
 	uint2 getComputationResolution() {
                 return (computation_size_);
