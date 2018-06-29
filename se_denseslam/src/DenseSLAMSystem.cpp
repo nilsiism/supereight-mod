@@ -75,7 +75,6 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3
       this->iterations_.push_back(*it);
     }
 
-    step = min(volumeDimensions) / max(volumeResolution);
     viewPose_ = &pose_;
     this->languageSpecificConstructor();
   }
@@ -96,7 +95,6 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution,
       this->iterations_.push_back(*it);
     }
 
-    step = min(volumeDimensions) / max(volumeResolution);
     viewPose_ = &pose_;
     this->languageSpecificConstructor();
   }
@@ -255,6 +253,7 @@ bool DenseSLAMSystem::raycasting(float4 k, float mu, uint frame) {
 
   if(frame > 2) {
     raycast_pose_ = pose_;
+    float step = volume_dimension_.x / volume_resolution_.x;
     raycastKernel(*volume_ptr_, vertex_, normal_, computation_size_,
         raycast_pose_ * getInverseCameraMatrix(k), nearPlane, farPlane, mu,
         step, step*BLOCK_SIDE);
@@ -350,12 +349,14 @@ void DenseSLAMSystem::dump_volume(std::string ) {
 
 void DenseSLAMSystem::renderVolume(uchar4 * out, uint2 outputSize, int frame,
 		int raycast_rendering_rate, float4 k, float largestep) {
-	if (frame % raycast_rendering_rate == 0)
+	if (frame % raycast_rendering_rate == 0) {
+    const float step = volume_dimension_.x / volume_resolution_.x;
 		renderVolumeKernel(*volume_ptr_, out, outputSize,
 	*(this->viewPose_) * getInverseCameraMatrix(k), nearPlane,
 	farPlane * 2.0f, mu_, step, largestep,
         get_translation(*(this->viewPose_)), ambient,
         !compareMatrix4(*(this->viewPose_), raycast_pose_), vertex_, normal_);
+  }
 }
 
 void DenseSLAMSystem::renderTrack(uchar4 * out, uint2 outputSize) {

@@ -51,7 +51,6 @@ class DenseSLAMSystem {
 
 private:
         uint2 computation_size_;
-	float step;
         Matrix4 pose_;
         Matrix4 *viewPose_;
         float3 volume_dimension_;
