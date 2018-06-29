@@ -29,6 +29,8 @@
 #ifndef VOLUME_TEMPLATE_H
 #define VOLUME_TEMPLATE_H
 
+#include <iostream>
+#include <memory>
 #include <se/voxel_traits.hpp>
 #include <se/utils/memory_pool.hpp>
 #include <type_traits>
@@ -42,7 +44,7 @@ class Void {};
  * Sparse, dynamically allocated storage accessed through the 
  * appropriate indexer (octree/hash table).
  * */ 
-template <typename FieldType, template<typename> class Indexer> 
+template <typename FieldType, template<typename> class DiscreteMapT> 
 class VolumeTemplate {
 
   public:
@@ -105,7 +107,7 @@ class VolumeTemplate {
     unsigned int _size;
     float _dim;
     std::vector<se::key_t> _allocationList;
-    Indexer<FieldType> _map_index; 
+    DiscreteMapT<FieldType> _map_index; 
 
   private:
 
