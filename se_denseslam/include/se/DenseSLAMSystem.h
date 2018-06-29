@@ -50,7 +50,7 @@
 class DenseSLAMSystem {
 
 private:
-	uint2 computationSize;
+        uint2 computation_size_;
 	float step;
 	Matrix4 pose;
 	Matrix4 *viewPose;
@@ -162,7 +162,7 @@ public:
 		return (volumeResolution);
 	}
 	uint2 getComputationResolution() {
-		return (computationSize);
+                return (computation_size_);
 	}
 };
 
