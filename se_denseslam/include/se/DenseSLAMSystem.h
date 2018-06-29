@@ -65,25 +65,25 @@ private:
   Configuration config_;
 
   // input once
-  float * gaussian;
+  float * gaussian_;
 
   // inter-frame
-  float3 * vertex;
-  float3 * normal;
+  float3 * vertex_;
+  float3 * normal_;
 
-  se::key_t* allocationList;
-  size_t reserved;
+  se::key_t* allocation_list_;
+  size_t reserved_;
   std::shared_ptr<Volume<FieldType> > volume_ptr;
 
   // intra-frame
-  TrackData * trackingResult;
-  float* reductionoutput;
-  float ** ScaledDepth;
-  float * floatDepth;
-  Matrix4 oldPose;
-  Matrix4 raycastPose;
-  float3 ** inputVertex;
-  float3 ** inputNormal;
+  TrackData * tracking_result_;
+  float* reduction_output_;
+  float ** scaled_depth_;
+  float * float_depth_;
+  Matrix4 old_pose_;
+  Matrix4 raycast_pose_;
+  float3 ** input_vertex_;
+  float3 ** input_normal_;
 
 public:
 
