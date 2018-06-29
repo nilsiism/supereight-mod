@@ -59,7 +59,7 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3
 			float3 initPose, std::vector<int> & pyramid, Configuration config):
   computation_size_(make_uint2(inputSize.x, inputSize.y)) {
 
-    this->_initPose = initPose;
+    this->init_pose_ = initPose;
     this->volume_dimension_ = volumeDimensions;
     this->volume_resolution_ = volumeResolution;
     this->voxel_block_size = config.voxel_block_size;
@@ -85,7 +85,7 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution,
     float3 volumeDimensions, Matrix4 initPose, std::vector<int> & pyramid, 
     Configuration config) :
   computation_size_(make_uint2(inputSize.x, inputSize.y)) {
-    this->_initPose = getPosition();
+    this->init_pose_ = getPosition();
     this->volume_dimension_ = volumeDimensions;
     this->volume_resolution_ = volumeResolution;
     this->voxel_block_size = config.voxel_block_size;
@@ -199,9 +199,9 @@ bool DenseSLAMSystem::tracking(float4 k, float icp_threshold, uint tracking_rate
   if(!poses.empty()) {
     oldPose = this->pose_;
     this->pose_ = poses[frame];
-    this->pose_.data[0].w = (this->pose_.data[0].w - poses[0].data[0].w) + this->_initPose.x;
-    this->pose_.data[1].w = (this->pose_.data[1].w - poses[0].data[1].w) + this->_initPose.y;
-    this->pose_.data[2].w = (this->pose_.data[2].w - poses[0].data[2].w) + this->_initPose.z;
+    this->pose_.data[0].w = (this->pose_.data[0].w - poses[0].data[0].w) + this->init_pose_.x;
+    this->pose_.data[1].w = (this->pose_.data[1].w - poses[0].data[1].w) + this->init_pose_.y;
+    this->pose_.data[2].w = (this->pose_.data[2].w - poses[0].data[2].w) + this->init_pose_.z;
     return true;
   }
 

@@ -57,9 +57,9 @@ private:
         float3 volume_dimension_;
         uint3 volume_resolution_;
         std::vector<int> iterations_;
-	bool _tracked;
-	bool _integrated;
-	float3 _initPose;
+        bool tracked_;
+        bool integrated_;
+        float3 init_pose_;
   int voxel_block_size;
   float _mu;
   bool shouldRender = false;
@@ -99,24 +99,24 @@ public:
 	~DenseSLAMSystem();
 
 	bool getTracked() {
-		return (_tracked);
+                return (tracked_);
 	}
 
 	bool getIntegrated() {
-		return (_integrated);
+                return (integrated_);
 	}
 
 	float3 getPosition() {
 		//std::cerr << "InitPose =" << _initPose.x << "," << _initPose.y  <<"," << _initPose.z << "    ";
 		//std::cerr << "pose =" << pose.data[0].w << "," << pose.data[1].w  <<"," << pose.data[2].w << "    ";
-                float xt = pose_.data[0].w - _initPose.x;
-                float yt = pose_.data[1].w - _initPose.y;
-                float zt = pose_.data[2].w - _initPose.z;
+                float xt = pose_.data[0].w - init_pose_.x;
+                float yt = pose_.data[1].w - init_pose_.y;
+                float zt = pose_.data[2].w - init_pose_.z;
 		return (make_float3(xt, yt, zt));
 	}
 
   float3 getInitPos(){
-    return _initPose;
+    return init_pose_;
   }
 
 	bool preprocessing(const ushort * inputDepth, const uint2 inputSize, 
