@@ -62,8 +62,8 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3
     this->init_pose_ = initPose;
     this->volume_dimension_ = volumeDimensions;
     this->volume_resolution_ = volumeResolution;
-    this->_mu = config.mu;
-    this->config = config;
+    this->mu_ = config.mu;
+    this->config_ = config;
 
     pose_.data[0] = {1.f, 0.f, 0.f, initPose.x};
     pose_.data[1] = {0.f, 1.f, 0.f, initPose.y};
@@ -87,7 +87,7 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution,
     this->init_pose_ = getPosition();
     this->volume_dimension_ = volumeDimensions;
     this->volume_resolution_ = volumeResolution;
-    this->_mu = config.mu;
+    this->mu_ = config.mu;
     pose_ = initPose;
 
     this->iterations_.clear();
@@ -146,8 +146,8 @@ void DenseSLAMSystem::languageSpecificConstructor() {
 	}
 	// ********* END : Generate the gaussian *************
 
-  if(config.groundtruth_file != ""){
-    parseGTFile(config.groundtruth_file, poses);
+  if(config_.groundtruth_file != ""){
+    parseGTFile(config_.groundtruth_file, poses);
     std::cout << "Parsed " << poses.size() << " poses" << std::endl;
   }
 
@@ -353,7 +353,7 @@ void DenseSLAMSystem::renderVolume(uchar4 * out, uint2 outputSize, int frame,
 	if (frame % raycast_rendering_rate == 0)
 		renderVolumeKernel(*volume_ptr, out, outputSize,
 	*(this->viewPose_) * getInverseCameraMatrix(k), nearPlane,
-        farPlane * 2.0f, _mu, step, largestep, 
+	farPlane * 2.0f, mu_, step, largestep,
         get_translation(*(this->viewPose_)), ambient,
         !compareMatrix4(*(this->viewPose_), raycastPose), vertex, normal);
 }

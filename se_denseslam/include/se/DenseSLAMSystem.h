@@ -60,9 +60,9 @@ private:
         bool tracked_;
         bool integrated_;
         float3 init_pose_;
-  float _mu;
-  bool shouldRender = false;
-  Configuration config;
+  float mu_;
+  bool need_render_ = false;
+  Configuration config_;
 
   // input once
   float * gaussian;
@@ -89,11 +89,11 @@ public:
 
   DenseSLAMSystem(uint2 inputSize, uint3 volume_resolution_,
       float3 volume_dimension_, float3 initPose, std::vector<int> & pyramid,
-      Configuration config);
+      Configuration config_);
 
   DenseSLAMSystem(uint2 inputSize, uint3 volume_resolution_,
       float3 volume_dimension_, Matrix4 initPose, std::vector<int> & pyramid,
-      Configuration config);
+      Configuration config_);
 	void languageSpecificConstructor();
 	~DenseSLAMSystem();
 
@@ -144,11 +144,11 @@ public:
 	void setViewPose(Matrix4 *value = NULL) {
 		if (value == NULL){
                         viewPose_ = &pose_;
-      shouldRender = false;
+      need_render_ = false;
     }
 		else {
                         viewPose_ = value;
-      shouldRender = true;
+      need_render_ = true;
     }
 	}
 	Matrix4 *getViewPose() {
