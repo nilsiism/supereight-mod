@@ -37,6 +37,8 @@
 
 #include <cstdlib>
 #include <se/commons.h>
+#include <iostream>
+#include <memory>
 #include <perfstats.h>
 #include <timings.h>
 #include <se/config.h>
@@ -72,7 +74,7 @@ private:
 
   se::key_t* allocationList;
   size_t reserved;
-  Volume<FieldType> volume;
+  std::shared_ptr<Volume<FieldType> > volume_ptr;
 
   // intra-frame
   TrackData * trackingResult;
@@ -99,6 +101,7 @@ public:
 	bool getTracked() {
 		return (_tracked);
 	}
+
 	bool getIntegrated() {
 		return (_integrated);
 	}
@@ -127,15 +130,18 @@ public:
 	bool raycasting(float4 k, float mu, uint frame);
 	bool integration(float4 k, uint integration_rate, float mu, uint frame);
 
-  void dumpVolume(std::string filename);
+  void dump_volume(const std::string filename);
+  void dump_mesh(const std::string filename);
 
   void renderVolume(uchar4 * out, const uint2 outputSize, int frame, int rate,
       float4 k, float mu);
   void renderTrack(uchar4 * out, const uint2 outputSize);
   void renderDepth(uchar4* out, uint2 outputSize);
+
 	Matrix4 getPose() {
 		return pose;
 	}
+
 	void setViewPose(Matrix4 *value = NULL) {
 		if (value == NULL){
 			viewPose = &pose;
@@ -158,9 +164,6 @@ public:
 	uint2 getComputationResolution() {
 		return (computationSize);
 	}
-
-  void dump_mesh(const char* filename);
-
 };
 
 void synchroniseDevices(); // Synchronise CPU and GPU

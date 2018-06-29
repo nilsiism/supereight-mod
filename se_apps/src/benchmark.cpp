@@ -170,7 +170,7 @@ int main(int argc, char ** argv) {
 
   if (config.dump_volume_file != "") {
     double s = tock();
-    pipeline.dumpVolume(config.dump_volume_file);
+    pipeline.dump_volume(config.dump_volume_file);
     double e = tock();
     std::cout << "Mesh generated in " << e - s << " seconds" << std::endl;
   }
