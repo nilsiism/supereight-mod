@@ -237,12 +237,6 @@ public:
 
 private:
 
-  struct stack_entry {
-    int scale;
-    Node<T> * parent;
-    float t_max;
-  };
-
   Node<T> * root_;
   int size_;
   float dim_;
