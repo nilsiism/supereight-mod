@@ -40,7 +40,6 @@ const bool default_bilateralFilter = false;
 const std::string default_dump_volume_file = "";
 const std::string default_input_file = "";
 const std::string default_log_file = "";
-const int default_voxel_block_size = 8;
 const int default_color_integration = false;
 const int default_multi_resolution = false;
 const bool default_bayesian = false;
@@ -54,7 +53,7 @@ inline std::string pyramid2str(std::vector<int> v) {
 
 }
 
-static std::string short_options = "a:qc:d:f:g:hi:l:m:k:o:p:r:s:t:v:y:z:B:FC:M";
+static std::string short_options = "a:qc:d:f:g:hi:l:m:k:o:p:r:s:t:v:y:z:FC:M";
 
 static struct option long_options[] =
   {
@@ -89,7 +88,6 @@ static struct option long_options[] =
 
 inline
 void print_arguments() {
-  std::cerr << "-B  (--voxel_block_size)         : default is " << default_voxel_block_size << std::endl;
   std::cerr << "-b  (--block-read)       		: default is False: Block on read " << std::endl;
   std::cerr << "-c  (--compute-size-ratio)       : default is " << default_compute_size_ratio << "   (same size)      " << std::endl;
   std::cerr << "-e  (--invert-y)       			: default is False: Block on read " << std::endl;
@@ -201,7 +199,6 @@ Configuration parseArgs(unsigned int argc, char ** argv) {
   config.volume_resolution = default_volume_resolution;
   config.volume_size = default_volume_size;
   config.initial_pos_factor = default_initial_pos_factor;
-  config.voxel_block_size = default_voxel_block_size;
   //initial_pose_quant.setIdentity();
   //invert_y = false;
 
@@ -389,10 +386,6 @@ Configuration parseArgs(unsigned int argc, char ** argv) {
                 }
                 std::cerr << "update pyramid levels to " << pyramid2str(config.pyramid)
                   << std::endl;
-                break;
-      case 'B':
-                config.voxel_block_size = atoi(optarg);
-                std::cerr << "update voxel block size to " << config.voxel_block_size << std::endl;
                 break;
       case 'F':
                 config.bilateralFilter = true;

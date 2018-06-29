@@ -62,7 +62,6 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3
     this->init_pose_ = initPose;
     this->volume_dimension_ = volumeDimensions;
     this->volume_resolution_ = volumeResolution;
-    this->voxel_block_size = config.voxel_block_size;
     this->_mu = config.mu;
     this->config = config;
 
@@ -88,7 +87,6 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution,
     this->init_pose_ = getPosition();
     this->volume_dimension_ = volumeDimensions;
     this->volume_resolution_ = volumeResolution;
-    this->voxel_block_size = config.voxel_block_size;
     this->_mu = config.mu;
     pose_ = initPose;
 

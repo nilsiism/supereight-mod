@@ -60,7 +60,6 @@ private:
         bool tracked_;
         bool integrated_;
         float3 init_pose_;
-  int voxel_block_size;
   float _mu;
   bool shouldRender = false;
   Configuration config;
