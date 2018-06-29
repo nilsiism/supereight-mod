@@ -194,7 +194,7 @@ public:
    * blocks, false to retrieve all allocated blocks.
    */
   void getBlockList(std::vector<VoxelBlock<T> *>& blocklist, bool active);
-  MemoryPool<VoxelBlock<T> >& getBlockBuffer(){ return block_memory_; };
+  MemoryPool<VoxelBlock<T> >& getBlockBuffer(){ return block_buffer_; };
   MemoryPool<Node<T> >& getNodesBuffer(){ return nodes_buffer_; };
   /*! \brief Computes the morton code of the block containing voxel 
    * at coordinates (x,y,z)
@@ -241,7 +241,7 @@ private:
   int size_;
   float dim_;
   int max_level_;
-  MemoryPool<VoxelBlock<T> > block_memory_;
+  MemoryPool<VoxelBlock<T> > block_buffer_;
   MemoryPool<Node<T> > nodes_buffer_;
 
   friend class ray_iterator<T>;
@@ -485,7 +485,7 @@ Node<T> * Octree<T>::insert(const int x, const int y, const int z,
   // Make sure we have enough space on buffers
   const int leaves_level = max_depth - math::log2_const(blockSide);
   if(depth > (max_depth - leaves_level)) {
-    block_memory_.reserve(1);
+    block_buffer_.reserve(1);
     nodes_buffer_.reserve(leaves_level);
   } else {
     nodes_buffer_.reserve(depth);
@@ -513,7 +513,7 @@ Node<T> * Octree<T>::insert(const int x, const int y, const int z,
     if(!tmp){
       const key_t prefix = keyops::code(key) & MASK[d + shift];
       if(edge == blockSide) {
-        tmp = block_memory_.acquire_block();
+        tmp = block_buffer_.acquire_block();
         static_cast<VoxelBlock<T> *>(tmp)->coordinates(
             Eigen::Vector3i(unpack_morton(prefix)));
         static_cast<VoxelBlock<T> *>(tmp)->active(true);
@@ -787,7 +787,7 @@ void Octree<T>::reserveBuffers(const int n){
     keys_at_level_ = new key_t[n];
     reserved_ = n;
   }
-  block_memory_.reserve(n);
+  block_buffer_.reserve(n);
 }
 
 template <typename T>
@@ -836,7 +836,7 @@ bool Octree<T>::allocate_level(key_t* keys, int num_tasks, int target_level){
 
       if(!(*n)){
         if(level == leaves_level){
-          *n = block_memory_.acquire_block();
+          *n = block_buffer_.acquire_block();
           static_cast<VoxelBlock<T> *>(*n)->coordinates(Eigen::Vector3i(unpack_morton(myKey)));
           static_cast<VoxelBlock<T> *>(*n)->active(true);
           static_cast<VoxelBlock<T> *>(*n)->code_ = myKey | level;
@@ -889,8 +889,8 @@ void Octree<T>::getActiveBlockList(Node<T> *n,
 template <typename T>
 void Octree<T>::getAllocatedBlockList(Node<T> *,
     std::vector<VoxelBlock<T>*>& blocklist){
-  for(unsigned int i = 0; i < block_memory_.size(); ++i) {
-      blocklist.push_back(block_memory_[i]);
+  for(unsigned int i = 0; i < block_buffer_.size(); ++i) {
+      blocklist.push_back(block_buffer_[i]);
     }
   }
 
@@ -906,10 +906,10 @@ void Octree<T>::save(const std::string& filename) {
     for(int i = 0; i < n; ++i)
       internal::serialise(os, *nodes_buffer_[i]);
 
-    n = block_memory_.size();
+    n = block_buffer_.size();
     os.write(reinterpret_cast<char *>(&n), sizeof(size_t));
     for(int i = 0; i < n; ++i)
-      internal::serialise(os, *block_memory_[i]);
+      internal::serialise(os, *block_buffer_[i]);
   }
 }
 
@@ -973,8 +973,8 @@ class leaf_iterator {
         }
         break;
       case LEAF_NODES:
-        if(last < map_.block_memory_.size()) {
-          VoxelBlock<T>* n = map_.block_memory_[last++];
+        if(last < map_.block_buffer_.size()) {
+          VoxelBlock<T>* n = map_.block_buffer_[last++];
           return std::make_tuple(unpack_morton(n->code_), 
               int(VoxelBlock<T>::side), n->value_[0]); 
               /* the above int init required due to odr-use of static member */
