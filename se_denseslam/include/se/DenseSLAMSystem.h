@@ -93,8 +93,33 @@ class DenseSLAMSystem {
     DenseSLAMSystem(uint2 inputSize, uint3 volume_resolution_,
         float3 volume_dimension_, Matrix4 initPose, std::vector<int> & pyramid,
         Configuration config_);
+
     void languageSpecificConstructor();
+
     ~DenseSLAMSystem();
+
+    bool preprocessing(const ushort * inputDepth, const uint2 inputSize, 
+        const bool filterInput);
+
+    bool preprocessing(const ushort * inputDepth, const uchar3 * inputRGB,
+        const uint2 inputSize, const bool filterInput);
+
+    bool tracking(float4 k, float icp_threshold, uint tracking_rate,
+        uint frame);
+    bool raycasting(float4 k, float mu, uint frame);
+    bool integration(float4 k, uint integration_rate, float mu, uint frame);
+
+    void dump_volume(const std::string filename);
+    void dump_mesh(const std::string filename);
+
+    void renderVolume(uchar4 * out, const uint2 outputSize, int frame, int rate,
+        float4 k, float mu);
+    void renderTrack(uchar4 * out, const uint2 outputSize);
+    void renderDepth(uchar4* out, uint2 outputSize);
+
+    //
+    // Getters
+    //
 
     bool getTracked() {
       return (tracked_);
@@ -117,25 +142,6 @@ class DenseSLAMSystem {
       return init_pose_;
     }
 
-    bool preprocessing(const ushort * inputDepth, const uint2 inputSize, 
-        const bool filterInput);
-
-    bool preprocessing(const ushort * inputDepth, const uchar3 * inputRGB,
-        const uint2 inputSize, const bool filterInput);
-
-    bool tracking(float4 k, float icp_threshold, uint tracking_rate,
-        uint frame);
-    bool raycasting(float4 k, float mu, uint frame);
-    bool integration(float4 k, uint integration_rate, float mu, uint frame);
-
-    void dump_volume(const std::string filename);
-    void dump_mesh(const std::string filename);
-
-    void renderVolume(uchar4 * out, const uint2 outputSize, int frame, int rate,
-        float4 k, float mu);
-    void renderTrack(uchar4 * out, const uint2 outputSize);
-    void renderDepth(uchar4* out, uint2 outputSize);
-
     Matrix4 getPose() {
       return pose_;
     }
@@ -150,15 +156,19 @@ class DenseSLAMSystem {
         need_render_ = true;
       }
     }
+
     Matrix4 *getViewPose() {
       return (viewPose_);
     }
+
     float3 getModelDimensions() {
       return (volume_dimension_);
     }
+
     uint3 getModelResolution() {
       return (volume_resolution_);
     }
+
     uint2 getComputationResolution() {
       return (computation_size_);
     }
