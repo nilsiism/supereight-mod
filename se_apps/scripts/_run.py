@@ -257,7 +257,6 @@ class KinectFusion(SLAMAlgorithm):
 
         self.integration_rate = 1
         self.volume_resolution = '512'
-        self.voxel_block = '8'
         self.pyramid_levels = '10,5,4'
         self.rendering_rate = 4
         self.tracking_rate = 1
@@ -302,7 +301,6 @@ class KinectFusion(SLAMAlgorithm):
         args.extend(['--no-gui'])
         args.extend(['--integration-rate', str(self.integration_rate)])
         args.extend(['--volume-size', str(self.volume_size)])
-        args.extend(['-B', str(self.voxel_block)])
         args.extend(['--tracking-rate', str(self.tracking_rate)])
         args.extend(['--volume-resolution', str(self.volume_resolution)])
         args.extend(['--pyramid-levels', str(self.pyramid_levels)])
@@ -331,7 +329,6 @@ class KinectFusion(SLAMAlgorithm):
         res['volume-size'] = str(self.volume_size)
         res['tracking-rate'] = str(self.tracking_rate)
         res['volume-resolution'] = str(self.volume_resolution)
-        res['block-size'] = str(self.voxel_block)
         res['pyramid-levels'] = str(self.pyramid_levels)
         res['rendering-rate'] = str(self.rendering_rate)
         res['version'] = str(self.impl)
