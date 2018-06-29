@@ -72,7 +72,8 @@ class DenseSLAMSystem {
 
     se::key_t* allocation_list_;
     size_t reserved_;
-    std::shared_ptr<Volume<FieldType> > volume_ptr_;
+    std::shared_ptr<se::Octree<FieldType> > discrete_vol_ptr_;
+    Volume<FieldType> volume_;
 
     // intra-frame
     TrackData * tracking_result_;

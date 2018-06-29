@@ -52,13 +52,12 @@ class VolumeTemplate {
     typedef typename traits_type::value_type value_type;
     typedef FieldType field_type;
 
-    void init(uint s, float d) {
-      _size = s;
-      _dim = d; 
-      _map_index.init(_size, _dim);
-    }
-
-    void release(){};
+    VolumeTemplate(){};
+    VolumeTemplate(unsigned int s, float d, DiscreteMapT<FieldType>* m) :
+      _map_index(m) {
+        _size = s;
+        _dim = d;
+      };
 
     inline float3 pos(const uint3 & p) const {
       static const float voxelSize = _dim/_size;
@@ -71,18 +70,18 @@ class VolumeTemplate {
       const float inverseVoxelSize = _size/_dim;
       const int3 scaled_pos = make_int3(make_float3((p.x * inverseVoxelSize),
           (p.y * inverseVoxelSize), (p.z * inverseVoxelSize)));
-      return _map_index.get(scaled_pos.x, scaled_pos.y, scaled_pos.z);
+      return _map_index->get(scaled_pos.x, scaled_pos.y, scaled_pos.z);
     }
 
     value_type get(const float3 & p) const {
       const float inverseVoxelSize = _size/_dim;
       const int3 scaled_pos = make_int3(make_float3((p.x * inverseVoxelSize),
           (p.y * inverseVoxelSize), (p.z * inverseVoxelSize)));
-      return _map_index.get_fine(scaled_pos.x, scaled_pos.y, scaled_pos.z);
+      return _map_index->get_fine(scaled_pos.x, scaled_pos.y, scaled_pos.z);
     }
 
     value_type operator[](const uint3 p) const {
-      return _map_index.get(p.x, p.y, p.z);
+      return _map_index->get(p.x, p.y, p.z);
     }
 
     template <typename FieldSelector>
@@ -91,7 +90,7 @@ class VolumeTemplate {
       const Eigen::Vector3f scaled_pos((pos.x * inverseVoxelSize),
           (pos.y * inverseVoxelSize),
           (pos.z * inverseVoxelSize));
-      return _map_index.interp(scaled_pos, select);
+      return _map_index->interp(scaled_pos, select);
     }
 
     template <typename FieldSelector>
@@ -101,13 +100,13 @@ class VolumeTemplate {
       const Eigen::Vector3f scaled_pos((pos.x * inverseVoxelSize),
           (pos.y * inverseVoxelSize),
           (pos.z * inverseVoxelSize));
-      return _map_index.grad(scaled_pos, select);
+      return _map_index->grad(scaled_pos, select);
     }
 
     unsigned int _size;
     float _dim;
     std::vector<se::key_t> _allocationList;
-    DiscreteMapT<FieldType> _map_index; 
+    DiscreteMapT<FieldType> * _map_index; 
 
   private:
 
