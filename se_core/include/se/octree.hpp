@@ -432,7 +432,7 @@ void Octree<T>::init(int size, float dim) {
   max_level_ = log2(size);
   nodes_buffer_.reserve(1);
   root_ = nodes_buffer_.acquire_block();
-  root_->side = size;
+  root_->side_ = size;
   reserved_ = 1024;
   keys_at_level_ = new key_t[reserved_];
   std::memset(keys_at_level_, 0, reserved_);
@@ -496,7 +496,7 @@ Node<T> * Octree<T>::insert(const int x, const int y, const int z,
   if(!n) {
     root_ = nodes_buffer_.acquire_block();
     root_->code_ = 0;
-    root_->side = size_;
+    root_->side_ = size_;
     n = root_;
   }
 
@@ -522,7 +522,7 @@ Node<T> * Octree<T>::insert(const int x, const int y, const int z,
       } else {
         tmp = nodes_buffer_.acquire_block();
         tmp->code_ = prefix | d;
-        tmp->side = edge;
+        tmp->side_ = edge;
         n->children_mask_ = n->children_mask_ | (1 << childid);
         // std::cout << "coords: " 
         //   << keyops::decode(keyops::code(tmp->code_)) << std::endl;
@@ -845,7 +845,7 @@ bool Octree<T>::allocate_level(key_t* keys, int num_tasks, int target_level){
         else  {
           *n = nodes_buffer_.acquire_block();
           (*n)->code_ = myKey | level;
-          (*n)->side = edge;
+          (*n)->side_ = edge;
           parent->children_mask_ = parent->children_mask_ | (1 << index);
         }
       }
@@ -965,7 +965,7 @@ class leaf_iterator {
         if(last < map_.nodes_buffer_.size()) {
           Node<T>* n = map_.nodes_buffer_[last++];
           return std::make_tuple(unpack_morton(n->code_), 
-                                 n->side, n->value_[0]);
+                                 n->side_, n->value_[0]);
         } else {
           last = 0;
           state_ = LEAF_NODES; 
@@ -976,7 +976,7 @@ class leaf_iterator {
         if(last < map_.block_buffer_.size()) {
           VoxelBlock<T>* n = map_.block_buffer_[last++];
           return std::make_tuple(unpack_morton(n->code_), 
-              int(VoxelBlock<T>::side), n->value_[0]); 
+              int(VoxelBlock<T>::side), n->value_[0]);
               /* the above int init required due to odr-use of static member */
         } else {
           last = 0;

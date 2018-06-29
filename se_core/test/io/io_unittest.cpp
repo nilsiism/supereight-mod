@@ -61,7 +61,7 @@ TEST(SerialiseUnitTest, WriteReadNode) {
     std::ofstream os (filename, std::ios::binary); 
     se::Node<testT> octant;
     octant.code_ = 24;
-    octant.side = 256;
+    octant.side_ = 256;
     for(int i = 0; i < 8; ++i)
       octant.value_[i] =  5.f;
     se::internal::serialise(os, octant);
@@ -72,7 +72,7 @@ TEST(SerialiseUnitTest, WriteReadNode) {
     se::Node<testT> octant;
     se::internal::deserialise(octant, is);
     ASSERT_EQ(octant.code_, 24);
-    ASSERT_EQ(octant.side, 256);
+    ASSERT_EQ(octant.side_, 256);
     for(int i = 0; i < 8; ++i)
       ASSERT_EQ(octant.value_[i], 5.f);
   }

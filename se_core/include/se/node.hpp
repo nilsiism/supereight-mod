@@ -52,12 +52,12 @@ public:
 
   value_type value_[8];
   key_t code_;
-  unsigned int side;
+  unsigned int side_;
   unsigned char children_mask_;
 
   Node(){
     code_ = 0;
-    side = 0;
+    side_ = 0;
     children_mask_ = 0;
     for (unsigned int i = 0; i < 8; i++){
       value_[i]     = init_val();
@@ -141,7 +141,7 @@ template <typename T>
 inline typename VoxelBlock<T>::value_type 
 VoxelBlock<T>::data(const Eigen::Vector3i pos) const {
   Eigen::Vector3i offset = pos - coordinates_;
-  const value_type& data = voxel_block_[offset(0) + offset(1)*side + 
+  const value_type& data = voxel_block_[offset(0) + offset(1)*side +
                                          offset(2)*sideSq];
   return data;
 }
