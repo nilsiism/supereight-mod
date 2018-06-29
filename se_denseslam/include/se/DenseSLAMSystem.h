@@ -56,7 +56,7 @@ private:
         Matrix4 *viewPose_;
         float3 volume_dimension_;
         uint3 volume_resolution_;
-	std::vector<int> iterations;
+        std::vector<int> iterations_;
 	bool _tracked;
 	bool _integrated;
 	float3 _initPose;

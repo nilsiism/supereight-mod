@@ -70,10 +70,10 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution, float3
     pose_.data[1] = {0.f, 1.f, 0.f, initPose.y};
     pose_.data[2] = {0.f, 0.f, 1.f, initPose.z};
     pose_.data[3] = {0.f, 0.f, 0.f, 1.f};
-    this->iterations.clear();
+    this->iterations_.clear();
     for (std::vector<int>::iterator it = pyramid.begin();
         it != pyramid.end(); it++) {
-      this->iterations.push_back(*it);
+      this->iterations_.push_back(*it);
     }
 
     step = min(volumeDimensions) / max(volumeResolution);
@@ -92,10 +92,10 @@ DenseSLAMSystem::DenseSLAMSystem(uint2 inputSize, uint3 volumeResolution,
     this->_mu = config.mu;
     pose_ = initPose;
 
-    this->iterations.clear();
+    this->iterations_.clear();
     for (std::vector<int>::iterator it = pyramid.begin();
         it != pyramid.end(); it++) {
-      this->iterations.push_back(*it);
+      this->iterations_.push_back(*it);
     }
 
     step = min(volumeDimensions) / max(volumeResolution);
@@ -111,11 +111,11 @@ void DenseSLAMSystem::languageSpecificConstructor() {
 	// internal buffers to initialize
 	reductionoutput = (float*) calloc(sizeof(float) * 8 * 32, 1);
 
-	ScaledDepth = (float**) calloc(sizeof(float*) * iterations.size(), 1);
-	inputVertex = (float3**) calloc(sizeof(float3*) * iterations.size(), 1);
-	inputNormal = (float3**) calloc(sizeof(float3*) * iterations.size(), 1);
+	ScaledDepth = (float**) calloc(sizeof(float*) * iterations_.size(), 1);
+	inputVertex = (float3**) calloc(sizeof(float3*) * iterations_.size(), 1);
+	inputNormal = (float3**) calloc(sizeof(float3*) * iterations_.size(), 1);
 
-	for (unsigned int i = 0; i < iterations.size(); ++i) {
+	for (unsigned int i = 0; i < iterations_.size(); ++i) {
 		ScaledDepth[i] = (float*) calloc(
 				sizeof(float) * (computation_size_.x * computation_size_.y)
 						/ (int) pow(2, i), 1);
@@ -160,7 +160,7 @@ void DenseSLAMSystem::languageSpecificConstructor() {
 DenseSLAMSystem::~DenseSLAMSystem() {
 
 	free(reductionoutput);
-	for (unsigned int i = 0; i < iterations.size(); ++i) {
+	for (unsigned int i = 0; i < iterations_.size(); ++i) {
 		free(ScaledDepth[i]);
 		free(inputVertex[i]);
 		free(inputNormal[i]);
@@ -206,7 +206,7 @@ bool DenseSLAMSystem::tracking(float4 k, float icp_threshold, uint tracking_rate
   }
 
 	// half sample the input depth maps into the pyramid levels
-	for (unsigned int i = 1; i < iterations.size(); ++i) {
+	for (unsigned int i = 1; i < iterations_.size(); ++i) {
 		halfSampleRobustImageKernel(ScaledDepth[i], ScaledDepth[i - 1],
 				make_uint2(computation_size_.x / (int) pow(2, i - 1),
 						computation_size_.y / (int) pow(2, i - 1)), e_delta * 3, 1);
@@ -214,7 +214,7 @@ bool DenseSLAMSystem::tracking(float4 k, float icp_threshold, uint tracking_rate
 
 	// prepare the 3D information from the input depth maps
 	uint2 localimagesize = computation_size_;
-	for (unsigned int i = 0; i < iterations.size(); ++i) {
+	for (unsigned int i = 0; i < iterations_.size(); ++i) {
 		Matrix4 invK = getInverseCameraMatrix(k / float(1 << i));
 		depth2vertexKernel(inputVertex[i], ScaledDepth[i], localimagesize,
 				invK);
@@ -228,11 +228,11 @@ bool DenseSLAMSystem::tracking(float4 k, float icp_threshold, uint tracking_rate
 	oldPose = pose_;
 	const Matrix4 projectReference = getCameraMatrix(k) * inverse(raycastPose);
 
-	for (int level = iterations.size() - 1; level >= 0; --level) {
+	for (int level = iterations_.size() - 1; level >= 0; --level) {
 		uint2 localimagesize = make_uint2(
 				computation_size_.x / (int) pow(2, level),
 				computation_size_.y / (int) pow(2, level));
-		for (int i = 0; i < iterations[level]; ++i) {
+		for (int i = 0; i < iterations_[level]; ++i) {
 
 			trackKernel(trackingResult, inputVertex[level], inputNormal[level],
 					localimagesize, vertex, normal, computation_size_, pose_,
