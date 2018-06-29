@@ -60,7 +60,7 @@ TEST(SerialiseUnitTest, WriteReadNode) {
   {
     std::ofstream os (filename, std::ios::binary); 
     se::Node<testT> octant;
-    octant.code = 24;
+    octant.code_ = 24;
     octant.side = 256;
     for(int i = 0; i < 8; ++i)
       octant.value_[i] =  5.f;
@@ -71,7 +71,7 @@ TEST(SerialiseUnitTest, WriteReadNode) {
     std::ifstream is(filename, std::ios::binary);
     se::Node<testT> octant;
     se::internal::deserialise(octant, is);
-    ASSERT_EQ(octant.code, 24);
+    ASSERT_EQ(octant.code_, 24);
     ASSERT_EQ(octant.side, 256);
     for(int i = 0; i < 8; ++i)
       ASSERT_EQ(octant.value_[i], 5.f);
@@ -83,7 +83,7 @@ TEST(SerialiseUnitTest, WriteReadBlock) {
   {
     std::ofstream os (filename, std::ios::binary); 
     se::VoxelBlock<testT> octant;
-    octant.code = 24;
+    octant.code_ = 24;
     octant.coordinates(Eigen::Vector3i(40, 48, 52));
     for(int i = 0; i < 512; ++i)
       octant.data(i, 5.f);
@@ -94,7 +94,7 @@ TEST(SerialiseUnitTest, WriteReadBlock) {
     std::ifstream is(filename, std::ios::binary);
     se::VoxelBlock<testT> octant;
     se::internal::deserialise(octant, is);
-    ASSERT_EQ(octant.code, 24);
+    ASSERT_EQ(octant.code_, 24);
     ASSERT_TRUE(octant.coordinates() == Eigen::Vector3i(40, 48, 52));
     for(int i = 0; i < 512; ++i)
       ASSERT_EQ(octant.data(i), 5.f);
@@ -106,7 +106,7 @@ TEST(SerialiseUnitTest, WriteReadBlockStruct) {
   {
     std::ofstream os (filename, std::ios::binary); 
     se::VoxelBlock<Occupancy> octant;
-    octant.code = 24;
+    octant.code_ = 24;
     octant.coordinates(Eigen::Vector3i(40, 48, 52));
     for(int i = 0; i < 512; ++i)
       octant.data(i, {5.f, 2.});
@@ -117,7 +117,7 @@ TEST(SerialiseUnitTest, WriteReadBlockStruct) {
     std::ifstream is(filename, std::ios::binary);
     se::VoxelBlock<Occupancy> octant;
     se::internal::deserialise(octant, is);
-    ASSERT_EQ(octant.code, 24);
+    ASSERT_EQ(octant.code_, 24);
     ASSERT_TRUE(octant.coordinates() == Eigen::Vector3i(40, 48, 52));
     for(int i = 0; i < 512; ++i) {
       auto data = octant.data(i);
@@ -155,7 +155,7 @@ TEST(SerialiseUnitTest, SerialiseTree) {
   for(int i = 0; i < node_buffer_base.size(); ++i) {
     se::Node<testT> * n  = node_buffer_base[i];
     se::Node<testT> * n1 = node_buffer_copy[i];
-    ASSERT_EQ(n->code, n1->code);
+    ASSERT_EQ(n->code_, n1->code_);
     ASSERT_EQ(n->children_mask_, n1->children_mask_);
   }
 

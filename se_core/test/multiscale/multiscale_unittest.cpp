@@ -172,7 +172,7 @@ TEST_F(MultiscaleTest, MultipleInsert) {
       se::Node<testT> * n = tree.insert(vox(0), vox(1), vox(2), i);
       se::Node<testT> * n1 = tree.fetch_octant(vox(0), vox(1), vox(2), i);
       Eigen::Vector3i rounded = edge * (vox/edge);
-      Eigen::Vector3i coords = se::keyops::decode(n1->code);
+      Eigen::Vector3i coords = se::keyops::decode(n1->code_);
 
       // Check expected coordinates
       ASSERT_TRUE(coords == rounded);

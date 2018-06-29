@@ -110,7 +110,7 @@ namespace functor {
       }
 
       void update_node(se::Node<FieldType> * node, const float voxel_size) { 
-        const Eigen::Vector3i voxel = Eigen::Vector3i(unpack_morton(node->code));
+        const Eigen::Vector3i voxel = Eigen::Vector3i(unpack_morton(node->code_));
         const Eigen::Vector3f delta = _Tcw.rotationMatrix() * Eigen::Vector3f::Constant(0.5f * voxel_size * node->side);
         const Eigen::Vector3f delta_c = _K.topLeftCorner<3,3>() * delta;
         Eigen::Vector3f base_cam = _Tcw * (voxel_size * voxel.cast<float> ());

@@ -73,7 +73,7 @@ namespace se {
         }
 
         void update_node(se::Node<FieldType> * node) { 
-          Eigen::Vector3i voxel = Eigen::Vector3i(unpack_morton(node->code));
+          Eigen::Vector3i voxel = Eigen::Vector3i(unpack_morton(node->code_));
 #pragma omp simd
           for(int i = 0; i < 8; ++i) {
             const Eigen::Vector3i dir =  Eigen::Vector3i((i & 1) > 0, (i & 2) > 0, (i & 4) > 0);

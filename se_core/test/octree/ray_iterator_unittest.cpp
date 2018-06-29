@@ -80,7 +80,7 @@ TEST_F(RayIteratorTest, FetchAlongRay) {
   se::VoxelBlock<testT> * current;
   while(current = it.next()) {
     ASSERT_LT(i, alloc_list_.size());
-    ASSERT_EQ(current->code, alloc_list_[i]);
+    ASSERT_EQ(current->code_, alloc_list_[i]);
     i++; 
   }
   ASSERT_EQ(i, alloc_list_.size());

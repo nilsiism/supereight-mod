@@ -51,12 +51,12 @@ public:
   value_type init_val() const { return traits_type::initValue(); }
 
   value_type value_[8];
-  key_t code;
+  key_t code_;
   unsigned int side;
   unsigned char children_mask_;
 
   Node(){
-    code = 0;
+    code_ = 0;
     side = 0;
     children_mask_ = 0;
     for (unsigned int i = 0; i < 8; i++){

@@ -52,7 +52,7 @@ namespace se {
      */
     template <typename T>
     std::ofstream& serialise(std::ofstream& out, Node<T>& node) {
-      out.write(reinterpret_cast<char *>(&node.code), sizeof(key_t));
+      out.write(reinterpret_cast<char *>(&node.code_), sizeof(key_t));
       out.write(reinterpret_cast<char *>(&node.side), sizeof(int));
       out.write(reinterpret_cast<char *>(&node.value_), sizeof(node.value_));
       return out;
@@ -66,7 +66,7 @@ namespace se {
      */
     template <typename T>
     void deserialise(Node<T>& node, std::ifstream& in) {
-      in.read(reinterpret_cast<char *>(&node.code), sizeof(key_t));
+      in.read(reinterpret_cast<char *>(&node.code_), sizeof(key_t));
       in.read(reinterpret_cast<char *>(&node.side), sizeof(int));
       in.read(reinterpret_cast<char *>(&node.value_), sizeof(node.value_));
     }
@@ -78,7 +78,7 @@ namespace se {
      */
     template <typename T>
     std::ofstream& serialise(std::ofstream& out, VoxelBlock<T>& block) {
-      out.write(reinterpret_cast<char *>(&block.code), sizeof(key_t));
+      out.write(reinterpret_cast<char *>(&block.code_), sizeof(key_t));
       out.write(reinterpret_cast<char *>(&block.coordinates_), sizeof(Eigen::Vector3i));
       out.write(reinterpret_cast<char *>(&block.voxel_block_), 
           sizeof(block.voxel_block_));
@@ -93,7 +93,7 @@ namespace se {
      */
     template <typename T>
     void deserialise(VoxelBlock<T>& block, std::ifstream& in) {
-      in.read(reinterpret_cast<char *>(&block.code), sizeof(key_t));
+      in.read(reinterpret_cast<char *>(&block.code_), sizeof(key_t));
       in.read(reinterpret_cast<char *>(&block.coordinates_), sizeof(Eigen::Vector3i));
       in.read(reinterpret_cast<char *>(&block.voxel_block_), sizeof(block.voxel_block_));
     }
