@@ -52,8 +52,8 @@ class DenseSLAMSystem {
 private:
         uint2 computation_size_;
 	float step;
-	Matrix4 pose;
-	Matrix4 *viewPose;
+        Matrix4 pose_;
+        Matrix4 *viewPose_;
 	float3 volumeDimensions;
 	uint3 volumeResolution;
 	std::vector<int> iterations;
@@ -109,9 +109,9 @@ public:
 	float3 getPosition() {
 		//std::cerr << "InitPose =" << _initPose.x << "," << _initPose.y  <<"," << _initPose.z << "    ";
 		//std::cerr << "pose =" << pose.data[0].w << "," << pose.data[1].w  <<"," << pose.data[2].w << "    ";
-		float xt = pose.data[0].w - _initPose.x;
-		float yt = pose.data[1].w - _initPose.y;
-		float zt = pose.data[2].w - _initPose.z;
+                float xt = pose_.data[0].w - _initPose.x;
+                float yt = pose_.data[1].w - _initPose.y;
+                float zt = pose_.data[2].w - _initPose.z;
 		return (make_float3(xt, yt, zt));
 	}
 
@@ -139,21 +139,21 @@ public:
   void renderDepth(uchar4* out, uint2 outputSize);
 
 	Matrix4 getPose() {
-		return pose;
+                return pose_;
 	}
 
 	void setViewPose(Matrix4 *value = NULL) {
 		if (value == NULL){
-			viewPose = &pose;
+                        viewPose_ = &pose_;
       shouldRender = false;
     }
 		else {
-			viewPose = value;
+                        viewPose_ = value;
       shouldRender = true;
     }
 	}
 	Matrix4 *getViewPose() {
-		return (viewPose);
+                return (viewPose_);
 	}
 	float3 getModelDimensions() {
 		return (volumeDimensions);
