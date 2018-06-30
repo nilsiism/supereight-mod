@@ -31,7 +31,7 @@ supereight is made of three main different components:
   compiled in a library and used in external projects. Notice that the pipeline
   API exposes the discrete octree map via a shared_ptr. As the map is a template
   class, it needs to be instantiated correctly. You do this by defining a
-  FIELD_TYPE macro when compiling your app. The field type must be consistent
+  FIELD_TYPE macro before including `DenseSLAMSystem.h`. The field type must be consistent
   with the library you are linking against. Have a look at se_denseslam and
   se_apps CMakeLists to see how it is done in our examples.
 * `se_apps`: front-end applications which run the se-denseslam pipelines on
