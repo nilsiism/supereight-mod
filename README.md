@@ -29,7 +29,7 @@ supereight is made of three main different components:
 * `se_core`: the main header only template octree library
 * `se_denseslam`: the volumetric SLAM pipelines presented in [1], which can be
   compiled in a library and used in external projects. Notice that the pipeline
-  API exposed the discrete map via a shared_ptr. As the map is a template
+  API exposes the discrete octree map via a shared_ptr. As the map is a template
   class, it needs to be instantiated correctly. You do this by defining a
   FIELD_TYPE macro when compiling your app. The field type must be consistent
   with the library you are linking against. Have a look at se_denseslam and
