@@ -38,12 +38,16 @@
  *
 ****************************************************************************/
 
-class SDF {};
+typedef struct {
+  float x;
+  float y;
+} SDF;
+
 template<>
 struct voxel_traits<SDF> {
-  typedef float2 value_type;
-  static inline value_type empty(){ return make_float2(1.f, -1.f); }
-  static inline value_type initValue(){ return make_float2(1.f, 0.f); }
+  typedef SDF value_type;
+  static inline value_type empty(){ return {1.f, -1.f}; }
+  static inline value_type initValue(){ return {1.f, 0.f}; }
 };
 
 /******************************************************************************
@@ -52,7 +56,11 @@ struct voxel_traits<SDF> {
  *
 ****************************************************************************/
 
-class OFusion {};
+typedef struct {
+    float x;
+    double y;
+} OFusion;
+
 template<>
 struct voxel_traits<OFusion> {
   typedef struct  {
