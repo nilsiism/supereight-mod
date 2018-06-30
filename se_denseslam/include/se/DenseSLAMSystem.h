@@ -122,6 +122,10 @@ class DenseSLAMSystem {
     // Getters
     //
 
+    void getMap(std::shared_ptr<se::Octree<FieldType> >& out) {
+      out = discrete_vol_ptr_;
+    }
+
     bool getTracked() {
       return (tracked_);
     }
