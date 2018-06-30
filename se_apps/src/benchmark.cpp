@@ -165,6 +165,10 @@ int main(int argc, char ** argv) {
 
 		timings[0] = tock();
 	}
+
+    std::shared_ptr<se::Octree<FieldType> > map_ptr;
+    pipeline.getMap(map_ptr);
+    map_ptr->save("test.bin");
     
     // ==========     DUMP VOLUME      =========
 

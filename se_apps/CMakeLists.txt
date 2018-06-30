@@ -124,5 +124,11 @@ include_directories(../se_shared ./include ../se_core/include/
   ${TOON_INCLUDE_DIR} ${EIGEN3_INCLUDE_DIR} ${SOPHUS_INCLUDE_DIR})
 
 foreach(appname ${BUILT_LIBS})
-  add_version(${appname} "" "${common_libraries}")
+  if(${appname} MATCHES ".*sdf.*")
+    set(field_type -DFIELD_TYPE=SDF) 
+  else()
+    set(field_type -DFIELD_TYPE=OFusion) 
+  endif()
+
+  add_version(${appname} "${field_type}" "${common_libraries}")
 endforeach()
