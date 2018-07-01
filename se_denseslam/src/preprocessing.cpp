@@ -36,7 +36,6 @@
 #include "timings.h"
 #include <math_utils.h>
 #include <functional>
-#include <se/continuous/volume_instance.hpp>
 
 void bilateralFilterKernel(float* out, const float* in, uint2 size,
 		const float * gaussian, float e_d, int r) {

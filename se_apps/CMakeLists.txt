@@ -125,9 +125,9 @@ include_directories(../se_shared ./include ../se_core/include/
 
 foreach(appname ${BUILT_LIBS})
   if(${appname} MATCHES ".*sdf.*")
-    set(field_type -DFIELD_TYPE=SDF) 
+    set(field_type -DSE_FIELD_TYPE=SDF) 
   else()
-    set(field_type -DFIELD_TYPE=OFusion) 
+    set(field_type -DSE_FIELD_TYPE=OFusion) 
   endif()
 
   add_version(${appname} "${field_type}" "${common_libraries}")

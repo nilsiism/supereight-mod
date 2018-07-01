@@ -43,9 +43,15 @@
 #include <timings.h>
 #include <se/config.h>
 #include <se/octree.hpp>
-#include "continuous/volume_instance.hpp"
+#include "volume_traits.hpp"
+#include "continuous/volume_template.hpp"
 
-/// OBJ ///
+/*
+ * Use SE_FIELD_TYPE macro to define the DenseSLAMSystem instance.
+ */
+typedef SE_FIELD_TYPE FieldType;
+template <typename T>
+using Volume = VolumeTemplate<T, se::Octree>;
 
 class DenseSLAMSystem {
 

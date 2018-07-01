@@ -35,7 +35,7 @@
  */
 #include <math_utils.h>
 #include "timings.h"
-#include <se/continuous/volume_instance.hpp>
+#include <se/continuous/volume_template.hpp>
 #include <tuple>
 #include <sophus/se3.hpp>
 
