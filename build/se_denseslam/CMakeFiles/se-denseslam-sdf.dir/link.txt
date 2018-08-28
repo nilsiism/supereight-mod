@@ -1,0 +1,2 @@
+/usr/bin/ar qc libse-denseslam-sdf.a  CMakeFiles/se-denseslam-sdf.dir/src/DenseSLAMSystem.cpp.o
+/usr/bin/ranlib libse-denseslam-sdf.a

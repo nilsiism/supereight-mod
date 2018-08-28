@@ -1,0 +1,2 @@
+/usr/bin/ar qc libse-denseslam-ofusion.a  CMakeFiles/se-denseslam-ofusion.dir/src/DenseSLAMSystem.cpp.o
+/usr/bin/ranlib libse-denseslam-ofusion.a

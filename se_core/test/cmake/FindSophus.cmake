@@ -21,6 +21,13 @@ else (SOPHUS_INCLUDE_DIR)
 
     find_path(SOPHUS_INCLUDE_DIR NAMES sophus/se3.hpp
         HINTS
+        ~/usr/include/Sophus
+        ~/usr/.local/include/Sophus
+        ~/.local/include/Sophus
+        ~/usr/local/include/Sophus
+        /usr/include/Sophus
+        /usr/local/include/Sophus
+        thirdparty
         ENV SOPHUS_ROOT 
         ENV SOPHUS_ROOT_DIR
         PATHS
