@@ -219,7 +219,9 @@ public:
   bool allocate(key_t *keys, int num_elem);
 
   void save(const std::string& filename);
+  void saveMultilevel(const std::string& filename);
   void load(const std::string& filename);
+  void loadMultilevel(const std::string& filename);
 
   /*! \brief Counts the number of blocks allocated
    * \return number of voxel blocks allocated
@@ -924,6 +926,32 @@ void Octree<T>::save(const std::string& filename) {
 }
 
 template <typename T>
+void Octree<T>::saveMultilevel(const std::string& filename) {
+  {
+    std::ofstream os (filename, std::ios::binary);
+    os.write(reinterpret_cast<char *>(&size_), sizeof(size_));
+    std::cout << "size of size_: " << sizeof(size_) << std::endl;
+    std::cout << "size_: " << size_ << std::endl;
+    os.write(reinterpret_cast<char *>(&dim_), sizeof(dim_));
+    std::cout << "size of dim_: " << sizeof(dim_) << std::endl;
+    std::cout << "dim_: " << dim_ << std::endl;
+
+    size_t n = nodes_buffer_.size();
+    std::cout << "size of nodes_buffer_: " << n << std::endl;
+    os.write(reinterpret_cast<char *>(&n), sizeof(size_t));
+    for(int i = 0; i < n; ++i)
+      internal::serialise(os, *nodes_buffer_[i]);
+
+    n = block_buffer_.size();
+    os.write(reinterpret_cast<char *>(&n), sizeof(size_t));
+    for(int i = 0; i < n; ++i) {
+      auto tmp = block_buffer_[i];
+      internal::serialiseMultilevel(os, *block_buffer_[i]);
+    }
+  }
+}
+
+template <typename T>
 void Octree<T>::load(const std::string& filename) {
   {
     std::cout << "Loading octree from disk... " << filename << std::endl;
@@ -955,6 +983,44 @@ void Octree<T>::load(const std::string& filename) {
       Eigen::Vector3i coords = tmp.coordinates();
       VoxelBlock<T> * n = 
         static_cast<VoxelBlock<T> *>(insert(coords(0), coords(1), coords(2), keyops::level(tmp.code_)));
+      std::memcpy(n->getBlockRawPtr(), tmp.getBlockRawPtr(), 512*sizeof(*(tmp.getBlockRawPtr())));
+    }
+  }
+}
+
+template <typename T>
+void Octree<T>::loadMultilevel(const std::string& filename) {
+  {
+    std::cout << "Loading octree from disk... " << filename << std::endl;
+    std::ifstream is (filename, std::ios::binary);
+    int size;
+    float dim;
+    is.read(reinterpret_cast<char *>(&size), sizeof(size));
+    is.read(reinterpret_cast<char *>(&dim), sizeof(dim));
+
+    init(size, dim);
+
+    size_t n = 0;
+    is.read(reinterpret_cast<char *>(&n), sizeof(size_t));
+    nodes_buffer_.setup(n);
+    std::cout << "Reading " << n << " nodes " << std::endl;
+    for(int i = 0; i < n; ++i) {
+      Node<T> tmp;
+      internal::deserialise(tmp, is);
+      Eigen::Vector3i coords = keyops::decode(tmp.code_);
+      Node<T> * n = insert(coords(0), coords(1), coords(2), keyops::level(tmp.code_));
+      std::memcpy(n->value_, tmp.value_, sizeof(tmp.value_));
+    }
+
+    is.read(reinterpret_cast<char *>(&n), sizeof(size_t));
+    std::cout << "Reading " << n << " blocks " << std::endl;
+    for(int i = 0; i < n; ++i) {
+      VoxelBlock<T> tmp;
+      internal::deserialiseMultilevel(tmp, is);
+      Eigen::Vector3i coords = tmp.coordinates();
+      VoxelBlock<T> * n =
+              static_cast<VoxelBlock<T> *>(insert(coords(0), coords(1), coords(2), keyops::level(tmp.code_)));
+      n->value_[0] = tmp.value_[0];
       std::memcpy(n->getBlockRawPtr(), tmp.getBlockRawPtr(), 512*sizeof(*(tmp.getBlockRawPtr())));
     }
   }
