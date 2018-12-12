@@ -1,1 +1,0 @@
-/usr/bin/c++     CMakeFiles/scene2raw.dir/scene2raw.cpp.o  -o scene2raw -Wl,-rpath,/home/nilsiism/workspace/prob_trajectory_planning/src/ext/supereight/build/se_tools liblodepng.so 

@@ -17,3 +17,5 @@ set(BUILT_LIBS "")
 add_subdirectory(se_denseslam)
 add_subdirectory(se_apps)
 
+install(DIRECTORY ${CMAKE_SOURCE_DIR}/se_core/include/ DESTINATION include)
+install(FILES ${CMAKE_SOURCE_DIR}/se_denseslam/include/se/volume_traits.hpp DESTINATION include/se)
